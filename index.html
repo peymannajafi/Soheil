@@ -517,7 +517,7 @@
             // --- TRANSLATIONS ---
             const translations = {
                 en: {
-                    app_title: "Building Information Hub", admin_title: "Admin: Records", add_building_title: "Add Building", edit_building_title: "Edit Building", detail_title_prefix: "", scan_title: "Scan QR Code", settings_title: "Settings & Data", scan_qr: "Scan Building QR Code", add_building: "Add Building", import_data_file: "Import Building Data File (JSON, CSV, Excel)",
+                    app_title: "Building Information Hub", admin_title: "Admin: Records", add_building_title: "Add Building", edit_building_title: "Edit Building", scan_title: "Scan QR Code", settings_title: "Settings & Data", scan_qr: "Scan Building QR Code", add_building: "Add Building", import_data_file: "Import Building Data File (JSON, CSV, Excel)",
                     no_buildings_found: "No buildings found.", click_plus_to_add: "Click the '+' button to add one.",
                     search_placeholder: "Search by Zip Code...", no_search_results: "No buildings match your search.", try_different_search: "Try a different zip code.",
                     form_section_address: "Address & Basic Info", form_building_name: "Building Name / Profile Name *", form_street: "Street", form_city: "City", form_state_province: "State/Province", form_zip_postal: "Zip/Postal Code", form_country: "Country/Region", form_webpage: "Web Page",
@@ -538,7 +538,7 @@
                     yes: "Yes", no: "No", cancel: "Cancel", done: "Done", detail_full_address: "Full Address", detail_other_info: "Other Information", detail_open_maps: "Open in Google Maps", detail_qr_code: "Building QR Code", detail_download_qr: "Download QR Code"
                 },
                 fa: {
-                    app_title: "مرکز اطلاعات ساختمان", admin_title: "مدیریت: رکوردها", add_building_title: "افزودن ساختمان", edit_building_title: "ویرایش ساختمان", detail_title_prefix: "", scan_title: "اسکن کد QR", settings_title: "تنظیمات و داده‌ها",
+                    app_title: "مرکز اطلاعات ساختمان", admin_title: "مدیریت: رکوردها", add_building_title: "افزودن ساختمان", edit_building_title: "ویرایش ساختمان", scan_title: "اسکن کد QR", settings_title: "تنظیمات و داده‌ها",
                     scan_qr: "اسکن کد QR ساختمان", add_building: "افزودن ساختمان", import_data_file: "ورود اطلاعات از فایل (JSON, CSV, Excel)",
                     no_buildings_found: "هیچ ساختمانی یافت نشد.", click_plus_to_add: "برای افزودن، روی دکمه '+' کلیک کنید.",
                     search_placeholder: "جستجو بر اساس کد پستی...", no_search_results: "هیچ ساختمانی با جستجوی شما مطابقت ندارد.", try_different_search: "یک کد پستی دیگر را امتحان کنید.",
@@ -1031,9 +1031,9 @@
                     case 'page-detail': 
                         const building = db.getById(params.buildingId);
                         if (building) {
-                            headerTitle.textContent = translate('detail_title_prefix') + " " + building.buildingName;
+                            headerTitle.textContent = building.buildingName;
                         } else {
-                            titleKey = 'app_title';
+                            headerTitle.textContent = translate('app_title');
                         }
                         break;
                     case 'page-scanner': titleKey = 'scan_title'; break;
