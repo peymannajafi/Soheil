@@ -127,7 +127,7 @@
             <div id="page-form" class="page relative">
                 <div id="form-qr-code-container" class="hidden md:block"></div>
                 <form id="building-form" class="space-y-6">
-                    <input type="hidden" id="id">
+                    <input type="hidden" id="building-id-input">
                     
                     <!-- Basic Info & Address Section -->
                     <div class="bg-white p-4 rounded-lg shadow">
@@ -660,12 +660,12 @@
                                         else { element.value = building[key]; }
                                     }
                                 }
-                                document.getElementById('id').value = building.id; // Correctly set hidden id
+                                document.getElementById('building-id-input').value = building.id; 
                                 state.photoCache = [...(building.photos || [])];
                             }
                         } else {
                             currentId = db.uuid();
-                            document.getElementById('id').value = currentId;
+                            document.getElementById('building-id-input').value = currentId;
                         }
                         ui.renderFormQRCode(currentId);
                         ui.renderPhotoThumbnails();
@@ -701,8 +701,9 @@
                 if (!form.checkValidity()) { ui.showToast('Please fill in all required fields.', true); return; }
                 const buildingData = {};
                 const inputs = form.querySelectorAll('input, select, textarea');
+                buildingData.id = document.getElementById('building-id-input').value; // Explicitly get ID
                 inputs.forEach(input => {
-                    if(input.id) {
+                    if(input.id && input.id !== 'building-id-input') { // Exclude the ID input from the loop
                         if (input.type === 'checkbox') { buildingData[input.id] = input.checked; } 
                         else { buildingData[input.id] = input.value; }
                     }
