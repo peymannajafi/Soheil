@@ -157,18 +157,22 @@
             pointer-events: none;
         }
         
-        /* Mobile-only form field styles */
+        /* UPDATED: Correctly hide/show desktop vs mobile inputs */
         @media (max-width: 768px) {
-            .mobile-wheel-trigger { display: block; }
-            .desktop-input { display: none; }
+            .desktop-input {
+                display: none !important;
+            }
         }
         @media (min-width: 769px) {
-            .mobile-wheel-trigger { display: none; }
-            .desktop-input { display: block; }
+            .mobile-wheel-trigger {
+                display: none !important;
+            }
         }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
+    <!-- NEW: Saving progress bar -->
+    <div id="save-progress-bar" class="fixed top-0 left-0 h-1 bg-[#01babc] w-0 transition-all duration-500 z-[100]"></div>
 
     <!-- Main Application Container -->
     <div id="app" class="max-w-4xl mx-auto">
@@ -503,6 +507,8 @@
                 activeScanner: null,
                 photoCache: [], // Temporary cache for photos on the form page
                 currentLang: localStorage.getItem(LANG_KEY) || 'en',
+                isNewFormEntry: false, // To track if we are adding or editing
+                photosLoading: 0, // To track photo processing
                 wheel: {
                     active: false,
                     targetInput: null,
@@ -599,6 +605,7 @@
             const wheelTitle = document.getElementById('wheel-title');
             const wheelDoneBtn = document.getElementById('wheel-done-btn');
             const wheelCancelBtn = document.getElementById('wheel-cancel-btn');
+            const saveProgressBar = document.getElementById('save-progress-bar');
 
             // --- DATA SANITIZATION ---
             const sanitizeBuilding = (buildingData) => {
@@ -748,7 +755,7 @@
                     }
                 },
                 
-                renderDetail: (building, isAdminView) => {
+                renderDetail: (building) => { // Removed isAdminView, QR code is always shown now
                     const content = document.getElementById('detail-content');
                     content.innerHTML = '';
 
@@ -783,6 +790,7 @@
                         if(row) section.lastChild.appendChild(row);
                     }
 
+                    // Render all sections
                     const mainInfoSection = createSection(null);
                     addField(mainInfoSection, 'form_building_name', building.buildingName);
                     const fullAddress = [building.address, building.city, building.stateProvince, building.zipPostal, building.country].filter(Boolean).join(', ');
@@ -836,15 +844,14 @@
                          content.appendChild(photoSection);
                     }
 
-                    if (isAdminView) {
-                        const qrCard = document.createElement('div');
-                        qrCard.className = 'bg-white p-6 rounded-lg shadow text-center mt-4';
-                        qrCard.innerHTML = `<h3 class="text-lg font-bold text-[#03396c] mb-2">${translate('detail_qr_code')}</h3><div id="detail-qr-code-container" class="mt-4 flex justify-center"></div><div class="mt-6"><button id="detail-download-qr-button" class="bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg">${translate('detail_download_qr')}</button></div>`;
-                        content.appendChild(qrCard);
-                        const qrCode = new QRCodeStyling({ width: 250, height: 250, data: building.id, dotsOptions: { color: '#03396c', type: 'rounded' }, backgroundOptions: { color: '#ffffff' }, cornersSquareOptions: { color: '#03396c', type: 'extra-rounded' }, cornersDotOptions: { color: '#03396c', type: 'dot' } });
-                        qrCode.append(document.getElementById('detail-qr-code-container'));
-                        document.getElementById('detail-download-qr-button').onclick = () => qrCode.download({ name: `qr-${building.buildingName.replace(/\s+/g, '-')}`, extension: 'png' });
-                    }
+                    // Always render the QR code
+                    const qrCard = document.createElement('div');
+                    qrCard.className = 'bg-white p-6 rounded-lg shadow text-center mt-4';
+                    qrCard.innerHTML = `<h3 class="text-lg font-bold text-[#03396c] mb-2">${translate('detail_qr_code')}</h3><div id="detail-qr-code-container" class="mt-4 flex justify-center"></div><div class="mt-6"><button id="detail-download-qr-button" class="bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg">${translate('detail_download_qr')}</button></div>`;
+                    content.appendChild(qrCard);
+                    const qrCode = new QRCodeStyling({ width: 250, height: 250, data: building.id, dotsOptions: { color: '#03396c', type: 'rounded' }, backgroundOptions: { color: '#ffffff' }, cornersSquareOptions: { color: '#03396c', type: 'extra-rounded' }, cornersDotOptions: { color: '#03396c', type: 'dot' } });
+                    qrCode.append(document.getElementById('detail-qr-code-container'));
+                    document.getElementById('detail-download-qr-button').onclick = () => qrCode.download({ name: `qr-${building.buildingName.replace(/\s+/g, '-')}`, extension: 'png' });
                 },
                 
                 renderPhotoThumbnails: () => {
@@ -974,15 +981,13 @@
                         const optCenter = opt.offsetTop + (state.wheel.itemHeight / 2);
                         
                         const distance = Math.abs( (scrollTop + state.wheel.itemHeight * 2) - optCenter);
-                        const scale = Math.max(0.9, 1 - distance / 200);
-                        const opacity = Math.max(0.4, 1 - distance / 150);
                         
                         if(Math.abs(scrollTop - (opt.offsetTop - (state.wheel.itemHeight*2))) < state.wheel.itemHeight / 2) {
                              opt.style.color = '#03396c';
                              opt.style.transform = 'scale(1)';
                         } else {
                             opt.style.color = '#9ca3af';
-                            opt.style.transform = `scale(${scale})`;
+                            opt.style.transform = `scale(0.9)`;
                         }
                     });
                 },
@@ -1029,7 +1034,10 @@
                 let titleKey = 'app_title';
                 switch(pageId) {
                     case 'page-admin': titleKey = 'admin_title'; break;
-                    case 'page-form': titleKey = params.buildingId ? 'edit_building_title' : 'add_building_title'; break;
+                    case 'page-form':
+                        state.isNewFormEntry = !params.buildingId;
+                        titleKey = state.isNewFormEntry ? 'add_building_title' : 'edit_building_title'; 
+                        break;
                     case 'page-detail': 
                         const building = db.getById(params.buildingId);
                         if (building) {
@@ -1052,7 +1060,7 @@
                     searchBar.value = '';
                     ui.renderAdminList();
                 } else if (pageId === 'page-form') {
-                    headerActions.innerHTML = `<button id="save-btn" class="p-2 rounded-full hover:bg-black/20"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></button>`;
+                    headerActions.innerHTML = `<button id="save-btn" class="p-2 rounded-full hover:bg-black/20 transition-opacity"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></button>`;
                     document.getElementById('save-btn').onclick = handleFormSave;
                     form.reset();
                     state.photoCache = [];
@@ -1076,7 +1084,6 @@
                         document.getElementById('id').value = currentId;
                     }
                     
-                    // Update trigger buttons with initial values
                     document.querySelectorAll('.mobile-wheel-trigger').forEach(trigger => {
                         const targetId = trigger.dataset.target;
                         const input = document.getElementById(targetId);
@@ -1090,7 +1097,6 @@
                         }
                         trigger.textContent = text;
                     });
-
 
                     ui.renderFormQRCode(currentId);
                     ui.renderPhotoThumbnails();
@@ -1109,7 +1115,7 @@
                             document.getElementById('edit-btn').onclick = () => showPage('page-form', { buildingId: building.id });
                             document.getElementById('delete-btn').onclick = () => handleDelete(building.id);
                         }
-                        ui.renderDetail(building, fromAdmin);
+                        ui.renderDetail(building);
                     }
                 } else if(pageId === 'page-scanner') {
                     startScanner();
@@ -1122,8 +1128,12 @@
 
             const handleFormSave = () => {
                 if (!form.checkValidity()) { ui.showToast('toast_fill_fields', true); return; }
+                
+                // Show progress bar
+                saveProgressBar.style.width = '100%';
+
                 const buildingData = {};
-                const inputs = form.querySelectorAll('input, select');
+                const inputs = form.querySelectorAll('input, select, textarea');
                 inputs.forEach(input => {
                     if(input.id) {
                         if (input.type === 'checkbox') { buildingData[input.id] = input.checked; } 
@@ -1133,7 +1143,19 @@
                 buildingData.photos = state.photoCache;
                 db.save(buildingData);
                 ui.showToast('toast_saved');
-                goBack();
+
+                // Navigate after a short delay to let user see progress bar
+                setTimeout(() => {
+                    if (state.isNewFormEntry) {
+                        // After creating a new building, go to its detail page
+                        showPage('page-detail', { buildingId: buildingData.id });
+                    } else {
+                        // After editing, go back to the previous page (likely the admin list)
+                        goBack();
+                    }
+                    // Hide progress bar for next time
+                    saveProgressBar.style.width = '0%';
+                }, 500);
             };
 
             const handleDelete = (id) => { if (confirm(translate('confirm_delete'))) { db.delete(id); ui.showToast('toast_deleted'); goBack(); } };
@@ -1146,7 +1168,7 @@
                        state.activeScanner.stop().then(ignore => {
                             const building = db.getById(decodedText);
                             if (building) {
-                                state.history.push('page-home');
+                                state.history.push('page-home'); // Set history so back button works
                                 showPage('page-detail', { buildingId: building.id });
                             } else {
                                 ui.showToast('toast_qr_not_found', true);
@@ -1174,15 +1196,32 @@
                     if (inputElement) inputElement.value = null;
                     return;
                 }
+
+                const saveBtn = document.getElementById('save-btn');
                 Array.from(files).forEach(file => {
+                    // Disable save button while processing
+                    state.photosLoading++;
+                    if(saveBtn) {
+                        saveBtn.disabled = true;
+                        saveBtn.classList.add('opacity-50');
+                    }
+
                     const reader = new FileReader();
                     reader.onload = (e) => { 
                         state.photoCache.push(e.target.result); 
-                        ui.renderPhotoThumbnails(); 
+                        ui.renderPhotoThumbnails();
+                        
+                        // Re-enable save button once done
+                        state.photosLoading--;
+                        if (state.photosLoading === 0 && saveBtn) {
+                            saveBtn.disabled = false;
+                            saveBtn.classList.remove('opacity-50');
+                        }
                     };
                     reader.readAsDataURL(file);
                 });
-                if (inputElement) inputElement.value = null;
+
+                if (inputElement) inputElement.value = null; // Reset file input
             };
             
             const handleImport = (event) => {
@@ -1247,7 +1286,7 @@
                 btn.addEventListener('click', () => {
                     const targetInput = document.getElementById(btn.dataset.target);
                     const stepperDisplay = btn.parentElement.querySelector('input[readonly]');
-                    let currentValue = parseInt(targetInput.value, 10);
+                    let currentValue = parseInt(targetInput.value, 10) || 0;
                     if (btn.dataset.action === 'increment') { currentValue++; } 
                     else if (currentValue > 0) { currentValue--; }
                     targetInput.value = currentValue;
