@@ -157,7 +157,7 @@
             pointer-events: none;
         }
         
-        /* UPDATED: Correctly hide/show desktop vs mobile inputs */
+        /* Correctly hide/show desktop vs mobile inputs */
         @media (max-width: 768px) {
             .desktop-input {
                 display: none !important;
@@ -171,7 +171,6 @@
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
-    <!-- NEW: Saving progress bar -->
     <div id="save-progress-bar" class="fixed top-0 left-0 h-1 bg-[#01babc] w-0 transition-all duration-500 z-[100]"></div>
 
     <!-- Main Application Container -->
@@ -264,7 +263,6 @@
                                 <label for="webpage" class="block text-sm font-medium text-gray-700" data-lang="form_webpage"></label>
                                 <input type="url" id="webpage" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#03396c] focus:ring-[#03396c]">
                             </div>
-                            <!-- GPS Location Fields moved here -->
                              <div class="md:col-span-2 border-t pt-4 mt-2">
                                  <div class="flex items-center space-x-4 mb-2">
                                     <div class="flex-1">
@@ -609,12 +607,10 @@
 
             // --- DATA SANITIZATION ---
             const sanitizeBuilding = (buildingData) => {
-                // Garage sanitation needs to handle 'Yes'/'No' from wheel selector and true/false from checkbox
                 let garageValue = buildingData.garage;
                 if(typeof garageValue === 'string') {
                     garageValue = ['true', 'yes', '1'].includes(garageValue.toLowerCase());
                 }
-
                 return {
                     id: buildingData.id || db.uuid(),
                     buildingName: buildingData.buildingName || '',
@@ -755,7 +751,7 @@
                     }
                 },
                 
-                renderDetail: (building) => {
+                renderDetail: (building, isAdminView, isNewSave = false) => {
                     const content = document.getElementById('detail-content');
                     content.innerHTML = '';
 
@@ -841,14 +837,17 @@
                          photoSection.lastChild.appendChild(photoGrid);
                          content.appendChild(photoSection);
                     }
-
-                    const qrCard = document.createElement('div');
-                    qrCard.className = 'bg-white p-6 rounded-lg shadow text-center mt-4';
-                    qrCard.innerHTML = `<h3 class="text-lg font-bold text-[#03396c] mb-2">${translate('detail_qr_code')}</h3><div id="detail-qr-code-container" class="mt-4 flex justify-center"></div><div class="mt-6"><button id="detail-download-qr-button" class="bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg">${translate('detail_download_qr')}</button></div>`;
-                    content.appendChild(qrCard);
-                    const qrCode = new QRCodeStyling({ width: 250, height: 250, data: building.id, dotsOptions: { color: '#03396c', type: 'rounded' }, backgroundOptions: { color: '#ffffff' }, cornersSquareOptions: { color: '#03396c', type: 'extra-rounded' }, cornersDotOptions: { color: '#03396c', type: 'dot' } });
-                    qrCode.append(document.getElementById('detail-qr-code-container'));
-                    document.getElementById('detail-download-qr-button').onclick = () => qrCode.download({ name: `qr-${building.buildingName.replace(/\s+/g, '-')}`, extension: 'png' });
+                    
+                    if (isAdminView || isNewSave) {
+                        const qrCard = document.createElement('div');
+                        qrCard.id = "qr-code-card";
+                        qrCard.className = 'bg-white p-6 rounded-lg shadow text-center mt-4';
+                        qrCard.innerHTML = `<h3 class="text-lg font-bold text-[#03396c] mb-2">${translate('detail_qr_code')}</h3><div id="detail-qr-code-container" class="mt-4 flex justify-center"></div><div class="mt-6"><button id="detail-download-qr-button" class="bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg">${translate('detail_download_qr')}</button></div>`;
+                        content.appendChild(qrCard);
+                        const qrCode = new QRCodeStyling({ width: 250, height: 250, data: String(building.id), dotsOptions: { color: '#03396c', type: 'rounded' }, backgroundOptions: { color: '#ffffff' }, cornersSquareOptions: { color: '#03396c', type: 'extra-rounded' }, cornersDotOptions: { color: '#03396c', type: 'dot' } });
+                        qrCode.append(document.getElementById('detail-qr-code-container'));
+                        document.getElementById('detail-download-qr-button').onclick = () => qrCode.download({ name: `qr-${building.buildingName.replace(/\s+/g, '-')}`, extension: 'png' });
+                    }
                 },
                 
                 renderPhotoThumbnails: () => {
@@ -970,14 +969,9 @@
                 },
                 highlightCurrent() {
                     const scrollTop = wheelContainer.scrollTop;
-                    const centerOffset = scrollTop + (wheelContainer.clientHeight / 2);
-
+                    
                     wheelOptions.querySelectorAll('.option').forEach(opt => {
-                        const optRect = opt.getBoundingClientRect();
-                        const containerRect = wheelContainer.getBoundingClientRect();
                         const optCenter = opt.offsetTop + (state.wheel.itemHeight / 2);
-                        
-                        const distance = Math.abs( (scrollTop + state.wheel.itemHeight * 2) - optCenter);
                         
                         if(Math.abs(scrollTop - (opt.offsetTop - (state.wheel.itemHeight*2))) < state.wheel.itemHeight / 2) {
                              opt.style.color = '#03396c';
@@ -1004,7 +998,7 @@
                         }
                         
                         if(state.wheel.targetInput.id === 'bedrooms' || state.wheel.targetInput.id === 'bathrooms') {
-                             const stepperInput = document.querySelector(`.desktop-input input[readonly][data-target="${state.wheel.targetInput.id}"]`) || document.querySelector(`.desktop-input input[readonly]`);
+                             const stepperInput = document.querySelector(`.desktop-input input[readonly]`);
                              if(stepperInput && stepperInput.parentElement.previousElementSibling.htmlFor === state.wheel.targetInput.id) {
                                 stepperInput.value = value;
                              }
@@ -1106,12 +1100,19 @@
                     const building = db.getById(params.buildingId);
                     if (building) {
                         const fromAdmin = state.history.at(-1) === 'page-admin';
-                        if (fromAdmin) {
+                        if (fromAdmin || params.isNewSave) {
                             headerActions.innerHTML = `<div class="flex items-center space-x-2"><button id="edit-btn" class="p-2 rounded-full hover:bg-black/20"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z"></path></svg></button><button id="delete-btn" class="p-2 rounded-full hover:bg-red-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>`;
                             document.getElementById('edit-btn').onclick = () => showPage('page-form', { buildingId: building.id });
                             document.getElementById('delete-btn').onclick = () => handleDelete(building.id);
                         }
-                        ui.renderDetail(building);
+                        ui.renderDetail(building, fromAdmin, params.isNewSave);
+
+                        if(params.isNewSave) {
+                             setTimeout(() => {
+                                const qrCard = document.getElementById('qr-code-card');
+                                if(qrCard) qrCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                             }, 100);
+                        }
                     }
                 } else if(pageId === 'page-scanner') {
                     startScanner();
@@ -1119,22 +1120,17 @@
             };
             
             const goBack = () => { if (state.history.length > 0) { const pageToGoBackTo = state.history.pop(); showPage(pageToGoBackTo, {}, true); } };
-            backButton.addEventListener('click', goBack);
-            document.querySelectorAll('.nav-button').forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.target)));
-
+            
             const handleFormSave = () => {
                 if (state.photosLoading > 0) {
                     ui.showToast('toast_photo_loading', true);
                     return;
                 }
-
                 if (!form.checkValidity()) {
                     ui.showToast('toast_fill_fields', true);
                     return;
                 }
-                
                 saveProgressBar.style.width = '100%';
-
                 const buildingData = {};
                 const inputs = form.querySelectorAll('input, select, textarea');
                 inputs.forEach(input => {
@@ -1149,7 +1145,7 @@
 
                 setTimeout(() => {
                     if (state.isNewFormEntry) {
-                        showPage('page-detail', { buildingId: buildingData.id });
+                        showPage('page-detail', { buildingId: buildingData.id, isNewSave: true });
                     } else {
                         goBack();
                     }
@@ -1195,7 +1191,6 @@
                     if (inputElement) inputElement.value = null;
                     return;
                 }
-
                 const saveBtn = document.getElementById('save-btn');
                 Array.from(files).forEach(file => {
                     state.photosLoading++;
@@ -1203,9 +1198,7 @@
                         saveBtn.disabled = true;
                         saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
                     }
-
                     const reader = new FileReader();
-
                     const doneLoading = () => {
                         state.photosLoading--;
                         if (state.photosLoading === 0 && saveBtn) {
@@ -1213,22 +1206,18 @@
                             saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                         }
                     };
-
                     reader.onload = (e) => { 
                         state.photoCache.push(e.target.result); 
                         ui.renderPhotoThumbnails();
                         doneLoading();
                     };
-                    
                     reader.onerror = () => {
                         console.error("Error reading file.");
                         ui.showToast('toast_photo_fail', true);
                         doneLoading();
                     };
-
                     reader.readAsDataURL(file);
                 });
-
                 if (inputElement) inputElement.value = null;
             };
             
@@ -1285,6 +1274,8 @@
             };
 
             // --- EVENT LISTENERS ---
+            backButton.addEventListener('click', goBack);
+            document.querySelectorAll('.nav-button').forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.target)));
             document.querySelectorAll('.mobile-wheel-trigger').forEach(btn => {
                 btn.addEventListener('click', (e) => wheel.show(e.target.dataset.target));
             });
