@@ -127,6 +127,9 @@
 
             <!-- 2. Admin Page -->
             <div id="page-admin" class="page">
+                <div class="mb-4 sticky top-[64px] bg-gray-100 py-2 z-10">
+                    <input type="search" id="search-bar" class="w-full p-3 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" autocomplete="off">
+                </div>
                 <div id="building-list" class="space-y-3">
                     <!-- Building list items will be inserted here -->
                 </div>
@@ -396,6 +399,7 @@
                 en: {
                     app_title: "Building Information Hub", admin_title: "Admin: Records", add_building_title: "Add Building", edit_building_title: "Edit Building", detail_title_prefix: "", scan_title: "Scan QR Code", settings_title: "Settings & Data", scan_qr: "Scan Building QR Code", add_building: "Add Building", import_data_file: "Import Building Data File (JSON, CSV, Excel)",
                     no_buildings_found: "No buildings found.", click_plus_to_add: "Click the '+' button to add one.",
+                    search_placeholder: "Search by Zip Code...", no_search_results: "No buildings match your search.", try_different_search: "Try a different zip code.",
                     form_section_address: "Address & Basic Info", form_building_name: "Building Name / Profile Name *", form_street: "Street", form_city: "City", form_state_province: "State/Province", form_zip_postal: "Zip/Postal Code", form_country: "Country/Region", form_webpage: "Web Page",
                     form_section_profile: "Property Profile", form_property_type: "Property Type", form_year_built: "Year Built", form_sqm: "Square Meters (m²)", form_bedrooms: "Bedrooms", form_bathrooms: "Bathrooms", form_garage: "Garage", form_eu_classification: "EU Building Classification (CC)",
                     form_property_type_residential: 'Residential', form_property_type_commercial: 'Commercial', form_property_type_industrial: 'Industrial', form_property_type_institutional: 'Institutional', form_property_type_mixed: 'Mixed-Use', form_property_type_other: 'Other',
@@ -417,6 +421,7 @@
                     app_title: "مرکز اطلاعات ساختمان", admin_title: "مدیریت: رکوردها", add_building_title: "افزودن ساختمان", edit_building_title: "ویرایش ساختمان", detail_title_prefix: "", scan_title: "اسکن کد QR", settings_title: "تنظیمات و داده‌ها",
                     scan_qr: "اسکن کد QR ساختمان", add_building: "افزودن ساختمان", import_data_file: "ورود اطلاعات از فایل (JSON, CSV, Excel)",
                     no_buildings_found: "هیچ ساختمانی یافت نشد.", click_plus_to_add: "برای افزودن، روی دکمه '+' کلیک کنید.",
+                    search_placeholder: "جستجو بر اساس کد پستی...", no_search_results: "هیچ ساختمانی با جستجوی شما مطابقت ندارد.", try_different_search: "یک کد پستی دیگر را امتحان کنید.",
                     form_section_address: "آدرس و اطلاعات اولیه", form_building_name: "نام ساختمان / نام پروفایل *", form_street: "خیابان", form_city: "شهر", form_state_province: "استان/ایالت", form_zip_postal: "کد پستی", form_country: "کشور", form_webpage: "صفحه وب",
                     form_section_profile: "مشخصات ملک", form_property_type: "نوع ملک", form_year_built: "سال ساخت", form_sqm: "متر مربع (m²)", form_bedrooms: "اتاق خواب", form_bathrooms: "حمام", form_garage: "پارکینگ", form_eu_classification: "طبقه‌بندی ساختمان (EU)",
                     form_property_type_residential: 'مسکونی', form_property_type_commercial: 'تجاری', form_property_type_industrial: 'صنعتی', form_property_type_institutional: 'اداری', form_property_type_mixed: 'مختلط', form_property_type_other: 'دیگر',
@@ -461,6 +466,7 @@
             const headerActions = document.getElementById('header-actions');
             const buildingList = document.getElementById('building-list');
             const emptyAdminState = document.getElementById('empty-admin-state');
+            const searchBar = document.getElementById('search-bar');
             const form = document.getElementById('building-form');
             const qrReader = document.getElementById('qr-reader');
             const importFileInput = document.getElementById('import-file');
@@ -559,6 +565,11 @@
                         if (key) el.textContent = translate(key);
                     });
                     
+                    const searchBarEl = document.getElementById('search-bar');
+                    if (searchBarEl) {
+                        searchBarEl.placeholder = translate('search_placeholder');
+                    }
+                    
                     const propertyTypeSelect = document.getElementById('buildingUseType');
                     propertyTypeSelect.innerHTML = `
                         <option>${translate('form_property_type_residential') || 'Residential'}</option>
@@ -582,20 +593,45 @@
                      `;
                 },
 
-                renderAdminList: () => {
-                    const buildings = db.getAll();
+                renderAdminList: (searchTerm = '') => {
+                    let buildings = db.getAll();
+                    const normalizedSearchTerm = searchTerm.toLowerCase().trim();
+
+                    if (normalizedSearchTerm) {
+                        buildings = buildings.filter(building => 
+                            building.zipPostal && building.zipPostal.toLowerCase().includes(normalizedSearchTerm)
+                        );
+                    }
+                    
                     buildingList.innerHTML = '';
+                    
                     if (buildings.length === 0) {
                         emptyAdminState.classList.remove('hidden');
+                        const noBuildingsMsg = document.querySelector('#empty-admin-state p[data-lang="no_buildings_found"]');
+                        const clickPlusMsg = document.querySelector('#empty-admin-state p[data-lang="click_plus_to_add"]');
+                        
+                        if (normalizedSearchTerm) {
+                            noBuildingsMsg.textContent = translate('no_search_results');
+                            clickPlusMsg.textContent = translate('try_different_search');
+                        } else {
+                            noBuildingsMsg.textContent = translate('no_buildings_found');
+                            clickPlusMsg.textContent = translate('click_plus_to_add');
+                        }
                     } else {
                         emptyAdminState.classList.add('hidden');
                         buildings.forEach(building => {
                             const item = document.createElement('div');
                             item.className = 'bg-white p-4 rounded-lg shadow hover:bg-gray-50 cursor-pointer';
                             item.dataset.id = building.id;
+                            const zipBadge = building.zipPostal ? `<span class="bg-blue-100 text-blue-800 text-xs font-medium ${state.currentLang === 'fa' ? 'me-2' : 'ms-2'} px-2.5 py-0.5 rounded-full">${building.zipPostal}</span>` : '';
                             item.innerHTML = `
-                                <h3 class="font-bold text-lg">${building.buildingName}</h3>
-                                <p class="text-gray-600">${building.address || 'No address'}</p>
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="font-bold text-lg">${building.buildingName}</h3>
+                                        <p class="text-gray-600">${building.address || 'No address'}</p>
+                                    </div>
+                                    ${zipBadge}
+                                </div>
                             `;
                             item.addEventListener('click', () => showPage('page-detail', { buildingId: building.id }));
                             buildingList.appendChild(item);
@@ -728,7 +764,7 @@
                 renderFormQRCode: (id) => {
                     const container = document.getElementById('form-qr-code-container');
                     container.innerHTML = '';
-                     const qrCode = new QRCodeStyling({ width: 100, height: 100, data: id, dotsOptions: { color: '#1e3a8a', type: 'rounded' }, backgroundOptions: { color: '#ffffff' } });
+                     const qrCode = new QRCodeStyling({ width: 100, height: 100, data: String(id), dotsOptions: { color: '#1e3a8a', type: 'rounded' }, backgroundOptions: { color: '#ffffff' } });
                      qrCode.append(container);
                 },
                 
@@ -774,6 +810,7 @@
                     headerActions.innerHTML = `<div class="flex items-center space-x-2"><button id="add-building-btn" class="p-2 rounded-full hover:bg-blue-700"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></button><button id="settings-btn" class="p-2 rounded-full hover:bg-blue-700"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></button></div>`;
                     document.getElementById('add-building-btn').onclick = () => showPage('page-form');
                     document.getElementById('settings-btn').onclick = () => showPage('page-settings');
+                    searchBar.value = '';
                     ui.renderAdminList();
                 } else if (pageId === 'page-form') {
                     headerActions.innerHTML = `<button id="save-btn" class="p-2 rounded-full hover:bg-blue-700"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></button>`;
@@ -919,7 +956,7 @@
                             const sanitizedBuildings = buildings.map(b => sanitizeBuilding(b));
                             localStorage.setItem(DB_KEY, JSON.stringify(sanitizedBuildings));
                             ui.showToast('toast_imported', false, {count: sanitizedBuildings.length});
-                            if(state.currentPage === 'page-admin') ui.renderAdminList();
+                            if(state.currentPage === 'page-admin') ui.renderAdminList(searchBar.value);
                         }
                     } catch (err) { ui.showToast('toast_import_fail', true); console.error(err); }
                 };
@@ -967,6 +1004,12 @@
                 }
             });
 
+            // --- EVENT LISTENERS ---
+            searchBar.addEventListener('input', (e) => {
+                if (state.currentPage === 'page-admin') {
+                    ui.renderAdminList(e.target.value);
+                }
+            });
             importFileInput.addEventListener('change', handleImport);
             importFileInputSettings.addEventListener('change', handleImport);
             exportJsonButton.addEventListener('click', () => handleExport('json'));
