@@ -5,17 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Offline Building Info</title>
     
+    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap" rel="stylesheet">
 
 
+    <!-- QR Code Generation and Scanning libraries -->
     <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     
+    <!-- Libraries for CSV and Excel handling -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -24,7 +28,6 @@
         /* Basic styles and theme setup */
         body {
             font-family: 'Ubuntu', sans-serif;
-            background-color: #F7F7F5; /* Notion-like light grey background */
         }
         html[dir="rtl"] body {
             font-family: 'Vazirmatn', sans-serif;
@@ -42,7 +45,7 @@
             margin: 0 auto;
             border-radius: 1rem;
             overflow: hidden;
-            border: 2px solid #EAEAEA; /* Softer border */
+            border: 4px solid #03396c; /* Custom Blue */
         }
         /* Thumbnail styles */
         .thumbnail-container {
@@ -75,7 +78,7 @@
             background: white;
             padding: 8px;
             border-radius: 8px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Softer shadow */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         html[dir="rtl"] #form-qr-code-container {
              right: auto;
@@ -89,7 +92,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.4); /* Slightly lighter overlay */
+            background-color: rgba(0,0,0,0.5);
             z-index: 100;
             display: flex;
             justify-content: center;
@@ -119,7 +122,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 0.75rem 1rem;
-            border-bottom: 1px solid #EAEAEA;
+            border-bottom: 1px solid #e5e7eb;
         }
         #wheel-selector-container {
             height: 224px; /* 5 rows * 40px + padding */
@@ -149,58 +152,11 @@
             right: 0;
             height: 48px;
             transform: translateY(-50%);
-            border-top: 1px solid #EAEAEA;
-            border-bottom: 1px solid #EAEAEA;
+            border-top: 1px solid #d1d5db;
+            border-bottom: 1px solid #d1d5db;
             pointer-events: none;
         }
         
-        /* Notion-Style Adjustments */
-        #app {
-          max-w-5xl mx-auto; /* Wider for a more spacious feel */
-        }
-        header {
-          background-color: #FFFFFF; /* White header */
-          color: #37352F; /* Notion's primary text color */
-          box-shadow: none;
-          border-bottom: 1px solid #EAEAEA;
-        }
-        #back-button {
-          color: #37352F;
-        }
-        .nav-button {
-          background-color: #FFFFFF;
-          color: #37352F;
-          border: 1px solid #EAEAEA;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-          transition: background-color 0.2s;
-        }
-        .nav-button:hover {
-          background-color: #F7F7F5;
-        }
-        #search-bar {
-          background-color: #FFFFFF;
-          border: 1px solid #EAEAEA;
-          box-shadow: none;
-        }
-        #search-bar:focus {
-          border-color: #03396c;
-          box-shadow: 0 0 0 2px rgba(3, 57, 108, 0.2); /* Focus ring */
-        }
-        .bg-white {
-          border: 1px solid #EAEAEA; /* Borders for cards */
-          box-shadow: none;
-        }
-        input[type="text"], input[type="url"], input[type="number"], input[type="email"], select, textarea {
-            background-color: #FFFFFF;
-            border: 1px solid #EAEAEA;
-            box-shadow: none;
-            transition: border-color 0.2s;
-        }
-        input:focus, select:focus, textarea:focus {
-          border-color: #03396c;
-          box-shadow: 0 0 0 2px rgba(3, 57, 108, 0.2); /* Focus ring */
-        }
-
         /* Correctly hide/show desktop vs mobile inputs */
         @media (max-width: 768px) {
             .desktop-input {
@@ -217,8 +173,10 @@
 <body class="bg-gray-100 text-gray-800">
     <div id="save-progress-bar" class="fixed top-0 left-0 h-1 bg-[#01babc] w-0 transition-all duration-500 z-[100]"></div>
 
+    <!-- Main Application Container -->
     <div id="app" class="max-w-4xl mx-auto">
 
+        <!-- Header -->
         <header class="bg-[#03396c] text-white shadow-md sticky top-0 z-50">
             <div class="mx-auto px-4 py-4 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
@@ -233,6 +191,9 @@
         </header>
 
         <main class="p-4 md:p-6">
+            <!-- ========== PAGES ========== -->
+
+            <!-- 1. Home Page -->
             <div id="page-home" class="page active">
                 <div class="flex flex-col space-y-4 max-w-sm mx-auto mt-16 text-center">
                     <button data-target="page-scanner" class="nav-button bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-4 px-6 rounded-lg shadow-lg flex items-center justify-center space-x-3">
@@ -250,23 +211,27 @@
                 </div>
             </div>
 
+            <!-- 2. Admin Page -->
             <div id="page-admin" class="page">
                 <div class="mb-4 sticky top-[64px] bg-gray-100 py-2 z-10">
                     <input type="search" id="search-bar" class="w-full p-3 rounded-lg border-gray-300 shadow-sm focus:border-[#03396c] focus:ring-[#03396c]" autocomplete="off">
                 </div>
                 <div id="building-list" class="space-y-3">
-                    </div>
+                    <!-- Building list items will be inserted here -->
+                </div>
                 <div id="empty-admin-state" class="text-center mt-16 text-gray-500 hidden">
                     <p data-lang="no_buildings_found"></p>
                     <p data-lang="click_plus_to_add"></p>
                 </div>
             </div>
 
+            <!-- 3. Building Form Page -->
             <div id="page-form" class="page relative">
                 <div id="form-qr-code-container" class="hidden md:block"></div>
                 <form id="building-form" class="space-y-6">
                     <input type="hidden" id="id">
                     
+                    <!-- Basic Info & Address Section -->
                     <div class="bg-white p-4 rounded-lg shadow">
                          <h3 class="font-bold text-lg mb-4 border-b pb-2 text-[#03396c]" data-lang="form_section_address"></h3>
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -282,7 +247,7 @@
                                 <label for="city" class="block text-sm font-medium text-gray-700" data-lang="form_city"></label>
                                 <input type="text" id="city" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#03396c] focus:ring-[#03396c]">
                             </div>
-                             <div>
+                              <div>
                                 <label for="stateProvince" class="block text-sm font-medium text-gray-700" data-lang="form_state_province"></label>
                                 <input type="text" id="stateProvince" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#03396c] focus:ring-[#03396c]">
                             </div>
@@ -309,28 +274,33 @@
                                         <input type="text" id="longitude" readonly class="mt-1 bg-gray-100 block w-full rounded-md border-gray-300 shadow-sm">
                                     </div>
                                  </div>
-                                <button type="button" id="get-location-btn" class="w-full mt-2 bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg" data-lang="form_get_location"></button>
-                            </div>
-                        </div>
+                                  <button type="button" id="get-location-btn" class="w-full mt-2 bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg" data-lang="form_get_location"></button>
+                             </div>
+                         </div>
                     </div>
 
+                    <!-- Property Profile Section -->
                     <div class="bg-white p-4 rounded-lg shadow">
                         <h3 class="font-bold text-lg mb-4 border-b pb-2 text-[#03396c]" data-lang="form_section_profile"></h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           <div class="md:col-span-2">
+                           <!-- Property Type -->
+                            <div class="md:col-span-2">
                                 <label for="buildingUseType" class="block text-sm font-medium text-gray-700" data-lang="form_property_type"></label>
                                 <select id="buildingUseType" class="desktop-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#03396c] focus:ring-[#03396c]"></select>
                                 <button type="button" class="mobile-wheel-trigger w-full text-left p-2 mt-1 border border-gray-300 rounded-md shadow-sm" data-target="buildingUseType"></button>
                             </div>
+                            <!-- Year Built -->
                             <div>
                                 <label for="yearBuilt" class="block text-sm font-medium text-gray-700" data-lang="form_year_built"></label>
                                 <input type="number" id="yearBuilt" class="desktop-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#03396c] focus:ring-[#03396c]">
                                 <button type="button" class="mobile-wheel-trigger w-full text-left p-2 mt-1 border border-gray-300 rounded-md shadow-sm" data-target="yearBuilt"></button>
                             </div>
+                            <!-- Square Feet -->
                             <div>
                                 <label for="squareFeet" class="block text-sm font-medium text-gray-700" data-lang="form_sqm"></label>
                                 <input type="number" id="squareFeet" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#03396c] focus:ring-[#03396c]">
                             </div>
+                            <!-- Bedrooms -->
                             <div>
                                 <label for="bedrooms" class="block text-sm font-medium text-gray-700" data-lang="form_bedrooms"></label>
                                 <div class="desktop-input flex items-center mt-1">
@@ -338,8 +308,10 @@
                                     <input type="text" value="0" readonly class="w-full text-center border-t border-b border-gray-300 shadow-sm focus:outline-none py-1.5">
                                     <button type="button" class="stepper-btn bg-gray-200 text-lg font-bold rounded-r px-3 py-1.5" data-target="bedrooms" data-action="increment">+</button>
                                 </div>
-                                 <input type="number" id="bedrooms" class="hidden" value="0"> <button type="button" class="mobile-wheel-trigger w-full text-left p-2 mt-1 border border-gray-300 rounded-md shadow-sm" data-target="bedrooms"></button>
+                                 <input type="number" id="bedrooms" class="hidden" value="0"> <!-- Hidden input for wheel selector -->
+                                 <button type="button" class="mobile-wheel-trigger w-full text-left p-2 mt-1 border border-gray-300 rounded-md shadow-sm" data-target="bedrooms"></button>
                             </div>
+                            <!-- Bathrooms -->
                             <div>
                                 <label for="bathrooms" class="block text-sm font-medium text-gray-700" data-lang="form_bathrooms"></label>
                                  <div class="desktop-input flex items-center mt-1">
@@ -347,9 +319,11 @@
                                     <input type="text" value="0" readonly class="w-full text-center border-t border-b border-gray-300 shadow-sm focus:outline-none py-1.5">
                                     <button type="button" class="stepper-btn bg-gray-200 text-lg font-bold rounded-r px-3 py-1.5" data-target="bathrooms" data-action="increment">+</button>
                                 </div>
-                                <input type="number" id="bathrooms" class="hidden" value="0"> <button type="button" class="mobile-wheel-trigger w-full text-left p-2 mt-1 border border-gray-300 rounded-md shadow-sm" data-target="bathrooms"></button>
+                                <input type="number" id="bathrooms" class="hidden" value="0"> <!-- Hidden input for wheel selector -->
+                                <button type="button" class="mobile-wheel-trigger w-full text-left p-2 mt-1 border border-gray-300 rounded-md shadow-sm" data-target="bathrooms"></button>
                             </div>
-                             <div class="md:col-span-2">
+                             <!-- Garage -->
+                            <div class="md:col-span-2">
                                 <label for="garage" class="block text-sm font-medium text-gray-700" data-lang="form_garage"></label>
                                  <div class="desktop-input flex items-center mt-2">
                                      <input type="checkbox" id="garage" class="h-4 w-4 rounded border-gray-300 text-[#03396c] focus:ring-[#03396c]">
@@ -361,10 +335,11 @@
                     </div>
 
 
-                    <div class="bg-white p-4 rounded-lg shadow">
+                    <!-- Financial Section -->
+                     <div class="bg-white p-4 rounded-lg shadow">
                          <h3 class="font-bold text-lg mb-4 border-b pb-2 text-[#03396c]" data-lang="form_section_financials"></h3>
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
+                             <div>
                                 <label for="loanAmount" class="block text-sm font-medium text-gray-700" data-lang="form_loan_amount"></label>
                                 <input type="number" id="loanAmount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#03396c] focus:ring-[#03396c]">
                                 <span id="loanAmount-formatted" class="text-sm text-gray-500 block mt-1"></span>
@@ -394,7 +369,7 @@
                                 <input type="number" id="housingDues" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#03396c] focus:ring-[#03396c]">
                                 <span id="housingDues-formatted" class="text-sm text-gray-500 block mt-1"></span>
                             </div>
-                              <div>
+                             <div>
                                 <label for="tax" class="block text-sm font-medium text-gray-700" data-lang="form_tax"></label>
                                 <input type="number" id="tax" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#03396c] focus:ring-[#03396c]">
                                 <span id="tax-formatted" class="text-sm text-gray-500 block mt-1"></span>
@@ -404,23 +379,26 @@
                                 <input type="number" id="insurance" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#03396c] focus:ring-[#03396c]">
                                 <span id="insurance-formatted" class="text-sm text-gray-500 block mt-1"></span>
                             </div>
-                        </div>
+                         </div>
                     </div>
 
+                    <!-- Photos Section -->
                     <div class="bg-white p-4 rounded-lg shadow">
                          <h3 class="font-bold text-lg mb-4 border-b pb-2 text-[#03396c]" data-lang="form_section_photos"></h3>
                          <p class="text-sm text-gray-500 mb-4" data-lang="form_photos_note"></p>
                          <div class="flex space-x-4">
                              <label for="photo-upload" class="flex-1 text-center bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg cursor-pointer" data-lang="form_upload_gallery"></label>
                              <input type="file" id="photo-upload" class="hidden" accept="image/*" multiple>
-                            
+                             
                              <label for="photo-capture" class="flex-1 text-center bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg cursor-pointer" data-lang="form_take_photo"></label>
                              <input type="file" id="photo-capture" class="hidden" accept="image/*" capture="environment">
-                        </div>
+                         </div>
                          <div id="photo-thumbnails" class="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-                            </div>
+                            <!-- Image thumbnails will be added here -->
+                         </div>
                     </div>
 
+                    <!-- Notes Section -->
                     <div class="bg-white p-4 rounded-lg shadow">
                          <h3 class="font-bold text-lg mb-4 border-b pb-2 text-[#03396c]" data-lang="form_section_notes"></h3>
                         <textarea id="notes" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#03396c] focus:ring-[#03396c]"></textarea>
@@ -429,11 +407,14 @@
                 </form>
             </div>
 
+            <!-- 4. Building Detail Page -->
             <div id="page-detail" class="page">
                 <div id="detail-content" class="space-y-4">
-                    </div>
+                    <!-- Detail rows and QR code will be inserted here -->
+                </div>
             </div>
 
+            <!-- 5. QR Scanner Page -->
             <div id="page-scanner" class="page">
                 <div id="qr-reader-container">
                     <div id="qr-reader"></div>
@@ -441,6 +422,7 @@
                 <p class="text-center text-gray-500 mt-4" data-lang="scan_instruction"></p>
             </div>
             
+            <!-- 6. Settings Page -->
             <div id="page-settings" class="page">
                 <div class="space-y-4">
                     <div>
@@ -484,6 +466,7 @@
             </div>
         </main>
         
+        <!-- Wheel Selector Modal -->
         <div id="wheel-selector-overlay">
             <div id="wheel-selector">
                 <div id="wheel-selector-header">
@@ -500,6 +483,7 @@
             </div>
         </div>
 
+        <!-- Global Toast/Notification -->
         <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300 opacity-0">
             <p id="toast-message"></p>
         </div>
@@ -812,9 +796,9 @@
                         mainInfoSection.lastChild.appendChild(webpageRow);
                     }
                      if (building.latitude && building.longitude) {
-                         const locationRow = document.createElement('div');
-                         locationRow.innerHTML = `<p class="text-sm font-medium text-gray-500">${translate('form_section_location')}</p><a href="https://www.google.com/maps?q=${building.latitude},${building.longitude}" target="_blank" rel="noopener noreferrer" class="text-[#03396c] hover:underline">${building.latitude}, ${building.longitude}</a>`;
-                         mainInfoSection.lastChild.appendChild(locationRow);
+                        const locationRow = document.createElement('div');
+                        locationRow.innerHTML = `<p class="text-sm font-medium text-gray-500">${translate('form_section_location')}</p><a href="https://www.google.com/maps?q=${building.latitude},${building.longitude}" target="_blank" rel="noopener noreferrer" class="text-[#03396c] hover:underline">${building.latitude}, ${building.longitude}</a>`;
+                        mainInfoSection.lastChild.appendChild(locationRow);
                     }
                     content.appendChild(mainInfoSection);
 
@@ -848,7 +832,7 @@
                          const photoGrid = document.createElement('div');
                          photoGrid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4';
                          building.photos.forEach(photoSrc => {
-                             photoGrid.innerHTML += `<img src="${photoSrc}" class="rounded-lg w-full h-auto object-cover shadow-md">`;
+                            photoGrid.innerHTML += `<img src="${photoSrc}" class="rounded-lg w-full h-auto object-cover shadow-md">`;
                          });
                          photoSection.lastChild.appendChild(photoGrid);
                          content.appendChild(photoSection);
@@ -877,7 +861,7 @@
                         img.className = 'w-full h-auto rounded-lg shadow';
                         const deleteBtn = document.createElement('div');
                         deleteBtn.className = 'thumbnail-delete';
-                        deleteBtn.innerHTML = '×';
+                        deleteBtn.innerHTML = '&times;';
                         deleteBtn.onclick = () => {
                             state.photoCache.splice(index, 1);
                             ui.renderPhotoThumbnails();
@@ -956,7 +940,7 @@
                     } else {
                         selectedValue = state.wheel.targetInput.value;
                     }
-                    
+                   
                     const selectedIndex = options.findIndex(opt => String(opt.value) === String(selectedValue));
                     const initialScrollTop = selectedIndex > -1 ? selectedIndex * state.wheel.itemHeight : 0;
                     wheelContainer.scrollTop = initialScrollTop;
@@ -1008,15 +992,15 @@
                         const text = selectedOption.textContent;
 
                         if(state.wheel.targetInput.id === 'garage') {
-                             state.wheel.targetInput.checked = (value === 'Yes');
+                            state.wheel.targetInput.checked = (value === 'Yes');
                         } else {
-                             state.wheel.targetInput.value = value;
+                            state.wheel.targetInput.value = value;
                         }
                         
                         if(state.wheel.targetInput.id === 'bedrooms' || state.wheel.targetInput.id === 'bathrooms') {
                              const stepperInput = document.querySelector(`.desktop-input input[readonly]`);
                              if(stepperInput && stepperInput.parentElement.previousElementSibling.htmlFor === state.wheel.targetInput.id) {
-                                 stepperInput.value = value;
+                                stepperInput.value = value;
                              }
                         }
 
@@ -1125,8 +1109,8 @@
 
                         if(params.isNewSave) {
                              setTimeout(() => {
-                                 const qrCard = document.getElementById('qr-code-card');
-                                 if(qrCard) qrCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                const qrCard = document.getElementById('qr-code-card');
+                                if(qrCard) qrCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                              }, 100);
                         }
                     }
