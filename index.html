@@ -8,10 +8,11 @@
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Font -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+
 
     <!-- QR Code Generation and Scanning libraries -->
     <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
@@ -26,6 +27,9 @@
         /* Basic styles and theme setup */
         body {
             font-family: 'Inter', sans-serif;
+        }
+        html[dir="rtl"] body {
+            font-family: 'Noto Sans Arabic', 'Inter', sans-serif;
         }
         .page {
             display: none; /* Hide all pages by default */
@@ -217,34 +221,42 @@
                              <div>
                                 <label for="loanAmount" class="block text-sm font-medium text-gray-700" data-lang="form_loan_amount"></label>
                                 <input type="number" id="loanAmount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <span id="loanAmount-formatted" class="text-sm text-gray-500 block mt-1"></span>
                             </div>
                               <div>
                                 <label for="assessedValue" class="block text-sm font-medium text-gray-700" data-lang="form_assessed_value"></label>
                                 <input type="number" id="assessedValue" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <span id="assessedValue-formatted" class="text-sm text-gray-500 block mt-1"></span>
                             </div>
                             <div>
                                 <label for="currentValue" class="block text-sm font-medium text-gray-700" data-lang="form_current_value"></label>
                                 <input type="number" id="currentValue" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <span id="currentValue-formatted" class="text-sm text-gray-500 block mt-1"></span>
                             </div>
                               <div>
                                 <label for="downPayment" class="block text-sm font-medium text-gray-700" data-lang="form_down_payment"></label>
                                 <input type="number" id="downPayment" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <span id="downPayment-formatted" class="text-sm text-gray-500 block mt-1"></span>
                             </div>
                             <div>
                                 <label for="monthlyMortgage" class="block text-sm font-medium text-gray-700" data-lang="form_monthly_mortgage"></label>
                                 <input type="number" id="monthlyMortgage" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <span id="monthlyMortgage-formatted" class="text-sm text-gray-500 block mt-1"></span>
                             </div>
                              <div>
                                 <label for="housingDues" class="block text-sm font-medium text-gray-700" data-lang="form_housing_dues"></label>
                                 <input type="number" id="housingDues" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <span id="housingDues-formatted" class="text-sm text-gray-500 block mt-1"></span>
                             </div>
                              <div>
                                 <label for="tax" class="block text-sm font-medium text-gray-700" data-lang="form_tax"></label>
                                 <input type="number" id="tax" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <span id="tax-formatted" class="text-sm text-gray-500 block mt-1"></span>
                             </div>
                              <div>
                                 <label for="insurance" class="block text-sm font-medium text-gray-700" data-lang="form_insurance"></label>
                                 <input type="number" id="insurance" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <span id="insurance-formatted" class="text-sm text-gray-500 block mt-1"></span>
                             </div>
                          </div>
                     </div>
@@ -374,150 +386,45 @@
             // --- TRANSLATIONS ---
             const translations = {
                 en: {
-                    app_title: "Building Information Hub",
-                    admin_title: "Admin: Records",
-                    add_building_title: "Add Building",
-                    edit_building_title: "Edit Building",
-                    detail_title_prefix: "",
-                    scan_title: "Scan QR Code",
-                    settings_title: "Settings & Data",
-                    scan_qr: "Scan Building QR Code",
-                    add_building: "Add Building",
-                    import_data_file: "Import Building Data File (JSON, CSV, Excel)",
-                    no_buildings_found: "No buildings found.",
-                    click_plus_to_add: "Click the '+' button to add one.",
-                    form_section_address: "Address & Basic Info",
-                    form_building_name: "Building Name / Profile Name *",
-                    form_street: "Street",
-                    form_city: "City",
-                    form_state_province: "State/Province",
-                    form_zip_postal: "Zip/Postal Code",
-                    form_country: "Country/Region",
-                    form_webpage: "Web Page",
-                    form_section_profile: "Property Profile",
-                    form_property_type: "Property Type",
-                    form_year_built: "Year Built",
-                    form_sqm: "Square Meters (m²)",
-                    form_bedrooms: "Bedrooms",
-                    form_bathrooms: "Bathrooms",
-                    form_garage: "Garage",
-                    form_eu_classification: "EU Building Classification (CC)",
-                    form_section_financials: "Financials",
-                    form_loan_amount: "Loan Amount",
-                    form_assessed_value: "Assessed Value",
-                    form_current_value: "Current Value",
-                    form_down_payment: "Down Payment",
-                    form_monthly_mortgage: "Monthly Mortgage",
-                    form_housing_dues: "Housing Dues",
-                    form_tax: "Tax",
-                    form_insurance: "Insurance",
-                    form_section_location: "GPS Location",
-                    form_latitude: "Latitude",
-                    form_longitude: "Longitude",
-                    form_get_location: "Get Current Location",
-                    form_section_photos: "Photos",
-                    form_photos_note: "Note: Storing many large photos may slow down the app. Storage is limited by your browser.",
-                    form_upload_gallery: "Upload from Gallery",
-                    form_take_photo: "Take Photo",
+                    app_title: "Building Information Hub", admin_title: "Admin: Records", add_building_title: "Add Building", edit_building_title: "Edit Building", detail_title_prefix: "", scan_title: "Scan QR Code", settings_title: "Settings & Data", scan_qr: "Scan Building QR Code", add_building: "Add Building", import_data_file: "Import Building Data File (JSON, CSV, Excel)",
+                    no_buildings_found: "No buildings found.", click_plus_to_add: "Click the '+' button to add one.",
+                    form_section_address: "Address & Basic Info", form_building_name: "Building Name / Profile Name *", form_street: "Street", form_city: "City", form_state_province: "State/Province", form_zip_postal: "Zip/Postal Code", form_country: "Country/Region", form_webpage: "Web Page",
+                    form_section_profile: "Property Profile", form_property_type: "Property Type", form_year_built: "Year Built", form_sqm: "Square Meters (m²)", form_bedrooms: "Bedrooms", form_bathrooms: "Bathrooms", form_garage: "Garage", form_eu_classification: "EU Building Classification (CC)",
+                    form_property_type_residential: 'Residential', form_property_type_commercial: 'Commercial', form_property_type_industrial: 'Industrial', form_property_type_institutional: 'Institutional', form_property_type_mixed: 'Mixed-Use', form_property_type_other: 'Other',
+                    form_eu_select: 'Select a classification...', form_eu_111: 'Residential - One-dwelling', form_eu_112: 'Residential - Multi-dwelling', form_eu_122: 'Commercial - Office Building', form_eu_123: 'Commercial - Wholesale and retail trade', form_eu_125: 'Commercial - Industrial and warehouse', form_eu_126: 'Public - Entertainment, education, hospital', form_eu_127: 'Other non-residential',
+                    form_section_financials: "Financials", form_loan_amount: "Loan Amount", form_assessed_value: "Assessed Value", form_current_value: "Current Value", form_down_payment: "Down Payment", form_monthly_mortgage: "Monthly Mortgage", form_housing_dues: "Housing Dues", form_tax: "Tax", form_insurance: "Insurance",
+                    form_section_location: "GPS Location", form_latitude: "Latitude", form_longitude: "Longitude", form_get_location: "Get Current Location",
+                    form_section_photos: "Photos", form_photos_note: "Note: Storing many large photos may slow down the app. Storage is limited by your browser.", form_upload_gallery: "Upload from Gallery", form_take_photo: "Take Photo",
                     form_section_notes: "Notes",
                     scan_instruction: "Point your camera at a QR code. Accessing your camera is required.",
-                    settings_import_title: "Import Data",
-                    settings_import_button: "Import from File",
-                    settings_import_desc: "Overwrite data from a JSON, CSV, or Excel file.",
-                    settings_export_title: "Export Data",
-                    settings_export_json: "Export as JSON",
-                    settings_export_json_desc: "Best for backups and re-importing.",
-                    settings_export_csv: "Export as CSV",
-                    settings_export_csv_desc: "Good for spreadsheets.",
-                    settings_export_xlsx: "Export as Excel (XLSX)",
-                    settings_export_xlsx_desc: "Best for Excel users.",
-                    confirm_delete: "Are you sure you want to delete this building?",
-                    confirm_import: "This will import {count} records and overwrite all existing data. Are you sure?",
-                    toast_saved: "Building saved successfully!",
-                    toast_deleted: "Building deleted.",
-                    toast_no_data_export: "No data to export.",
-                    toast_exported: "Data exported as {format} successfully!",
-                    toast_imported: "{count} buildings imported successfully!",
-                    toast_import_fail: "Failed to import file. Make sure it's a valid and correctly formatted file.",
-                    toast_location_captured: "Location captured!",
-                    toast_location_fail: "Could not get location. Please enable GPS.",
-                    toast_geo_unsupported: "Geolocation is not supported by your browser.",
-                    toast_camera_fail: "Could not start camera. Please grant permission.",
-                    toast_qr_not_found: "Building not found in local data.",
-                    toast_fill_fields: "Please fill in all required fields."
+                    settings_import_title: "Import Data", settings_import_button: "Import from File", settings_import_desc: "Overwrite data from a JSON, CSV, or Excel file.",
+                    settings_export_title: "Export Data", settings_export_json: "Export as JSON", settings_export_json_desc: "Best for backups and re-importing.", settings_export_csv: "Export as CSV", settings_export_csv_desc: "Good for spreadsheets.", settings_export_xlsx: "Export as Excel (XLSX)", settings_export_xlsx_desc: "Best for Excel users.",
+                    confirm_delete: "Are you sure you want to delete this building?", confirm_import: "This will import {count} records and overwrite all existing data. Are you sure?",
+                    toast_saved: "Building saved successfully!", toast_deleted: "Building deleted.", toast_no_data_export: "No data to export.", toast_exported: "Data exported as {format} successfully!", toast_imported: "{count} buildings imported successfully!", toast_import_fail: "Failed to import file. Make sure it's a valid and correctly formatted file.",
+                    toast_location_captured: "Location captured!", toast_location_fail: "Could not get location. Please enable GPS.", toast_geo_unsupported: "Geolocation is not supported by your browser.",
+                    toast_camera_fail: "Could not start camera. Please grant permission.", toast_qr_not_found: "Building not found in local data.", toast_fill_fields: "Please fill in all required fields.",
+                    yes: "Yes", no: "No", detail_full_address: "Full Address", detail_other_info: "Other Information", detail_open_maps: "Open in Google Maps", detail_qr_code: "Building QR Code", detail_download_qr: "Download QR Code"
                 },
                 fa: {
-                    app_title: "مرکز اطلاعات ساختمان",
-                    admin_title: "مدیریت: رکوردها",
-                    add_building_title: "افزودن ساختمان",
-                    edit_building_title: "ویرایش ساختمان",
-                    detail_title_prefix: "",
-                    scan_title: "اسکن کد QR",
-                    settings_title: "تنظیمات و داده‌ها",
-                    scan_qr: "اسکن کد QR ساختمان",
-                    add_building: "افزودن ساختمان",
-                    import_data_file: "ورود اطلاعات از فایل (JSON, CSV, Excel)",
-                    no_buildings_found: "هیچ ساختمانی یافت نشد.",
-                    click_plus_to_add: "برای افزودن، روی دکمه '+' کلیک کنید.",
-                    form_section_address: "آدرس و اطلاعات اولیه",
-                    form_building_name: "نام ساختمان / نام پروفایل *",
-                    form_street: "خیابان",
-                    form_city: "شهر",
-                    form_state_province: "استان/ایالت",
-                    form_zip_postal: "کد پستی",
-                    form_country: "کشور",
-                    form_webpage: "صفحه وب",
-                    form_section_profile: "مشخصات ملک",
-                    form_property_type: "نوع ملک",
-                    form_year_built: "سال ساخت",
-                    form_sqm: "متر مربع (m²)",
-                    form_bedrooms: "اتاق خواب",
-                    form_bathrooms: "حمام",
-                    form_garage: "پارکینگ",
-                    form_eu_classification: "طبقه‌بندی ساختمان (EU)",
-                    form_section_financials: "اطلاعات مالی",
-                    form_loan_amount: "مبلغ وام",
-                    form_assessed_value: "ارزش ارزیابی شده",
-                    form_current_value: "ارزش فعلی",
-                    form_down_payment: "پیش پرداخت",
-                    form_monthly_mortgage: "قسط ماهانه",
-                    form_housing_dues: "شارژ ساختمان",
-                    form_tax: "مالیات",
-                    form_insurance: "بیمه",
-                    form_section_location: "موقعیت GPS",
-                    form_latitude: "عرض جغرافیایی",
-                    form_longitude: "طول جغرافیایی",
-                    form_get_location: "دریافت موقعیت مکانی فعلی",
-                    form_section_photos: "عکس‌ها",
-                    form_photos_note: "توجه: ذخیره عکس‌های زیاد و بزرگ ممکن است سرعت برنامه را کاهش دهد. فضای ذخیره‌سازی توسط مرورگر شما محدود است.",
-                    form_upload_gallery: "آپلود از گالری",
-                    form_take_photo: "گرفتن عکس",
+                    app_title: "مرکز اطلاعات ساختمان", admin_title: "مدیریت: رکوردها", add_building_title: "افزودن ساختمان", edit_building_title: "ویرایش ساختمان", detail_title_prefix: "", scan_title: "اسکن کد QR", settings_title: "تنظیمات و داده‌ها",
+                    scan_qr: "اسکن کد QR ساختمان", add_building: "افزودن ساختمان", import_data_file: "ورود اطلاعات از فایل (JSON, CSV, Excel)",
+                    no_buildings_found: "هیچ ساختمانی یافت نشد.", click_plus_to_add: "برای افزودن، روی دکمه '+' کلیک کنید.",
+                    form_section_address: "آدرس و اطلاعات اولیه", form_building_name: "نام ساختمان / نام پروفایل *", form_street: "خیابان", form_city: "شهر", form_state_province: "استان/ایالت", form_zip_postal: "کد پستی", form_country: "کشور", form_webpage: "صفحه وب",
+                    form_section_profile: "مشخصات ملک", form_property_type: "نوع ملک", form_year_built: "سال ساخت", form_sqm: "متر مربع (m²)", form_bedrooms: "اتاق خواب", form_bathrooms: "حمام", form_garage: "پارکینگ", form_eu_classification: "طبقه‌بندی ساختمان (EU)",
+                    form_property_type_residential: 'مسکونی', form_property_type_commercial: 'تجاری', form_property_type_industrial: 'صنعتی', form_property_type_institutional: 'اداری', form_property_type_mixed: 'مختلط', form_property_type_other: 'دیگر',
+                    form_eu_select: 'یک طبقه‌بندی انتخاب کنید...', form_eu_111: 'مسکونی - یک واحدی', form_eu_112: 'مسکونی - چند واحدی', form_eu_122: 'تجاری - اداری', form_eu_123: 'تجاری - عمده و خرده فروشی', form_eu_125: 'صنعتی و انبار', form_eu_126: 'عمومی - تفریحی، آموزشی، بیمارستانی', form_eu_127: 'سایر غیرمسکونی‌ها',
+                    form_section_financials: "اطلاعات مالی", form_loan_amount: "مبلغ وام", form_assessed_value: "ارزش ارزیابی شده", form_current_value: "ارزش فعلی", form_down_payment: "پیش پرداخت", form_monthly_mortgage: "قسط ماهانه", form_housing_dues: "شارژ ساختمان", form_tax: "مالیات", form_insurance: "بیمه",
+                    form_section_location: "موقعیت GPS", form_latitude: "عرض جغرافیایی", form_longitude: "طول جغرافیایی", form_get_location: "دریافت موقعیت مکانی فعلی",
+                    form_section_photos: "عکس‌ها", form_photos_note: "توجه: ذخیره عکس‌های زیاد و بزرگ ممکن است سرعت برنامه را کاهش دهد. فضای ذخیره‌سازی توسط مرورگر شما محدود است.", form_upload_gallery: "آپلود از گالری", form_take_photo: "گرفتن عکس",
                     form_section_notes: "یادداشت‌ها",
                     scan_instruction: "دوربین خود را به سمت کد QR بگیرید. دسترسی به دوربین الزامی است.",
-                    settings_import_title: "ورود داده",
-                    settings_import_button: "ورود از فایل",
-                    settings_import_desc: "بازنویسی داده‌ها از فایل JSON، CSV یا Excel.",
-                    settings_export_title: "خروج داده",
-                    settings_export_json: "خروجی به صورت JSON",
-                    settings_export_json_desc: "بهترین گزینه برای پشتیبان‌گیری و ورود مجدد.",
-                    settings_export_csv: "خروجی به صورت CSV",
-                    settings_export_csv_desc: "مناسب برای صفحات گسترده.",
-                    settings_export_xlsx: "خروجی به صورت Excel (XLSX)",
-                    settings_export_xlsx_desc: "بهترین گزینه برای کاربران اکسل.",
-                    confirm_delete: "آیا از حذف این ساختمان مطمئن هستید؟",
-                    confirm_import: "این عملیات {count} رکورد را وارد کرده و تمام داده‌های موجود را بازنویسی می‌کند. آیا مطمئن هستید؟",
-                    toast_saved: "ساختمان با موفقیت ذخیره شد!",
-                    toast_deleted: "ساختمان حذف شد.",
-                    toast_no_data_export: "داده‌ای برای خروج وجود ندارد.",
-                    toast_exported: "داده‌ها با موفقیت به صورت {format} خروجی گرفته شد!",
-                    toast_imported: "{count} ساختمان با موفقیت وارد شد!",
-                    toast_import_fail: "ورود فایل ناموفق بود. از معتبر و صحیح بودن فرمت فایل اطمینان حاصل کنید.",
-                    toast_location_captured: "موقعیت مکانی ثبت شد!",
-                    toast_location_fail: "دریافت موقعیت مکانی ناموفق بود. لطفاً GPS را فعال کنید.",
-                    toast_geo_unsupported: "مرورگر شما از موقعیت‌یابی جغرافیایی پشتیبانی نمی‌کند.",
-                    toast_camera_fail: "دوربین فعال نشد. لطفاً دسترسی را مجاز کنید.",
-                    toast_qr_not_found: "ساختمان در داده‌های محلی یافت نشد.",
-                    toast_fill_fields: "لطفاً تمام فیلدهای الزامی را پر کنید."
+                    settings_import_title: "ورود داده", settings_import_button: "ورود از فایل", settings_import_desc: "بازنویسی داده‌ها از فایل JSON، CSV یا Excel.",
+                    settings_export_title: "خروج داده", settings_export_json: "خروجی به صورت JSON", settings_export_json_desc: "بهترین گزینه برای پشتیبان‌گیری و ورود مجدد.", settings_export_csv: "خروجی به صورت CSV", settings_export_csv_desc: "مناسب برای صفحات گسترده.", settings_export_xlsx: "خروجی به صورت Excel (XLSX)", settings_export_xlsx_desc: "بهترین گزینه برای کاربران اکسل.",
+                    confirm_delete: "آیا از حذف این ساختمان مطمئن هستید؟", confirm_import: "این عملیات {count} رکورد را وارد کرده و تمام داده‌های موجود را بازنویسی می‌کند. آیا مطمئن هستید؟",
+                    toast_saved: "ساختمان با موفقیت ذخیره شد!", toast_deleted: "ساختمان حذف شد.", toast_no_data_export: "داده‌ای برای خروج وجود ندارد.", toast_exported: "داده‌ها با موفقیت به صورت {format} خروجی گرفته شد!", toast_imported: "{count} ساختمان با موفقیت وارد شد!", toast_import_fail: "ورود فایل ناموفق بود. از معتبر و صحیح بودن فرمت فایل اطمینان حاصل کنید.",
+                    toast_location_captured: "موقعیت مکانی ثبت شد!", toast_location_fail: "دریافت موقعیت مکانی ناموفق بود. لطفاً GPS را فعال کنید.", toast_geo_unsupported: "مرورگر شما از موقعیت‌یابی جغرافیایی پشتیبانی نمی‌کند.",
+                    toast_camera_fail: "دوربین فعال نشد. لطفاً دسترسی را مجاز کنید.", toast_qr_not_found: "ساختمان در داده‌های محلی یافت نشد.", toast_fill_fields: "لطفاً تمام فیلدهای الزامی را پر کنید.",
+                    yes: "بله", no: "خیر", detail_full_address: "آدرس کامل", detail_other_info: "سایر اطلاعات", detail_open_maps: "باز کردن در نقشه گوگل", detail_qr_code: "کد QR ساختمان", detail_download_qr: "دانلود کد QR"
                 }
             };
 
@@ -528,6 +435,16 @@
                 }
                 return text;
             }
+
+            const formatCurrency = (number) => {
+                if (isNaN(number) || number === '' || number === null) return '';
+                const numericValue = Number(number);
+                if (state.currentLang === 'fa') {
+                    return new Intl.NumberFormat('fa-IR', { style: 'currency', currency: 'IRR', minimumFractionDigits: 0 }).format(numericValue);
+                } else {
+                    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(numericValue); // Using de-DE for Euro formatting
+                }
+            };
 
             // --- DOM ELEMENTS ---
             const pages = document.querySelectorAll('.page');
@@ -700,8 +617,12 @@
                          return row;
                     };
 
-                    const addField = (section, labelKey, value) => {
-                        const row = createFieldRow(labelKey, value);
+                    const addField = (section, labelKey, value, isCurrency = false) => {
+                        let displayValue = value;
+                        if (isCurrency) {
+                            displayValue = formatCurrency(value);
+                        }
+                        const row = createFieldRow(labelKey, displayValue);
                         if(row) section.lastChild.appendChild(row);
                     }
 
@@ -727,14 +648,14 @@
                     if (profileSection.lastChild.children.length > 0) content.appendChild(profileSection);
 
                     const financialSection = createSection('form_section_financials');
-                    addField(financialSection, 'form_loan_amount', building.loanAmount);
-                    addField(financialSection, 'form_assessed_value', building.assessedValue);
-                    addField(financialSection, 'form_current_value', building.currentValue);
-                    addField(financialSection, 'form_down_payment', building.downPayment);
-                    addField(financialSection, 'form_monthly_mortgage', building.monthlyMortgage);
-                    addField(financialSection, 'form_housing_dues', building.housingDues);
-                    addField(financialSection, 'form_tax', building.tax);
-                    addField(financialSection, 'form_insurance', building.insurance);
+                    addField(financialSection, 'form_loan_amount', building.loanAmount, true);
+                    addField(financialSection, 'form_assessed_value', building.assessedValue, true);
+                    addField(financialSection, 'form_current_value', building.currentValue, true);
+                    addField(financialSection, 'form_down_payment', building.downPayment, true);
+                    addField(financialSection, 'form_monthly_mortgage', building.monthlyMortgage, true);
+                    addField(financialSection, 'form_housing_dues', building.housingDues, true);
+                    addField(financialSection, 'form_tax', building.tax, true);
+                    addField(financialSection, 'form_insurance', building.insurance, true);
                     if (financialSection.lastChild.children.length > 0) content.appendChild(financialSection);
 
                     const otherSection = createSection('detail_other_info');
@@ -868,6 +789,12 @@
                     }
                     ui.renderFormQRCode(currentId);
                     ui.renderPhotoThumbnails();
+                    document.querySelectorAll('#building-form input[type="number"]').forEach(input => {
+                        const formattedEl = document.getElementById(`${input.id}-formatted`);
+                        if (formattedEl) {
+                             formattedEl.textContent = formatCurrency(input.value);
+                        }
+                    });
                 } else if (pageId === 'page-detail') {
                     const building = db.getById(params.buildingId);
                     if (building) {
@@ -1002,9 +929,20 @@
                 state.currentLang = state.currentLang === 'en' ? 'fa' : 'en';
                 localStorage.setItem(LANG_KEY, state.currentLang);
                 ui.updateText();
-                showPage(state.currentPage, { buildingId: document.getElementById('building-id-input').value }, true); // Re-render current page
+                // To refresh the current page with the new language
+                const currentBuildingId = document.getElementById('building-id-input')?.value;
+                showPage(state.currentPage, { buildingId: currentBuildingId }, true); 
             });
             
+            document.querySelectorAll('#building-form input[type="number"]').forEach(input => {
+                const formattedEl = document.getElementById(`${input.id}-formatted`);
+                if (formattedEl) {
+                    input.addEventListener('input', () => {
+                        formattedEl.textContent = formatCurrency(input.value);
+                    });
+                }
+            });
+
             importFileInput.addEventListener('change', handleImport);
             importFileInputSettings.addEventListener('change', handleImport);
             exportJsonButton.addEventListener('click', () => handleExport('json'));
