@@ -536,6 +536,7 @@
                     toast_saved: "Building saved successfully!", toast_deleted: "Building deleted.", toast_no_data_export: "No data to export.", toast_exported: "Data exported as {format} successfully!", toast_imported: "{count} buildings imported successfully!", toast_import_fail: "Failed to import file. Make sure it's a valid and correctly formatted file.",
                     toast_location_captured: "Location captured!", toast_location_fail: "Could not get location. Please enable GPS.", toast_geo_unsupported: "Geolocation is not supported by your browser.",
                     toast_camera_fail: "Could not start camera. Please grant permission.", toast_qr_not_found: "Building not found in local data.", toast_fill_fields: "Please fill in all required fields.",
+                    toast_photo_loading: "Please wait for photos to finish loading.", toast_photo_fail: "Failed to load photo. Please try again.",
                     yes: "Yes", no: "No", cancel: "Cancel", done: "Done", detail_full_address: "Full Address", detail_other_info: "Other Information", detail_open_maps: "Open in Google Maps", detail_qr_code: "Building QR Code", detail_download_qr: "Download QR Code"
                 },
                 fa: {
@@ -557,6 +558,7 @@
                     toast_saved: "ساختمان با موفقیت ذخیره شد!", toast_deleted: "ساختمان حذف شد.", toast_no_data_export: "داده‌ای برای خروج وجود ندارد.", toast_exported: "داده‌ها با موفقیت به صورت {format} خروجی گرفته شد!", toast_imported: "{count} ساختمان با موفقیت وارد شد!", toast_import_fail: "ورود فایل ناموفق بود. از معتبر و صحیح بودن فرمت فایل اطمینان حاصل کنید.",
                     toast_location_captured: "موقعیت مکانی ثبت شد!", toast_location_fail: "دریافت موقعیت مکانی ناموفق بود. لطفاً GPS را فعال کنید.", toast_geo_unsupported: "مرورگر شما از موقعیت‌یابی جغرافیایی پشتیبانی نمی‌کند.",
                     toast_camera_fail: "دوربین فعال نشد. لطفاً دسترسی را مجاز کنید.", toast_qr_not_found: "ساختمان در داده‌های محلی یافت نشد.", toast_fill_fields: "لطفاً تمام فیلدهای الزامی را پر کنید.",
+                    toast_photo_loading: "لطفاً منتظر بمانید تا بارگذاری عکس‌ها تمام شود.", toast_photo_fail: "بارگذاری عکس ناموفق بود. لطفاً دوباره تلاش کنید.",
                     yes: "بله", no: "خیر", cancel: "لغو", done: "تایید", detail_full_address: "آدرس کامل", detail_other_info: "سایر اطلاعات", detail_open_maps: "باز کردن در نقشه گوگل", detail_qr_code: "کد QR ساختمان", detail_download_qr: "دانلود کد QR"
                 }
             };
@@ -753,7 +755,7 @@
                     }
                 },
                 
-                renderDetail: (building) => { // Removed isAdminView, QR code is always shown now
+                renderDetail: (building) => {
                     const content = document.getElementById('detail-content');
                     content.innerHTML = '';
 
@@ -788,7 +790,6 @@
                         if(row) section.lastChild.appendChild(row);
                     }
 
-                    // Render all sections
                     const mainInfoSection = createSection(null);
                     addField(mainInfoSection, 'form_building_name', building.buildingName);
                     const fullAddress = [building.address, building.city, building.stateProvince, building.zipPostal, building.country].filter(Boolean).join(', ');
@@ -841,7 +842,6 @@
                          content.appendChild(photoSection);
                     }
 
-                    // Always render the QR code
                     const qrCard = document.createElement('div');
                     qrCard.className = 'bg-white p-6 rounded-lg shadow text-center mt-4';
                     qrCard.innerHTML = `<h3 class="text-lg font-bold text-[#03396c] mb-2">${translate('detail_qr_code')}</h3><div id="detail-qr-code-container" class="mt-4 flex justify-center"></div><div class="mt-6"><button id="detail-download-qr-button" class="bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg">${translate('detail_download_qr')}</button></div>`;
@@ -1003,7 +1003,6 @@
                             state.wheel.targetInput.value = value;
                         }
                         
-                        // Update stepper inputs for bedrooms/bathrooms
                         if(state.wheel.targetInput.id === 'bedrooms' || state.wheel.targetInput.id === 'bathrooms') {
                              const stepperInput = document.querySelector(`.desktop-input input[readonly][data-target="${state.wheel.targetInput.id}"]`) || document.querySelector(`.desktop-input input[readonly]`);
                              if(stepperInput && stepperInput.parentElement.previousElementSibling.htmlFor === state.wheel.targetInput.id) {
@@ -1124,9 +1123,16 @@
             document.querySelectorAll('.nav-button').forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.target)));
 
             const handleFormSave = () => {
-                if (!form.checkValidity()) { ui.showToast('toast_fill_fields', true); return; }
+                if (state.photosLoading > 0) {
+                    ui.showToast('toast_photo_loading', true);
+                    return;
+                }
+
+                if (!form.checkValidity()) {
+                    ui.showToast('toast_fill_fields', true);
+                    return;
+                }
                 
-                // Show progress bar
                 saveProgressBar.style.width = '100%';
 
                 const buildingData = {};
@@ -1141,16 +1147,12 @@
                 db.save(buildingData);
                 ui.showToast('toast_saved');
 
-                // Navigate after a short delay to let user see progress bar
                 setTimeout(() => {
                     if (state.isNewFormEntry) {
-                        // After creating a new building, go to its detail page
                         showPage('page-detail', { buildingId: buildingData.id });
                     } else {
-                        // After editing, go back to the previous page (likely the admin list)
                         goBack();
                     }
-                    // Hide progress bar for next time
                     saveProgressBar.style.width = '0%';
                 }, 500);
             };
@@ -1165,7 +1167,7 @@
                        state.activeScanner.stop().then(ignore => {
                             const building = db.getById(decodedText);
                             if (building) {
-                                state.history.push('page-home'); // Set history so back button works
+                                state.history.push('page-home');
                                 showPage('page-detail', { buildingId: building.id });
                             } else {
                                 ui.showToast('toast_qr_not_found', true);
@@ -1196,29 +1198,38 @@
 
                 const saveBtn = document.getElementById('save-btn');
                 Array.from(files).forEach(file => {
-                    // Disable save button while processing
                     state.photosLoading++;
                     if(saveBtn) {
                         saveBtn.disabled = true;
-                        saveBtn.classList.add('opacity-50');
+                        saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
                     }
 
                     const reader = new FileReader();
-                    reader.onload = (e) => { 
-                        state.photoCache.push(e.target.result); 
-                        ui.renderPhotoThumbnails();
-                        
-                        // Re-enable save button once done
+
+                    const doneLoading = () => {
                         state.photosLoading--;
                         if (state.photosLoading === 0 && saveBtn) {
                             saveBtn.disabled = false;
-                            saveBtn.classList.remove('opacity-50');
+                            saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                         }
                     };
+
+                    reader.onload = (e) => { 
+                        state.photoCache.push(e.target.result); 
+                        ui.renderPhotoThumbnails();
+                        doneLoading();
+                    };
+                    
+                    reader.onerror = () => {
+                        console.error("Error reading file.");
+                        ui.showToast('toast_photo_fail', true);
+                        doneLoading();
+                    };
+
                     reader.readAsDataURL(file);
                 });
 
-                if (inputElement) inputElement.value = null; // Reset file input
+                if (inputElement) inputElement.value = null;
             };
             
             const handleImport = (event) => {
