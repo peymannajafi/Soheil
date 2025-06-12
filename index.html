@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -62,6 +62,10 @@
             font-weight: bold;
             border: 2px solid white;
         }
+        html[dir="rtl"] .thumbnail-delete {
+            right: auto;
+            left: -10px;
+        }
         #form-qr-code-container {
             position: absolute;
             top: 1.5rem;
@@ -70,6 +74,10 @@
             padding: 8px;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        html[dir="rtl"] #form-qr-code-container {
+             right: auto;
+             left: 1.5rem;
         }
     </style>
 </head>
@@ -83,9 +91,12 @@
             <div class="mx-auto px-4 py-4 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <svg id="back-button" class="w-6 h-6 cursor-pointer hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    <h1 id="header-title" class="text-xl font-bold">Building Information Hub</h1>
+                    <h1 id="header-title" class="text-xl font-bold"></h1>
                 </div>
-                <div id="header-actions"></div>
+                 <div class="flex items-center space-x-4">
+                    <div id="header-actions"></div>
+                    <button id="lang-switcher" class="font-bold text-lg p-2 rounded-md hover:bg-blue-700 w-12 text-center"></button>
+                </div>
             </div>
         </header>
 
@@ -97,16 +108,14 @@
                 <div class="flex flex-col space-y-4 max-w-sm mx-auto mt-16 text-center">
                     <button data-target="page-scanner" class="nav-button bg-blue-700 hover:bg-blue-800 text-white font-bold py-4 px-6 rounded-lg shadow-lg flex items-center justify-center space-x-3">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                        <span>Scan Building QR Code</span>
+                        <span data-lang="scan_qr"></span>
                     </button>
                     <button data-target="page-admin" class="nav-button bg-gray-700 hover:bg-gray-800 text-white font-bold py-4 px-6 rounded-lg shadow-lg flex items-center justify-center space-x-3">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                        <span>Add Building</span>
+                        <span data-lang="add_building"></span>
                     </button>
                     <div class="pt-8">
-                        <label for="import-file" class="text-blue-600 hover:text-blue-800 font-semibold cursor-pointer">
-                            Import Building Data File (JSON, CSV, Excel)
-                        </label>
+                        <label for="import-file" class="text-blue-600 hover:text-blue-800 font-semibold cursor-pointer" data-lang="import_data_file"></label>
                         <input type="file" id="import-file" class="hidden" accept=".json,.csv,.xls,.xlsx">
                     </div>
                 </div>
@@ -118,8 +127,8 @@
                     <!-- Building list items will be inserted here -->
                 </div>
                 <div id="empty-admin-state" class="text-center mt-16 text-gray-500 hidden">
-                    <p>No buildings found.</p>
-                    <p>Click the '+' button to add one.</p>
+                    <p data-lang="no_buildings_found"></p>
+                    <p data-lang="click_plus_to_add"></p>
                 </div>
             </div>
 
@@ -131,34 +140,34 @@
                     
                     <!-- Basic Info & Address Section -->
                     <div class="bg-white p-4 rounded-lg shadow">
-                         <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800">Address & Basic Info</h3>
+                         <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800" data-lang="form_section_address"></h3>
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="md:col-span-2">
-                                <label for="buildingName" class="block text-sm font-medium text-gray-700">Building Name / Profile Name *</label>
+                                <label for="buildingName" class="block text-sm font-medium text-gray-700" data-lang="form_building_name"></label>
                                 <input type="text" id="buildingName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                             <div>
-                                <label for="address" class="block text-sm font-medium text-gray-700">Street</label>
+                                <label for="address" class="block text-sm font-medium text-gray-700" data-lang="form_street"></label>
                                 <input type="text" id="address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                              <div>
-                                <label for="city" class="block text-sm font-medium text-gray-700">City</label>
+                                <label for="city" class="block text-sm font-medium text-gray-700" data-lang="form_city"></label>
                                 <input type="text" id="city" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                               <div>
-                                <label for="stateProvince" class="block text-sm font-medium text-gray-700">State/Province</label>
+                                <label for="stateProvince" class="block text-sm font-medium text-gray-700" data-lang="form_state_province"></label>
                                 <input type="text" id="stateProvince" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                              <div>
-                                <label for="zipPostal" class="block text-sm font-medium text-gray-700">Zip/Postal Code</label>
+                                <label for="zipPostal" class="block text-sm font-medium text-gray-700" data-lang="form_zip_postal"></label>
                                 <input type="text" id="zipPostal" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                              <div>
-                                <label for="country" class="block text-sm font-medium text-gray-700">Country/Region</label>
+                                <label for="country" class="block text-sm font-medium text-gray-700" data-lang="form_country"></label>
                                 <input type="text" id="country" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                              <div>
-                                <label for="webpage" class="block text-sm font-medium text-gray-700">Web Page</label>
+                                <label for="webpage" class="block text-sm font-medium text-gray-700" data-lang="form_webpage"></label>
                                 <input type="url" id="webpage" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                          </div>
@@ -166,50 +175,36 @@
 
                     <!-- Property Profile Section -->
                     <div class="bg-white p-4 rounded-lg shadow">
-                         <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800">Property Profile</h3>
+                         <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800" data-lang="form_section_profile"></h3>
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label for="buildingUseType" class="block text-sm font-medium text-gray-700">Property Type</label>
+                                <label for="buildingUseType" class="block text-sm font-medium text-gray-700" data-lang="form_property_type"></label>
                                 <select id="buildingUseType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <option>Residential</option>
-                                    <option>Commercial</option>
-                                    <option>Industrial</option>
-                                    <option>Institutional</option>
-                                    <option>Mixed-Use</option>
-                                    <option>Other</option>
                                 </select>
                             </div>
                              <div>
-                                <label for="yearBuilt" class="block text-sm font-medium text-gray-700">Year Built</label>
+                                <label for="yearBuilt" class="block text-sm font-medium text-gray-700" data-lang="form_year_built"></label>
                                 <input type="number" id="yearBuilt" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                              <div>
-                                <label for="squareFeet" class="block text-sm font-medium text-gray-700">Square Meters (m²)</label>
+                                <label for="squareFeet" class="block text-sm font-medium text-gray-700" data-lang="form_sqm"></label>
                                 <input type="number" id="squareFeet" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                              <div>
-                                <label for="bedrooms" class="block text-sm font-medium text-gray-700">Bedrooms</label>
+                                <label for="bedrooms" class="block text-sm font-medium text-gray-700" data-lang="form_bedrooms"></label>
                                 <input type="number" id="bedrooms" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                              <div>
-                                <label for="bathrooms" class="block text-sm font-medium text-gray-700">Bathrooms</label>
+                                <label for="bathrooms" class="block text-sm font-medium text-gray-700" data-lang="form_bathrooms"></label>
                                 <input type="number" id="bathrooms" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                             <div class="flex items-center mt-2">
                                 <input type="checkbox" id="garage" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                <label for="garage" class="ml-2 block text-sm text-gray-900">Garage</label>
+                                <label for="garage" class="ml-2 block text-sm text-gray-900" data-lang="form_garage"></label>
                             </div>
                             <div class="md:col-span-2">
-                                <label for="euClassification" class="block text-sm font-medium text-gray-700">EU Building Classification (CC)</label>
+                                <label for="euClassification" class="block text-sm font-medium text-gray-700" data-lang="form_eu_classification"></label>
                                 <select id="euClassification" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <option value="">Select a classification...</option>
-                                    <option value="111">Residential - One-dwelling</option>
-                                    <option value="112">Residential - Multi-dwelling</option>
-                                    <option value="122">Commercial - Office Building</option>
-                                    <option value="123">Commercial - Wholesale and retail trade</option>
-                                    <option value="125">Commercial - Industrial and warehouse</option>
-                                    <option value="126">Public - Entertainment, education, hospital</option>
-                                    <option value="127">Other non-residential</option>
                                 </select>
                             </div>
                         </div>
@@ -217,38 +212,38 @@
 
                     <!-- Financial Section -->
                      <div class="bg-white p-4 rounded-lg shadow">
-                         <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800">Financials</h3>
+                         <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800" data-lang="form_section_financials"></h3>
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <div>
-                                <label for="loanAmount" class="block text-sm font-medium text-gray-700">Loan Amount</label>
+                                <label for="loanAmount" class="block text-sm font-medium text-gray-700" data-lang="form_loan_amount"></label>
                                 <input type="number" id="loanAmount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                               <div>
-                                <label for="assessedValue" class="block text-sm font-medium text-gray-700">Assessed Value</label>
+                                <label for="assessedValue" class="block text-sm font-medium text-gray-700" data-lang="form_assessed_value"></label>
                                 <input type="number" id="assessedValue" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                             <div>
-                                <label for="currentValue" class="block text-sm font-medium text-gray-700">Current Value</label>
+                                <label for="currentValue" class="block text-sm font-medium text-gray-700" data-lang="form_current_value"></label>
                                 <input type="number" id="currentValue" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                               <div>
-                                <label for="downPayment" class="block text-sm font-medium text-gray-700">Down Payment</label>
+                                <label for="downPayment" class="block text-sm font-medium text-gray-700" data-lang="form_down_payment"></label>
                                 <input type="number" id="downPayment" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                             <div>
-                                <label for="monthlyMortgage" class="block text-sm font-medium text-gray-700">Monthly Mortgage</label>
+                                <label for="monthlyMortgage" class="block text-sm font-medium text-gray-700" data-lang="form_monthly_mortgage"></label>
                                 <input type="number" id="monthlyMortgage" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                              <div>
-                                <label for="housingDues" class="block text-sm font-medium text-gray-700">Housing Dues</label>
+                                <label for="housingDues" class="block text-sm font-medium text-gray-700" data-lang="form_housing_dues"></label>
                                 <input type="number" id="housingDues" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                              <div>
-                                <label for="tax" class="block text-sm font-medium text-gray-700">Tax</label>
+                                <label for="tax" class="block text-sm font-medium text-gray-700" data-lang="form_tax"></label>
                                 <input type="number" id="tax" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                              <div>
-                                <label for="insurance" class="block text-sm font-medium text-gray-700">Insurance</label>
+                                <label for="insurance" class="block text-sm font-medium text-gray-700" data-lang="form_insurance"></label>
                                 <input type="number" id="insurance" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                          </div>
@@ -256,29 +251,29 @@
                     
                     <!-- Location Section -->
                      <div class="bg-white p-4 rounded-lg shadow">
-                         <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800">GPS Location</h3>
+                         <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800" data-lang="form_section_location"></h3>
                          <div class="flex items-center space-x-4 mb-2">
                             <div class="flex-1">
-                                <label for="latitude" class="block text-sm font-medium text-gray-700">Latitude</label>
+                                <label for="latitude" class="block text-sm font-medium text-gray-700" data-lang="form_latitude"></label>
                                 <input type="text" id="latitude" readonly class="mt-1 bg-gray-100 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
                              <div class="flex-1">
-                                <label for="longitude" class="block text-sm font-medium text-gray-700">Longitude</label>
+                                <label for="longitude" class="block text-sm font-medium text-gray-700" data-lang="form_longitude"></label>
                                 <input type="text" id="longitude" readonly class="mt-1 bg-gray-100 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
                          </div>
-                          <button type="button" id="get-location-btn" class="w-full mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Get Current Location</button>
+                          <button type="button" id="get-location-btn" class="w-full mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg" data-lang="form_get_location"></button>
                     </div>
 
                     <!-- Photos Section -->
                     <div class="bg-white p-4 rounded-lg shadow">
-                         <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800">Photos</h3>
-                         <p class="text-sm text-gray-500 mb-4">Note: Storing many large photos may slow down the app. Storage is limited by your browser.</p>
+                         <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800" data-lang="form_section_photos"></h3>
+                         <p class="text-sm text-gray-500 mb-4" data-lang="form_photos_note"></p>
                          <div class="flex space-x-4">
-                             <label for="photo-upload" class="flex-1 text-center bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg cursor-pointer">Upload from Gallery</label>
+                             <label for="photo-upload" class="flex-1 text-center bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg cursor-pointer" data-lang="form_upload_gallery"></label>
                              <input type="file" id="photo-upload" class="hidden" accept="image/*" multiple>
                              
-                             <label for="photo-capture" class="flex-1 text-center bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg cursor-pointer">Take Photo</label>
+                             <label for="photo-capture" class="flex-1 text-center bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg cursor-pointer" data-lang="form_take_photo"></label>
                              <input type="file" id="photo-capture" class="hidden" accept="image/*" capture="user">
                          </div>
                          <div id="photo-thumbnails" class="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
@@ -288,7 +283,7 @@
 
                     <!-- Notes Section -->
                     <div class="bg-white p-4 rounded-lg shadow">
-                         <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800">Notes</h3>
+                         <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800" data-lang="form_section_notes"></h3>
                         <textarea id="notes" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
                     </div>
 
@@ -307,44 +302,44 @@
                 <div id="qr-reader-container">
                     <div id="qr-reader"></div>
                 </div>
-                <p class="text-center text-gray-500 mt-4">Point your camera at a QR code. Accessing your camera is required.</p>
+                <p class="text-center text-gray-500 mt-4" data-lang="scan_instruction"></p>
             </div>
             
             <!-- 6. Settings Page -->
             <div id="page-settings" class="page">
                 <div class="space-y-4">
                     <div>
-                        <h3 class="font-bold text-lg mb-2">Import Data</h3>
+                        <h3 class="font-bold text-lg mb-2" data-lang="settings_import_title"></h3>
                          <label for="import-file-settings" class="w-full text-left bg-white p-4 rounded-lg shadow hover:bg-gray-50 flex justify-between items-center cursor-pointer">
                             <div>
-                                <p class="font-semibold">Import from File</p>
-                                <p class="text-gray-600 text-sm">Overwrite data from a JSON, CSV, or Excel file.</p>
+                                <p class="font-semibold" data-lang="settings_import_button"></p>
+                                <p class="text-gray-600 text-sm" data-lang="settings_import_desc"></p>
                             </div>
                             <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         </label>
                         <input type="file" id="import-file-settings" class="hidden" accept=".json,.csv,.xls,.xlsx">
                     </div>
                     <div>
-                        <h3 class="font-bold text-lg mb-2">Export Data</h3>
+                        <h3 class="font-bold text-lg mb-2" data-lang="settings_export_title"></h3>
                         <div class="space-y-3">
                              <button id="export-json" class="w-full text-left bg-white p-4 rounded-lg shadow hover:bg-gray-50 flex justify-between items-center">
                                 <div>
-                                    <p class="font-semibold">Export as JSON</p>
-                                    <p class="text-gray-600 text-sm">Best for backups and re-importing.</p>
+                                    <p class="font-semibold" data-lang="settings_export_json"></p>
+                                    <p class="text-gray-600 text-sm" data-lang="settings_export_json_desc"></p>
                                 </div>
                                 <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                             </button>
                              <button id="export-csv" class="w-full text-left bg-white p-4 rounded-lg shadow hover:bg-gray-50 flex justify-between items-center">
                                 <div>
-                                    <p class="font-semibold">Export as CSV</p>
-                                    <p class="text-gray-600 text-sm">Good for spreadsheets.</p>
+                                    <p class="font-semibold" data-lang="settings_export_csv"></p>
+                                    <p class="text-gray-600 text-sm" data-lang="settings_export_csv_desc"></p>
                                 </div>
                                 <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                             </button>
                              <button id="export-xlsx" class="w-full text-left bg-white p-4 rounded-lg shadow hover:bg-gray-50 flex justify-between items-center">
                                 <div>
-                                    <p class="font-semibold">Export as Excel (XLSX)</p>
-                                    <p class="text-gray-600 text-sm">Best for Excel users.</p>
+                                    <p class="font-semibold" data-lang="settings_export_xlsx"></p>
+                                    <p class="text-gray-600 text-sm" data-lang="settings_export_xlsx_desc"></p>
                                 </div>
                                 <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                             </button>
@@ -367,12 +362,172 @@
 
             // --- STATE & CONFIG ---
             const DB_KEY = 'qrBuildingApp_buildings';
+            const LANG_KEY = 'qrBuildingApp_lang';
             const state = {
                 currentPage: 'page-home',
                 history: [], // For back button functionality
                 activeScanner: null,
                 photoCache: [], // Temporary cache for photos on the form page
+                currentLang: localStorage.getItem(LANG_KEY) || 'en',
             };
+
+            // --- TRANSLATIONS ---
+            const translations = {
+                en: {
+                    app_title: "Building Information Hub",
+                    admin_title: "Admin: Records",
+                    add_building_title: "Add Building",
+                    edit_building_title: "Edit Building",
+                    detail_title_prefix: "",
+                    scan_title: "Scan QR Code",
+                    settings_title: "Settings & Data",
+                    scan_qr: "Scan Building QR Code",
+                    add_building: "Add Building",
+                    import_data_file: "Import Building Data File (JSON, CSV, Excel)",
+                    no_buildings_found: "No buildings found.",
+                    click_plus_to_add: "Click the '+' button to add one.",
+                    form_section_address: "Address & Basic Info",
+                    form_building_name: "Building Name / Profile Name *",
+                    form_street: "Street",
+                    form_city: "City",
+                    form_state_province: "State/Province",
+                    form_zip_postal: "Zip/Postal Code",
+                    form_country: "Country/Region",
+                    form_webpage: "Web Page",
+                    form_section_profile: "Property Profile",
+                    form_property_type: "Property Type",
+                    form_year_built: "Year Built",
+                    form_sqm: "Square Meters (m²)",
+                    form_bedrooms: "Bedrooms",
+                    form_bathrooms: "Bathrooms",
+                    form_garage: "Garage",
+                    form_eu_classification: "EU Building Classification (CC)",
+                    form_section_financials: "Financials",
+                    form_loan_amount: "Loan Amount",
+                    form_assessed_value: "Assessed Value",
+                    form_current_value: "Current Value",
+                    form_down_payment: "Down Payment",
+                    form_monthly_mortgage: "Monthly Mortgage",
+                    form_housing_dues: "Housing Dues",
+                    form_tax: "Tax",
+                    form_insurance: "Insurance",
+                    form_section_location: "GPS Location",
+                    form_latitude: "Latitude",
+                    form_longitude: "Longitude",
+                    form_get_location: "Get Current Location",
+                    form_section_photos: "Photos",
+                    form_photos_note: "Note: Storing many large photos may slow down the app. Storage is limited by your browser.",
+                    form_upload_gallery: "Upload from Gallery",
+                    form_take_photo: "Take Photo",
+                    form_section_notes: "Notes",
+                    scan_instruction: "Point your camera at a QR code. Accessing your camera is required.",
+                    settings_import_title: "Import Data",
+                    settings_import_button: "Import from File",
+                    settings_import_desc: "Overwrite data from a JSON, CSV, or Excel file.",
+                    settings_export_title: "Export Data",
+                    settings_export_json: "Export as JSON",
+                    settings_export_json_desc: "Best for backups and re-importing.",
+                    settings_export_csv: "Export as CSV",
+                    settings_export_csv_desc: "Good for spreadsheets.",
+                    settings_export_xlsx: "Export as Excel (XLSX)",
+                    settings_export_xlsx_desc: "Best for Excel users.",
+                    confirm_delete: "Are you sure you want to delete this building?",
+                    confirm_import: "This will import {count} records and overwrite all existing data. Are you sure?",
+                    toast_saved: "Building saved successfully!",
+                    toast_deleted: "Building deleted.",
+                    toast_no_data_export: "No data to export.",
+                    toast_exported: "Data exported as {format} successfully!",
+                    toast_imported: "{count} buildings imported successfully!",
+                    toast_import_fail: "Failed to import file. Make sure it's a valid and correctly formatted file.",
+                    toast_location_captured: "Location captured!",
+                    toast_location_fail: "Could not get location. Please enable GPS.",
+                    toast_geo_unsupported: "Geolocation is not supported by your browser.",
+                    toast_camera_fail: "Could not start camera. Please grant permission.",
+                    toast_qr_not_found: "Building not found in local data.",
+                    toast_fill_fields: "Please fill in all required fields."
+                },
+                fa: {
+                    app_title: "مرکز اطلاعات ساختمان",
+                    admin_title: "مدیریت: رکوردها",
+                    add_building_title: "افزودن ساختمان",
+                    edit_building_title: "ویرایش ساختمان",
+                    detail_title_prefix: "",
+                    scan_title: "اسکن کد QR",
+                    settings_title: "تنظیمات و داده‌ها",
+                    scan_qr: "اسکن کد QR ساختمان",
+                    add_building: "افزودن ساختمان",
+                    import_data_file: "ورود اطلاعات از فایل (JSON, CSV, Excel)",
+                    no_buildings_found: "هیچ ساختمانی یافت نشد.",
+                    click_plus_to_add: "برای افزودن، روی دکمه '+' کلیک کنید.",
+                    form_section_address: "آدرس و اطلاعات اولیه",
+                    form_building_name: "نام ساختمان / نام پروفایل *",
+                    form_street: "خیابان",
+                    form_city: "شهر",
+                    form_state_province: "استان/ایالت",
+                    form_zip_postal: "کد پستی",
+                    form_country: "کشور",
+                    form_webpage: "صفحه وب",
+                    form_section_profile: "مشخصات ملک",
+                    form_property_type: "نوع ملک",
+                    form_year_built: "سال ساخت",
+                    form_sqm: "متر مربع (m²)",
+                    form_bedrooms: "اتاق خواب",
+                    form_bathrooms: "حمام",
+                    form_garage: "پارکینگ",
+                    form_eu_classification: "طبقه‌بندی ساختمان (EU)",
+                    form_section_financials: "اطلاعات مالی",
+                    form_loan_amount: "مبلغ وام",
+                    form_assessed_value: "ارزش ارزیابی شده",
+                    form_current_value: "ارزش فعلی",
+                    form_down_payment: "پیش پرداخت",
+                    form_monthly_mortgage: "قسط ماهانه",
+                    form_housing_dues: "شارژ ساختمان",
+                    form_tax: "مالیات",
+                    form_insurance: "بیمه",
+                    form_section_location: "موقعیت GPS",
+                    form_latitude: "عرض جغرافیایی",
+                    form_longitude: "طول جغرافیایی",
+                    form_get_location: "دریافت موقعیت مکانی فعلی",
+                    form_section_photos: "عکس‌ها",
+                    form_photos_note: "توجه: ذخیره عکس‌های زیاد و بزرگ ممکن است سرعت برنامه را کاهش دهد. فضای ذخیره‌سازی توسط مرورگر شما محدود است.",
+                    form_upload_gallery: "آپلود از گالری",
+                    form_take_photo: "گرفتن عکس",
+                    form_section_notes: "یادداشت‌ها",
+                    scan_instruction: "دوربین خود را به سمت کد QR بگیرید. دسترسی به دوربین الزامی است.",
+                    settings_import_title: "ورود داده",
+                    settings_import_button: "ورود از فایل",
+                    settings_import_desc: "بازنویسی داده‌ها از فایل JSON، CSV یا Excel.",
+                    settings_export_title: "خروج داده",
+                    settings_export_json: "خروجی به صورت JSON",
+                    settings_export_json_desc: "بهترین گزینه برای پشتیبان‌گیری و ورود مجدد.",
+                    settings_export_csv: "خروجی به صورت CSV",
+                    settings_export_csv_desc: "مناسب برای صفحات گسترده.",
+                    settings_export_xlsx: "خروجی به صورت Excel (XLSX)",
+                    settings_export_xlsx_desc: "بهترین گزینه برای کاربران اکسل.",
+                    confirm_delete: "آیا از حذف این ساختمان مطمئن هستید؟",
+                    confirm_import: "این عملیات {count} رکورد را وارد کرده و تمام داده‌های موجود را بازنویسی می‌کند. آیا مطمئن هستید؟",
+                    toast_saved: "ساختمان با موفقیت ذخیره شد!",
+                    toast_deleted: "ساختمان حذف شد.",
+                    toast_no_data_export: "داده‌ای برای خروج وجود ندارد.",
+                    toast_exported: "داده‌ها با موفقیت به صورت {format} خروجی گرفته شد!",
+                    toast_imported: "{count} ساختمان با موفقیت وارد شد!",
+                    toast_import_fail: "ورود فایل ناموفق بود. از معتبر و صحیح بودن فرمت فایل اطمینان حاصل کنید.",
+                    toast_location_captured: "موقعیت مکانی ثبت شد!",
+                    toast_location_fail: "دریافت موقعیت مکانی ناموفق بود. لطفاً GPS را فعال کنید.",
+                    toast_geo_unsupported: "مرورگر شما از موقعیت‌یابی جغرافیایی پشتیبانی نمی‌کند.",
+                    toast_camera_fail: "دوربین فعال نشد. لطفاً دسترسی را مجاز کنید.",
+                    toast_qr_not_found: "ساختمان در داده‌های محلی یافت نشد.",
+                    toast_fill_fields: "لطفاً تمام فیلدهای الزامی را پر کنید."
+                }
+            };
+
+            const translate = (key, params = {}) => {
+                let text = translations[state.currentLang][key] || key;
+                for(const param in params) {
+                    text = text.replace(`{${param}}`, params[param]);
+                }
+                return text;
+            }
 
             // --- DOM ELEMENTS ---
             const pages = document.querySelectorAll('.page');
@@ -463,8 +618,41 @@
                 }
             };
             
-            // --- UI RENDERING ---
+            // --- UI RENDERING & TRANSLATION ---
             const ui = {
+                updateText: () => {
+                    document.documentElement.lang = state.currentLang;
+                    document.documentElement.dir = state.currentLang === 'fa' ? 'rtl' : 'ltr';
+                    document.getElementById('lang-switcher').textContent = state.currentLang === 'en' ? 'FA' : 'EN';
+                    
+                    document.querySelectorAll('[data-lang]').forEach(el => {
+                        const key = el.dataset.lang;
+                        if (key) el.textContent = translate(key);
+                    });
+                    
+                    const propertyTypeSelect = document.getElementById('buildingUseType');
+                    propertyTypeSelect.innerHTML = `
+                        <option>${translate('form_property_type_residential') || 'Residential'}</option>
+                        <option>${translate('form_property_type_commercial') || 'Commercial'}</option>
+                        <option>${translate('form_property_type_industrial') || 'Industrial'}</option>
+                        <option>${translate('form_property_type_institutional') || 'Institutional'}</option>
+                        <option>${translate('form_property_type_mixed') || 'Mixed-Use'}</option>
+                        <option>${translate('form_property_type_other') || 'Other'}</option>
+                    `;
+
+                     const euSelect = document.getElementById('euClassification');
+                     euSelect.innerHTML = `
+                        <option value="">${translate('form_eu_select') || 'Select a classification...'}</option>
+                        <option value="111">${translate('form_eu_111') || 'Residential - One-dwelling'}</option>
+                        <option value="112">${translate('form_eu_112') || 'Residential - Multi-dwelling'}</option>
+                        <option value="122">${translate('form_eu_122') || 'Commercial - Office Building'}</option>
+                        <option value="123">${translate('form_eu_123') || 'Commercial - Wholesale and retail trade'}</option>
+                        <option value="125">${translate('form_eu_125') || 'Commercial - Industrial and warehouse'}</option>
+                        <option value="126">${translate('form_eu_126') || 'Public - Entertainment, education, hospital'}</option>
+                        <option value="127">${translate('form_eu_127') || 'Other non-residential'}</option>
+                     `;
+                },
+
                 renderAdminList: () => {
                     const buildings = db.getAll();
                     buildingList.innerHTML = '';
@@ -490,78 +678,78 @@
                     const content = document.getElementById('detail-content');
                     content.innerHTML = '';
 
-                    const createSection = (title) => {
+                    const createSection = (titleKey) => {
                         const section = document.createElement('div');
                         section.className = 'bg-white p-4 rounded-lg shadow-md';
                         const sectionContent = document.createElement('div');
                         sectionContent.className = 'space-y-3';
-                        if (title) {
+                        if (titleKey) {
                              const heading = document.createElement('h3');
                              heading.className = 'font-bold text-lg mb-3 border-b border-gray-200 pb-2 text-blue-800';
-                             heading.textContent = title;
+                             heading.textContent = translate(titleKey);
                              section.appendChild(heading);
                         } 
                         section.appendChild(sectionContent);
                         return section;
                     };
                     
-                    const createFieldRow = (label, value) => {
+                    const createFieldRow = (labelKey, value) => {
                          if (!value && value !== false && value !== 0) return null;
                          const row = document.createElement('div');
-                         row.innerHTML = `<p class="text-sm font-medium text-gray-500">${label}</p><p class="text-lg mt-1 break-words text-gray-800">${value}</p>`;
+                         row.innerHTML = `<p class="text-sm font-medium text-gray-500">${translate(labelKey)}</p><p class="text-lg mt-1 break-words text-gray-800">${value}</p>`;
                          return row;
                     };
 
-                    const addField = (section, label, value) => {
-                        const row = createFieldRow(label, value);
+                    const addField = (section, labelKey, value) => {
+                        const row = createFieldRow(labelKey, value);
                         if(row) section.lastChild.appendChild(row);
                     }
 
                     const mainInfoSection = createSection(null);
-                    addField(mainInfoSection, 'Building Name', building.buildingName);
+                    addField(mainInfoSection, 'form_building_name', building.buildingName);
                     const fullAddress = [building.address, building.city, building.stateProvince, building.zipPostal, building.country].filter(Boolean).join(', ');
-                    addField(mainInfoSection, 'Full Address', fullAddress);
+                    addField(mainInfoSection, 'detail_full_address', fullAddress);
                     if (building.webpage) {
                         const webpageRow = document.createElement('div');
-                        webpageRow.innerHTML = `<p class="text-sm font-medium text-gray-500">Web Page</p><a href="${building.webpage}" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline break-all">${building.webpage}</a>`;
+                        webpageRow.innerHTML = `<p class="text-sm font-medium text-gray-500">${translate('form_webpage')}</p><a href="${building.webpage}" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline break-all">${building.webpage}</a>`;
                         mainInfoSection.lastChild.appendChild(webpageRow);
                     }
                     content.appendChild(mainInfoSection);
 
-                    const profileSection = createSection('Property Profile');
-                    addField(profileSection, 'Property Type', building.buildingUseType);
-                    addField(profileSection, 'EU Classification (CC)', building.euClassification);
-                    addField(profileSection, 'Year Built', building.yearBuilt);
-                    addField(profileSection, 'Square Meters (m²)', building.squareFeet);
-                    addField(profileSection, 'Bedrooms', building.bedrooms);
-                    addField(profileSection, 'Bathrooms', building.bathrooms);
-                    addField(profileSection, 'Garage', building.garage ? 'Yes' : 'No');
+                    const profileSection = createSection('form_section_profile');
+                    addField(profileSection, 'form_property_type', building.buildingUseType);
+                    addField(profileSection, 'form_eu_classification', building.euClassification);
+                    addField(profileSection, 'form_year_built', building.yearBuilt);
+                    addField(profileSection, 'form_sqm', building.squareFeet);
+                    addField(profileSection, 'form_bedrooms', building.bedrooms);
+                    addField(profileSection, 'form_bathrooms', building.bathrooms);
+                    addField(profileSection, 'form_garage', building.garage ? translate('yes') : translate('no'));
                     if (profileSection.lastChild.children.length > 0) content.appendChild(profileSection);
 
-                    const financialSection = createSection('Financials');
-                    addField(financialSection, 'Loan Amount', building.loanAmount);
-                    addField(financialSection, 'Assessed Value', building.assessedValue);
-                    addField(financialSection, 'Current Value', building.currentValue);
-                    addField(financialSection, 'Down Payment', building.downPayment);
-                    addField(financialSection, 'Monthly Mortgage', building.monthlyMortgage);
-                    addField(financialSection, 'Housing Dues', building.housingDues);
-                    addField(financialSection, 'Tax', building.tax);
-                    addField(financialSection, 'Insurance', building.insurance);
+                    const financialSection = createSection('form_section_financials');
+                    addField(financialSection, 'form_loan_amount', building.loanAmount);
+                    addField(financialSection, 'form_assessed_value', building.assessedValue);
+                    addField(financialSection, 'form_current_value', building.currentValue);
+                    addField(financialSection, 'form_down_payment', building.downPayment);
+                    addField(financialSection, 'form_monthly_mortgage', building.monthlyMortgage);
+                    addField(financialSection, 'form_housing_dues', building.housingDues);
+                    addField(financialSection, 'form_tax', building.tax);
+                    addField(financialSection, 'form_insurance', building.insurance);
                     if (financialSection.lastChild.children.length > 0) content.appendChild(financialSection);
 
-                    const otherSection = createSection('Other Information');
-                    addField(otherSection, 'Owner Name', building.ownerName);
-                    addField(otherSection, 'Notes', building.notes);
+                    const otherSection = createSection('detail_other_info');
+                    addField(otherSection, 'ownerName', building.ownerName);
+                    addField(otherSection, 'form_section_notes', building.notes);
                     if (otherSection.lastChild.children.length > 0) content.appendChild(otherSection);
 
                     if (building.latitude && building.longitude) {
-                        const locationSection = createSection('Location');
-                        locationSection.lastChild.innerHTML = `<p class="text-lg mt-1">${building.latitude}, ${building.longitude}</p><a href="https://www.google.com/maps?q=${building.latitude},${building.longitude}" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">Open in Google Maps</a>`;
+                        const locationSection = createSection('form_section_location');
+                        locationSection.lastChild.innerHTML = `<p class="text-lg mt-1">${building.latitude}, ${building.longitude}</p><a href="https://www.google.com/maps?q=${building.latitude},${building.longitude}" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">${translate('detail_open_maps')}</a>`;
                         content.appendChild(locationSection);
                     }
 
                     if (building.photos && building.photos.length > 0) {
-                         const photoSection = createSection('Photos');
+                         const photoSection = createSection('form_section_photos');
                          const photoGrid = document.createElement('div');
                          photoGrid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4';
                          building.photos.forEach(photoSrc => {
@@ -574,7 +762,7 @@
                     if (isAdminView) {
                         const qrCard = document.createElement('div');
                         qrCard.className = 'bg-white p-6 rounded-lg shadow text-center mt-4';
-                        qrCard.innerHTML = `<h3 class="text-lg font-bold text-blue-800 mb-2">Building QR Code</h3><div id="detail-qr-code-container" class="mt-4 flex justify-center"></div><div class="mt-6"><button id="detail-download-qr-button" class="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg">Download QR Code</button></div>`;
+                        qrCard.innerHTML = `<h3 class="text-lg font-bold text-blue-800 mb-2">${translate('detail_qr_code')}</h3><div id="detail-qr-code-container" class="mt-4 flex justify-center"></div><div class="mt-6"><button id="detail-download-qr-button" class="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg">${translate('detail_download_qr')}</button></div>`;
                         content.appendChild(qrCard);
                         const qrCode = new QRCodeStyling({ width: 250, height: 250, data: building.id, dotsOptions: { color: '#1e3a8a', type: 'rounded' }, backgroundOptions: { color: '#ffffff' }, cornersSquareOptions: { color: '#1e40af', type: 'extra-rounded' }, cornersDotOptions: { color: '#1e40af', type: 'dot' } });
                         qrCode.append(document.getElementById('detail-qr-code-container'));
@@ -611,10 +799,10 @@
                      qrCode.append(container);
                 },
                 
-                showToast: (message, isError = false) => {
+                showToast: (message, isError = false, params = {}) => {
                     const toast = document.getElementById('toast');
                     const toastMessage = document.getElementById('toast-message');
-                    toastMessage.textContent = message;
+                    toastMessage.textContent = translate(message, params);
                     toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300 opacity-100 ${isError ? 'bg-red-600' : 'bg-gray-900'}`;
                     setTimeout(() => toast.classList.replace('opacity-100', 'opacity-0'), 3000);
                 }
@@ -630,66 +818,69 @@
                 backButton.classList.toggle('hidden', pageId === 'page-home');
                 headerActions.innerHTML = '';
 
+                let titleKey = 'app_title';
                 switch(pageId) {
-                    case 'page-home':
-                        headerTitle.textContent = 'Building Info Hub';
-                        state.history = [];
-                        break;
-                    case 'page-admin':
-                        headerTitle.textContent = 'Admin: Records';
-                        headerActions.innerHTML = `<div class="flex items-center space-x-2"><button id="add-building-btn" class="p-2 rounded-full hover:bg-blue-700"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></button><button id="settings-btn" class="p-2 rounded-full hover:bg-blue-700"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></button></div>`;
-                        document.getElementById('add-building-btn').onclick = () => showPage('page-form');
-                        document.getElementById('settings-btn').onclick = () => showPage('page-settings');
-                        ui.renderAdminList();
-                        break;
-                    case 'page-form':
-                        headerTitle.textContent = params.buildingId ? 'Edit Building' : 'Add Building';
-                        headerActions.innerHTML = `<button id="save-btn" class="p-2 rounded-full hover:bg-blue-700"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></button>`;
-                        document.getElementById('save-btn').onclick = handleFormSave;
-                        form.reset();
-                        state.photoCache = [];
-                        let currentId;
-                        if (params.buildingId) {
-                            const building = db.getById(params.buildingId);
-                            if (building) {
-                                currentId = building.id;
-                                for (const key in building) {
-                                    const element = document.getElementById(key);
-                                    if(element) {
-                                        if (element.type === 'checkbox') { element.checked = building[key]; } 
-                                        else { element.value = building[key]; }
-                                    }
-                                }
-                                document.getElementById('building-id-input').value = building.id; 
-                                state.photoCache = [...(building.photos || [])];
-                            }
-                        } else {
-                            currentId = db.uuid();
-                            document.getElementById('building-id-input').value = currentId;
-                        }
-                        ui.renderFormQRCode(currentId);
-                        ui.renderPhotoThumbnails();
-                        break;
-                    case 'page-detail':
+                    case 'page-admin': titleKey = 'admin_title'; break;
+                    case 'page-form': titleKey = params.buildingId ? 'edit_building_title' : 'add_building_title'; break;
+                    case 'page-detail': 
                         const building = db.getById(params.buildingId);
                         if (building) {
-                            headerTitle.textContent = building.buildingName;
-                            const fromAdmin = state.history.at(-1) === 'page-admin';
-                            if (fromAdmin) {
-                                headerActions.innerHTML = `<div class="flex items-center space-x-2"><button id="edit-btn" class="p-2 rounded-full hover:bg-blue-700"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z"></path></svg></button><button id="delete-btn" class="p-2 rounded-full hover:bg-red-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>`;
-                                document.getElementById('edit-btn').onclick = () => showPage('page-form', { buildingId: building.id });
-                                document.getElementById('delete-btn').onclick = () => handleDelete(building.id);
-                            }
-                            ui.renderDetail(building, fromAdmin);
+                            headerTitle.textContent = translate('detail_title_prefix') + " " + building.buildingName;
+                        } else {
+                            titleKey = 'app_title';
                         }
                         break;
-                    case 'page-scanner':
-                        headerTitle.textContent = 'Scan QR Code';
-                        startScanner();
-                        break;
-                    case 'page-settings':
-                        headerTitle.textContent = 'Settings & Data';
-                        break;
+                    case 'page-scanner': titleKey = 'scan_title'; break;
+                    case 'page-settings': titleKey = 'settings_title'; break;
+                }
+                if (pageId !== 'page-detail') {
+                    headerTitle.textContent = translate(titleKey);
+                }
+
+                if (pageId === 'page-admin') {
+                    headerActions.innerHTML = `<div class="flex items-center space-x-2"><button id="add-building-btn" class="p-2 rounded-full hover:bg-blue-700"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></button><button id="settings-btn" class="p-2 rounded-full hover:bg-blue-700"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></button></div>`;
+                    document.getElementById('add-building-btn').onclick = () => showPage('page-form');
+                    document.getElementById('settings-btn').onclick = () => showPage('page-settings');
+                    ui.renderAdminList();
+                } else if (pageId === 'page-form') {
+                    headerActions.innerHTML = `<button id="save-btn" class="p-2 rounded-full hover:bg-blue-700"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></button>`;
+                    document.getElementById('save-btn').onclick = handleFormSave;
+                    form.reset();
+                    state.photoCache = [];
+                    let currentId;
+                    if (params.buildingId) {
+                        const building = db.getById(params.buildingId);
+                        if (building) {
+                            currentId = building.id;
+                            for (const key in building) {
+                                const element = document.getElementById(key);
+                                if(element) {
+                                    if (element.type === 'checkbox') { element.checked = building[key]; } 
+                                    else { element.value = building[key]; }
+                                }
+                            }
+                            document.getElementById('building-id-input').value = building.id; 
+                            state.photoCache = [...(building.photos || [])];
+                        }
+                    } else {
+                        currentId = db.uuid();
+                        document.getElementById('building-id-input').value = currentId;
+                    }
+                    ui.renderFormQRCode(currentId);
+                    ui.renderPhotoThumbnails();
+                } else if (pageId === 'page-detail') {
+                    const building = db.getById(params.buildingId);
+                    if (building) {
+                        const fromAdmin = state.history.at(-1) === 'page-admin';
+                        if (fromAdmin) {
+                            headerActions.innerHTML = `<div class="flex items-center space-x-2"><button id="edit-btn" class="p-2 rounded-full hover:bg-blue-700"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z"></path></svg></button><button id="delete-btn" class="p-2 rounded-full hover:bg-red-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>`;
+                            document.getElementById('edit-btn').onclick = () => showPage('page-form', { buildingId: building.id });
+                            document.getElementById('delete-btn').onclick = () => handleDelete(building.id);
+                        }
+                        ui.renderDetail(building, fromAdmin);
+                    }
+                } else if(pageId === 'page-scanner') {
+                    startScanner();
                 }
             };
             
@@ -698,23 +889,23 @@
             document.querySelectorAll('.nav-button').forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.target)));
 
             const handleFormSave = () => {
-                if (!form.checkValidity()) { ui.showToast('Please fill in all required fields.', true); return; }
+                if (!form.checkValidity()) { ui.showToast('toast_fill_fields', true); return; }
                 const buildingData = {};
                 const inputs = form.querySelectorAll('input, select, textarea');
                 buildingData.id = document.getElementById('building-id-input').value; // Explicitly get ID
                 inputs.forEach(input => {
-                    if(input.id && input.id !== 'building-id-input') { // Exclude the ID input from the loop
+                    if(input.id && input.id !== 'building-id-input') {
                         if (input.type === 'checkbox') { buildingData[input.id] = input.checked; } 
                         else { buildingData[input.id] = input.value; }
                     }
                 });
                 buildingData.photos = state.photoCache;
                 db.save(buildingData);
-                ui.showToast('Building saved successfully!');
+                ui.showToast('toast_saved');
                 goBack();
             };
 
-            const handleDelete = (id) => { if (confirm('Are you sure?')) { db.delete(id); ui.showToast('Building deleted.'); goBack(); } };
+            const handleDelete = (id) => { if (confirm(translate('confirm_delete'))) { db.delete(id); ui.showToast('toast_deleted'); goBack(); } };
             
             const startScanner = () => {
                 const html5QrCode = new Html5Qrcode("qr-reader");
@@ -724,17 +915,17 @@
                        state.activeScanner.stop().then(ignore => {
                             const building = db.getById(decodedText);
                             if (building) {
-                                state.history.push('page-home'); // Add home to history so back button works
+                                state.history.push('page-home');
                                 showPage('page-detail', { buildingId: building.id });
                             } else {
-                                ui.showToast('Building not found in local data.', true);
+                                ui.showToast('toast_qr_not_found', true);
                                 goBack();
                             }
                         }).catch(err => console.error("Failed to stop scanner", err));
                        state.activeScanner = null;
                     }
                 };
-                html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess).catch(err => ui.showToast("Could not start camera. Please grant permission.", true));
+                html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess).catch(err => ui.showToast("toast_camera_fail", true));
             };
             
             getLocationBtn.addEventListener('click', () => {
@@ -742,9 +933,9 @@
                     navigator.geolocation.getCurrentPosition(position => {
                         document.getElementById('latitude').value = position.coords.latitude.toFixed(6);
                         document.getElementById('longitude').value = position.coords.longitude.toFixed(6);
-                        ui.showToast('Location captured!');
-                    }, error => ui.showToast('Could not get location. Please enable GPS.', true));
-                } else { ui.showToast('Geolocation is not supported by your browser.', true); }
+                        ui.showToast('toast_location_captured');
+                    }, error => ui.showToast('toast_location_fail', true));
+                } else { ui.showToast('toast_geo_unsupported', true); }
             });
 
             const handlePhotoFiles = (files) => {
@@ -773,13 +964,13 @@
                             buildings = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
                         } else { throw new Error('Unsupported file format.'); }
                         if (!Array.isArray(buildings)) throw new Error("Invalid file content.");
-                        if (confirm(`This will import ${buildings.length} records and overwrite all existing data. Are you sure?`)) {
+                        if (confirm(translate('confirm_import', {count: buildings.length}))) {
                             const sanitizedBuildings = buildings.map(b => sanitizeBuilding(b));
                             localStorage.setItem(DB_KEY, JSON.stringify(sanitizedBuildings));
-                            ui.showToast(`${sanitizedBuildings.length} buildings imported successfully!`);
+                            ui.showToast('toast_imported', false, {count: sanitizedBuildings.length});
                             if(state.currentPage === 'page-admin') ui.renderAdminList();
                         }
-                    } catch (err) { ui.showToast("Failed to import file.", true); console.error(err); }
+                    } catch (err) { ui.showToast('toast_import_fail', true); console.error(err); }
                 };
                 reader.readAsBinaryString(file);
                 event.target.value = null;
@@ -794,7 +985,7 @@
 
             const handleExport = (format) => {
                 const buildings = db.getAll();
-                if (buildings.length === 0) { ui.showToast("No data to export.", true); return; }
+                if (buildings.length === 0) { ui.showToast("toast_no_data_export", true); return; }
                 const cleanBuildings = buildings.map(b => { const { photos, ...rest } = b; return rest; });
                 if (format === 'json') { createAndDownloadFile('building_backup.json', JSON.stringify(buildings, null, 2), 'application/json'); } 
                 else if (format === 'csv') { createAndDownloadFile('building_backup.csv', Papa.unparse(cleanBuildings), 'text/csv;charset=utf-8;'); } 
@@ -804,9 +995,16 @@
                     XLSX.utils.book_append_sheet(workbook, worksheet, "Buildings");
                     XLSX.writeFile(workbook, "building_backup.xlsx");
                 }
-                ui.showToast(`Data exported as ${format.toUpperCase()} successfully!`);
+                ui.showToast('toast_exported', false, {format: format.toUpperCase()});
             };
 
+            document.getElementById('lang-switcher').addEventListener('click', () => {
+                state.currentLang = state.currentLang === 'en' ? 'fa' : 'en';
+                localStorage.setItem(LANG_KEY, state.currentLang);
+                ui.updateText();
+                showPage(state.currentPage, { buildingId: document.getElementById('building-id-input').value }, true); // Re-render current page
+            });
+            
             importFileInput.addEventListener('change', handleImport);
             importFileInputSettings.addEventListener('change', handleImport);
             exportJsonButton.addEventListener('click', () => handleExport('json'));
@@ -814,6 +1012,7 @@
             exportXlsxButton.addEventListener('click', () => handleExport('xlsx'));
 
             // --- INITIALIZATION ---
+            ui.updateText();
             showPage('page-home');
         });
     </script>
