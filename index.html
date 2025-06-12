@@ -42,6 +42,26 @@
             overflow: hidden;
             border: 4px solid #0d9488;
         }
+        /* Thumbnail styles */
+        .thumbnail-container {
+            position: relative;
+        }
+        .thumbnail-delete {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            border: 2px solid white;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -96,32 +116,101 @@
 
             <!-- 3. Building Form Page -->
             <div id="page-form" class="page">
-                <form id="building-form" class="space-y-4">
+                <form id="building-form" class="space-y-6">
                     <input type="hidden" id="building-id">
-                    <div>
-                        <label for="buildingName" class="block text-sm font-medium text-gray-700">Building Name *</label>
-                        <input type="text" id="buildingName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                    
+                    <!-- Basic Info Section -->
+                    <div class="bg-white p-4 rounded-lg shadow">
+                         <h3 class="font-bold text-lg mb-4 border-b pb-2">Basic Information</h3>
+                         <div class="space-y-4">
+                            <div>
+                                <label for="buildingName" class="block text-sm font-medium text-gray-700">Building Name *</label>
+                                <input type="text" id="buildingName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                            </div>
+                            <div>
+                                <label for="address" class="block text-sm font-medium text-gray-700">Address / Location</label>
+                                <input type="text" id="address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                            </div>
+                            <div>
+                                <label for="yearBuilt" class="block text-sm font-medium text-gray-700">Year Built</label>
+                                <input type="number" id="yearBuilt" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                            </div>
+                             <div>
+                                <label for="ownerName" class="block text-sm font-medium text-gray-700">Owner Name (Optional)</label>
+                                <input type="text" id="ownerName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                            </div>
+                         </div>
                     </div>
-                    <div>
-                        <label for="address" class="block text-sm font-medium text-gray-700">Address / Location</label>
-                        <input type="text" id="address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+
+                    <!-- Classification Section -->
+                    <div class="bg-white p-4 rounded-lg shadow">
+                         <h3 class="font-bold text-lg mb-4 border-b pb-2">Classification</h3>
+                         <div class="space-y-4">
+                            <div>
+                                <label for="buildingUseType" class="block text-sm font-medium text-gray-700">Building Use Type</label>
+                                <select id="buildingUseType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                                    <option>Residential</option>
+                                    <option>Commercial</option>
+                                    <option>Industrial</option>
+                                    <option>Institutional</option>
+                                    <option>Mixed-Use</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="euClassification" class="block text-sm font-medium text-gray-700">EU Building Classification (CC)</label>
+                                <select id="euClassification" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                                    <option value="">Select a classification...</option>
+                                    <option value="111">Residential - One-dwelling</option>
+                                    <option value="112">Residential - Multi-dwelling</option>
+                                    <option value="122">Commercial - Office Building</option>
+                                    <option value="123">Commercial - Wholesale and retail trade</option>
+                                    <option value="125">Commercial - Industrial and warehouse</option>
+                                    <option value="126">Public - Entertainment, education, hospital</option>
+                                    <option value="127">Other non-residential</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label for="yearBuilt" class="block text-sm font-medium text-gray-700">Year Built</label>
-                        <input type="number" id="yearBuilt" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                    
+                    <!-- Location Section -->
+                     <div class="bg-white p-4 rounded-lg shadow">
+                         <h3 class="font-bold text-lg mb-4 border-b pb-2">GPS Location</h3>
+                         <div class="flex items-center space-x-4 mb-2">
+                            <div class="flex-1">
+                                <label for="latitude" class="block text-sm font-medium text-gray-700">Latitude</label>
+                                <input type="text" id="latitude" readonly class="mt-1 bg-gray-100 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                             <div class="flex-1">
+                                <label for="longitude" class="block text-sm font-medium text-gray-700">Longitude</label>
+                                <input type="text" id="longitude" readonly class="mt-1 bg-gray-100 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                         </div>
+                          <button type="button" id="get-location-btn" class="w-full mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Get Current Location</button>
                     </div>
-                    <div>
-                        <label for="buildingUseType" class="block text-sm font-medium text-gray-700">Building Use Type</label>
-                        <input type="text" id="buildingUseType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+
+                    <!-- Photos Section -->
+                    <div class="bg-white p-4 rounded-lg shadow">
+                         <h3 class="font-bold text-lg mb-4 border-b pb-2">Photos</h3>
+                         <p class="text-sm text-gray-500 mb-4">Note: Storing many large photos may slow down the app. Storage is limited by your browser.</p>
+                         <div class="flex space-x-4">
+                             <label for="photo-upload" class="flex-1 text-center bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg cursor-pointer">Upload from Gallery</label>
+                             <input type="file" id="photo-upload" class="hidden" accept="image/*" multiple>
+                             
+                             <label for="photo-capture" class="flex-1 text-center bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg cursor-pointer">Take Photo</label>
+                             <input type="file" id="photo-capture" class="hidden" accept="image/*" capture="environment">
+                         </div>
+                         <div id="photo-thumbnails" class="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                            <!-- Image thumbnails will be added here -->
+                         </div>
                     </div>
-                    <div>
-                        <label for="ownerName" class="block text-sm font-medium text-gray-700">Owner Name (Optional)</label>
-                        <input type="text" id="ownerName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
-                    </div>
-                    <div>
-                        <label for="notes" class="block text-sm font-medium text-gray-700">Notes</label>
+
+                    <!-- Notes Section -->
+                    <div class="bg-white p-4 rounded-lg shadow">
+                         <h3 class="font-bold text-lg mb-4 border-b pb-2">Notes</h3>
                         <textarea id="notes" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></textarea>
                     </div>
+
                 </form>
             </div>
 
@@ -201,6 +290,7 @@
                 currentPage: 'page-home',
                 history: [], // For back button functionality
                 activeScanner: null,
+                photoCache: [], // Temporary cache for photos on the form page
             };
 
             // --- DOM ELEMENTS ---
@@ -217,6 +307,9 @@
             const exportJsonButton = document.getElementById('export-json');
             const exportCsvButton = document.getElementById('export-csv');
             const exportXlsxButton = document.getElementById('export-xlsx');
+            const getLocationBtn = document.getElementById('get-location-btn');
+            const photoUploadInput = document.getElementById('photo-upload');
+            const photoCaptureInput = document.getElementById('photo-capture');
             
             // --- DATABASE LOGIC (using localStorage) ---
             const db = {
@@ -239,8 +332,12 @@
                         address: buildingData.address || '',
                         yearBuilt: buildingData.yearBuilt || '',
                         buildingUseType: buildingData.buildingUseType || '',
+                        euClassification: buildingData.euClassification || '',
+                        latitude: buildingData.latitude || '',
+                        longitude: buildingData.longitude || '',
                         ownerName: buildingData.ownerName || '',
                         notes: buildingData.notes || '',
+                        photos: buildingData.photos || [],
                     };
                     const index = buildings.findIndex(b => b.id === buildingToSave.id);
                     if (index > -1) {
@@ -294,19 +391,50 @@
                         { label: 'Building Name', value: building.buildingName },
                         { label: 'Address', value: building.address },
                         { label: 'Year Built', value: building.yearBuilt },
-                        { label: 'Use Type', value: building.buildingUseType },
+                        { label: 'Building Use Type', value: building.buildingUseType },
+                        { label: 'EU Classification', value: building.euClassification },
                         { label: 'Owner Name', value: building.ownerName },
                         { label: 'Notes', value: building.notes },
                     ];
+
                     fields.forEach(field => {
+                        if (field.value) { // Only show fields that have a value
+                            const row = document.createElement('div');
+                            row.className = 'bg-white p-4 rounded-lg shadow';
+                            row.innerHTML = `
+                                <p class="text-sm font-bold text-teal-600">${field.label}</p>
+                                <p class="text-lg mt-1">${field.value}</p>
+                            `;
+                            content.appendChild(row);
+                        }
+                    });
+                    
+                    // Display Location
+                    if (building.latitude && building.longitude) {
                         const row = document.createElement('div');
                         row.className = 'bg-white p-4 rounded-lg shadow';
                         row.innerHTML = `
-                            <p class="text-sm font-bold text-teal-600">${field.label}</p>
-                            <p class="text-lg mt-1">${field.value || 'N/A'}</p>
+                            <p class="text-sm font-bold text-teal-600">Location</p>
+                            <p class="text-lg mt-1">${building.latitude}, ${building.longitude}</p>
+                            <a href="https://www.google.com/maps?q=${building.latitude},${building.longitude}" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">Open in Google Maps</a>
                         `;
                         content.appendChild(row);
-                    });
+                    }
+
+                    // Display Photos
+                    if (building.photos && building.photos.length > 0) {
+                         const photoSection = document.createElement('div');
+                         photoSection.className = 'bg-white p-4 rounded-lg shadow';
+                         photoSection.innerHTML = `<p class="text-sm font-bold text-teal-600 mb-2">Photos</p>`;
+                         const photoGrid = document.createElement('div');
+                         photoGrid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4';
+                         building.photos.forEach(photoSrc => {
+                            photoGrid.innerHTML += `<img src="${photoSrc}" class="rounded-lg w-full h-auto object-cover">`;
+                         });
+                         photoSection.appendChild(photoGrid);
+                         content.appendChild(photoSection);
+                    }
+
 
                     // If it's an admin view, render the QR code directly on this page
                     if (isAdminView) {
@@ -337,6 +465,31 @@
                             qrCode.download({ name: `qr-${building.buildingName.replace(/\s+/g, '-')}`, extension: 'png' });
                         };
                     }
+                },
+                
+                renderPhotoThumbnails: () => {
+                    const container = document.getElementById('photo-thumbnails');
+                    container.innerHTML = '';
+                    state.photoCache.forEach((photoSrc, index) => {
+                        const thumbContainer = document.createElement('div');
+                        thumbContainer.className = 'thumbnail-container';
+                        
+                        const img = document.createElement('img');
+                        img.src = photoSrc;
+                        img.className = 'w-full h-auto rounded-lg shadow';
+                        
+                        const deleteBtn = document.createElement('div');
+                        deleteBtn.className = 'thumbnail-delete';
+                        deleteBtn.innerHTML = '&times;';
+                        deleteBtn.onclick = () => {
+                            state.photoCache.splice(index, 1);
+                            ui.renderPhotoThumbnails();
+                        };
+                        
+                        thumbContainer.appendChild(img);
+                        thumbContainer.appendChild(deleteBtn);
+                        container.appendChild(thumbContainer);
+                    });
                 },
                 
                 showToast: (message, isError = false) => {
@@ -394,6 +547,7 @@
                         headerActions.innerHTML = `<button id="save-btn" class="p-2 rounded-full hover:bg-teal-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></button>`;
                         document.getElementById('save-btn').onclick = handleFormSave;
                         form.reset();
+                        state.photoCache = []; // Clear photo cache
                         if (params.buildingId) {
                             const building = db.getById(params.buildingId);
                             if (building) {
@@ -401,13 +555,18 @@
                                 document.getElementById('buildingName').value = building.buildingName;
                                 document.getElementById('address').value = building.address;
                                 document.getElementById('yearBuilt').value = building.yearBuilt;
-                                document.getElementById('buildingUseType').value = building.buildingUseType;
+                                document.getElementById('buildingUseType').value = building.buildingUseType || 'Residential';
+                                document.getElementById('euClassification').value = building.euClassification || '';
+                                document.getElementById('latitude').value = building.latitude || '';
+                                document.getElementById('longitude').value = building.longitude || '';
                                 document.getElementById('ownerName').value = building.ownerName;
                                 document.getElementById('notes').value = building.notes;
+                                state.photoCache = [...(building.photos || [])];
                             }
                         } else {
                             document.getElementById('building-id').value = db.uuid();
                         }
+                        ui.renderPhotoThumbnails();
                         break;
                     case 'page-detail':
                         const building = db.getById(params.buildingId);
@@ -463,8 +622,12 @@
                     address: document.getElementById('address').value,
                     yearBuilt: document.getElementById('yearBuilt').value,
                     buildingUseType: document.getElementById('buildingUseType').value,
+                    euClassification: document.getElementById('euClassification').value,
+                    latitude: document.getElementById('latitude').value,
+                    longitude: document.getElementById('longitude').value,
                     ownerName: document.getElementById('ownerName').value,
                     notes: document.getElementById('notes').value,
+                    photos: state.photoCache, // Save photos from the cache
                 };
                 db.save(buildingData);
                 ui.showToast('Building saved successfully!');
@@ -504,6 +667,39 @@
                     });
             };
             
+             // --- LOCATION & PHOTO LOGIC ---
+            getLocationBtn.addEventListener('click', () => {
+                if ('geolocation' in navigator) {
+                    navigator.geolocation.getCurrentPosition(position => {
+                        document.getElementById('latitude').value = position.coords.latitude.toFixed(6);
+                        document.getElementById('longitude').value = position.coords.longitude.toFixed(6);
+                        ui.showToast('Location captured!');
+                    }, error => {
+                        ui.showToast('Could not get location. Please enable GPS.', true);
+                        console.error(error);
+                    });
+                } else {
+                    ui.showToast('Geolocation is not supported by your browser.', true);
+                }
+            });
+
+            const handlePhotoFiles = (files) => {
+                if (!files || files.length === 0) return;
+                
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        state.photoCache.push(e.target.result); // Add Base64 string to cache
+                        ui.renderPhotoThumbnails();
+                    };
+                    reader.readAsDataURL(file); // Read as Base64
+                });
+            };
+
+            photoUploadInput.addEventListener('change', (e) => handlePhotoFiles(e.target.files));
+            photoCaptureInput.addEventListener('change', (e) => handlePhotoFiles(e.target.files));
+
+
             // --- IMPORT/EXPORT LOGIC ---
             const handleImport = (event) => {
                 const file = event.target.files[0];
@@ -530,10 +726,26 @@
 
                         if (!Array.isArray(buildings)) throw new Error("Invalid file content.");
                         
-                        if (confirm(`This will import ${buildings.length} records and overwrite all existing data. Are you sure?`)) {
-                            db.clear();
-                            buildings.forEach(b => db.save(b));
-                            ui.showToast(`${buildings.length} buildings imported successfully!`);
+                        // Sanitize imported data to ensure correct structure
+                        const sanitizedBuildings = buildings.map(b => ({
+                            id: b.id || db.uuid(),
+                            buildingName: b.buildingName || '',
+                            address: b.address || '',
+                            yearBuilt: b.yearBuilt || '',
+                            buildingUseType: b.buildingUseType || '',
+                            euClassification: b.euClassification || '',
+                            latitude: b.latitude || '',
+                            longitude: b.longitude || '',
+                            ownerName: b.ownerName || '',
+                            notes: b.notes || '',
+                            // If importing from JSON, keep photos. Otherwise, default to empty.
+                            photos: fileExtension === 'json' && Array.isArray(b.photos) ? b.photos : [],
+                        }));
+
+                        if (confirm(`This will import ${sanitizedBuildings.length} records and overwrite all existing data. Are you sure?`)) {
+                            // Overwrite the entire database at once for efficiency
+                            localStorage.setItem(DB_KEY, JSON.stringify(sanitizedBuildings));
+                            ui.showToast(`${sanitizedBuildings.length} buildings imported successfully!`);
                             if(state.currentPage === 'page-admin') ui.renderAdminList();
                         }
 
@@ -562,15 +774,21 @@
                     ui.showToast("No data to export.", true);
                     return;
                 }
+
+                // Create a clean version without photos for CSV/Excel
+                const cleanBuildings = buildings.map(b => {
+                    const { photos, ...rest } = b; // Destructure to remove photos
+                    return rest;
+                });
                 
                 if (format === 'json') {
-                    const content = JSON.stringify(buildings, null, 2);
+                    const content = JSON.stringify(buildings, null, 2); // Export with photos for JSON
                     createAndDownloadFile('building_backup.json', content, 'application/json');
                 } else if (format === 'csv') {
-                    const content = Papa.unparse(buildings);
+                    const content = Papa.unparse(cleanBuildings);
                     createAndDownloadFile('building_backup.csv', content, 'text/csv;charset=utf-8;');
                 } else if (format === 'xlsx') {
-                    const worksheet = XLSX.utils.json_to_sheet(buildings);
+                    const worksheet = XLSX.utils.json_to_sheet(cleanBuildings);
                     const workbook = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(workbook, worksheet, "Buildings");
                     XLSX.writeFile(workbook, "building_backup.xlsx");
