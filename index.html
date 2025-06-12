@@ -140,7 +140,7 @@
             <div id="page-form" class="page relative">
                 <div id="form-qr-code-container" class="hidden md:block"></div>
                 <form id="building-form" class="space-y-6">
-                    <input type="hidden" id="building-id-input">
+                    <input type="hidden" id="id">
                     
                     <!-- Basic Info & Address Section -->
                     <div class="bg-white p-4 rounded-lg shadow">
@@ -194,15 +194,23 @@
                                 <label for="squareFeet" class="block text-sm font-medium text-gray-700" data-lang="form_sqm"></label>
                                 <input type="number" id="squareFeet" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
-                             <div>
+                            <div>
                                 <label for="bedrooms" class="block text-sm font-medium text-gray-700" data-lang="form_bedrooms"></label>
-                                <input type="number" id="bedrooms" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <div class="flex items-center mt-1">
+                                    <button type="button" class="stepper-btn bg-gray-200 text-lg font-bold rounded-l px-3 py-1.5" data-target="bedrooms" data-action="decrement">-</button>
+                                    <input type="text" id="bedrooms" value="0" readonly class="w-full text-center border-t border-b border-gray-300 shadow-sm focus:outline-none py-1.5">
+                                    <button type="button" class="stepper-btn bg-gray-200 text-lg font-bold rounded-r px-3 py-1.5" data-target="bedrooms" data-action="increment">+</button>
+                                </div>
                             </div>
                              <div>
                                 <label for="bathrooms" class="block text-sm font-medium text-gray-700" data-lang="form_bathrooms"></label>
-                                <input type="number" id="bathrooms" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                 <div class="flex items-center mt-1">
+                                    <button type="button" class="stepper-btn bg-gray-200 text-lg font-bold rounded-l px-3 py-1.5" data-target="bathrooms" data-action="decrement">-</button>
+                                    <input type="text" id="bathrooms" value="0" readonly class="w-full text-center border-t border-b border-gray-300 shadow-sm focus:outline-none py-1.5">
+                                    <button type="button" class="stepper-btn bg-gray-200 text-lg font-bold rounded-r px-3 py-1.5" data-target="bathrooms" data-action="increment">+</button>
+                                </div>
                             </div>
-                            <div class="flex items-center mt-2">
+                            <div class="flex items-center mt-2 md:mt-8">
                                 <input type="checkbox" id="garage" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                                 <label for="garage" class="ml-2 block text-sm text-gray-900" data-lang="form_garage"></label>
                             </div>
@@ -501,19 +509,23 @@
             // --- DATABASE LOGIC (using localStorage) ---
             const db = {
                 // Generate a unique ID (simple version)
-                uuid: () => 'id-' + new Date().getTime() + '-' + Math.random().toString(16).slice(2),
+                uuid: () => {
+                    const buildings = db.getAll();
+                    if (buildings.length === 0) return 1;
+                    return Math.max(...buildings.map(b => Number(b.id) || 0)) + 1;
+                },
                 
                 // Get all buildings from localStorage
                 getAll: () => JSON.parse(localStorage.getItem(DB_KEY) || '[]'),
                 
                 // Get a single building by its ID
-                getById: (id) => db.getAll().find(b => b.id === id),
+                getById: (id) => db.getAll().find(b => String(b.id) === String(id)),
                 
                 // Save a building (add or update)
                 save: (buildingData) => {
                     const buildings = db.getAll();
                     const buildingToSave = sanitizeBuilding(buildingData);
-                    const index = buildings.findIndex(b => b.id === buildingToSave.id);
+                    const index = buildings.findIndex(b => String(b.id) === String(buildingToSave.id));
                     if (index > -1) {
                         buildings[index] = buildingToSave; // Update
                     } else {
@@ -525,7 +537,7 @@
                 // Delete a building by ID
                 delete: (id) => {
                     let buildings = db.getAll();
-                    buildings = buildings.filter(b => b.id !== id);
+                    buildings = buildings.filter(b => String(b.id) !== String(id));
                     localStorage.setItem(DB_KEY, JSON.stringify(buildings));
                 },
                 
@@ -780,12 +792,12 @@
                                     else { element.value = building[key]; }
                                 }
                             }
-                            document.getElementById('building-id-input').value = building.id; 
+                            document.getElementById('id').value = building.id; 
                             state.photoCache = [...(building.photos || [])];
                         }
                     } else {
                         currentId = db.uuid();
-                        document.getElementById('building-id-input').value = currentId;
+                        document.getElementById('id').value = currentId;
                     }
                     ui.renderFormQRCode(currentId);
                     ui.renderPhotoThumbnails();
@@ -819,9 +831,8 @@
                 if (!form.checkValidity()) { ui.showToast('toast_fill_fields', true); return; }
                 const buildingData = {};
                 const inputs = form.querySelectorAll('input, select, textarea');
-                buildingData.id = document.getElementById('building-id-input').value; // Explicitly get ID
                 inputs.forEach(input => {
-                    if(input.id && input.id !== 'building-id-input') {
+                    if(input.id) {
                         if (input.type === 'checkbox') { buildingData[input.id] = input.checked; } 
                         else { buildingData[input.id] = input.value; }
                     }
@@ -875,6 +886,19 @@
             };
             photoUploadInput.addEventListener('change', (e) => handlePhotoFiles(e.target.files));
             photoCaptureInput.addEventListener('change', (e) => handlePhotoFiles(e.target.files));
+            
+            document.querySelectorAll('.stepper-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetInput = document.getElementById(btn.dataset.target);
+                    let currentValue = parseInt(targetInput.value, 10);
+                    if (btn.dataset.action === 'increment') {
+                        currentValue++;
+                    } else {
+                        if (currentValue > 0) { currentValue--; }
+                    }
+                    targetInput.value = currentValue;
+                });
+            });
 
             const handleImport = (event) => {
                 const file = event.target.files[0];
@@ -930,7 +954,7 @@
                 localStorage.setItem(LANG_KEY, state.currentLang);
                 ui.updateText();
                 // To refresh the current page with the new language
-                const currentBuildingId = document.getElementById('building-id-input')?.value;
+                const currentBuildingId = document.getElementById('id')?.value;
                 showPage(state.currentPage, { buildingId: currentBuildingId }, true); 
             });
             
