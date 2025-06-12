@@ -127,7 +127,7 @@
             <div id="page-form" class="page relative">
                 <div id="form-qr-code-container" class="hidden md:block"></div>
                 <form id="building-form" class="space-y-6">
-                    <input type="hidden" id="building-id">
+                    <input type="hidden" id="id">
                     
                     <!-- Basic Info & Address Section -->
                     <div class="bg-white p-4 rounded-lg shadow">
@@ -512,41 +512,46 @@
                          return row;
                     };
 
+                    const addField = (section, label, value) => {
+                        const row = createFieldRow(label, value);
+                        if(row) section.lastChild.appendChild(row);
+                    }
+
                     const mainInfoSection = createSection(null);
-                    mainInfoSection.firstChild.appendChild(createFieldRow('Building Name', building.buildingName));
+                    addField(mainInfoSection, 'Building Name', building.buildingName);
                     const fullAddress = [building.address, building.city, building.stateProvince, building.zipPostal, building.country].filter(Boolean).join(', ');
-                    mainInfoSection.firstChild.appendChild(createFieldRow('Full Address', fullAddress));
+                    addField(mainInfoSection, 'Full Address', fullAddress);
                     if (building.webpage) {
                         const webpageRow = document.createElement('div');
                         webpageRow.innerHTML = `<p class="text-sm font-medium text-gray-500">Web Page</p><a href="${building.webpage}" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline break-all">${building.webpage}</a>`;
-                        mainInfoSection.firstChild.appendChild(webpageRow);
+                        mainInfoSection.lastChild.appendChild(webpageRow);
                     }
                     content.appendChild(mainInfoSection);
 
                     const profileSection = createSection('Property Profile');
-                    profileSection.lastChild.appendChild(createFieldRow('Property Type', building.buildingUseType));
-                    profileSection.lastChild.appendChild(createFieldRow('EU Classification (CC)', building.euClassification));
-                    profileSection.lastChild.appendChild(createFieldRow('Year Built', building.yearBuilt));
-                    profileSection.lastChild.appendChild(createFieldRow('Square Meters (m²)', building.squareFeet));
-                    profileSection.lastChild.appendChild(createFieldRow('Bedrooms', building.bedrooms));
-                    profileSection.lastChild.appendChild(createFieldRow('Bathrooms', building.bathrooms));
-                    profileSection.lastChild.appendChild(createFieldRow('Garage', building.garage ? 'Yes' : 'No'));
+                    addField(profileSection, 'Property Type', building.buildingUseType);
+                    addField(profileSection, 'EU Classification (CC)', building.euClassification);
+                    addField(profileSection, 'Year Built', building.yearBuilt);
+                    addField(profileSection, 'Square Meters (m²)', building.squareFeet);
+                    addField(profileSection, 'Bedrooms', building.bedrooms);
+                    addField(profileSection, 'Bathrooms', building.bathrooms);
+                    addField(profileSection, 'Garage', building.garage ? 'Yes' : 'No');
                     if (profileSection.lastChild.children.length > 0) content.appendChild(profileSection);
 
                     const financialSection = createSection('Financials');
-                    financialSection.lastChild.appendChild(createFieldRow('Loan Amount', building.loanAmount));
-                    financialSection.lastChild.appendChild(createFieldRow('Assessed Value', building.assessedValue));
-                    financialSection.lastChild.appendChild(createFieldRow('Current Value', building.currentValue));
-                    financialSection.lastChild.appendChild(createFieldRow('Down Payment', building.downPayment));
-                    financialSection.lastChild.appendChild(createFieldRow('Monthly Mortgage', building.monthlyMortgage));
-                    financialSection.lastChild.appendChild(createFieldRow('Housing Dues', building.housingDues));
-                    financialSection.lastChild.appendChild(createFieldRow('Tax', building.tax));
-                    financialSection.lastChild.appendChild(createFieldRow('Insurance', building.insurance));
+                    addField(financialSection, 'Loan Amount', building.loanAmount);
+                    addField(financialSection, 'Assessed Value', building.assessedValue);
+                    addField(financialSection, 'Current Value', building.currentValue);
+                    addField(financialSection, 'Down Payment', building.downPayment);
+                    addField(financialSection, 'Monthly Mortgage', building.monthlyMortgage);
+                    addField(financialSection, 'Housing Dues', building.housingDues);
+                    addField(financialSection, 'Tax', building.tax);
+                    addField(financialSection, 'Insurance', building.insurance);
                     if (financialSection.lastChild.children.length > 0) content.appendChild(financialSection);
 
                     const otherSection = createSection('Other Information');
-                    otherSection.lastChild.appendChild(createFieldRow('Owner Name', building.ownerName));
-                    otherSection.lastChild.appendChild(createFieldRow('Notes', building.notes));
+                    addField(otherSection, 'Owner Name', building.ownerName);
+                    addField(otherSection, 'Notes', building.notes);
                     if (otherSection.lastChild.children.length > 0) content.appendChild(otherSection);
 
                     if (building.latitude && building.longitude) {
@@ -655,12 +660,12 @@
                                         else { element.value = building[key]; }
                                     }
                                 }
-                                document.getElementById('building-id').value = building.id;
+                                document.getElementById('id').value = building.id; // Correctly set hidden id
                                 state.photoCache = [...(building.photos || [])];
                             }
                         } else {
                             currentId = db.uuid();
-                            document.getElementById('building-id').value = currentId;
+                            document.getElementById('id').value = currentId;
                         }
                         ui.renderFormQRCode(currentId);
                         ui.renderPhotoThumbnails();
