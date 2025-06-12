@@ -16,6 +16,11 @@
     <!-- QR Code Generation and Scanning libraries -->
     <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    
+    <!-- Libraries for CSV and Excel handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 
     <style>
         /* Basic styles and theme setup */
@@ -66,14 +71,14 @@
                         <span>Scan Building QR Code</span>
                     </button>
                     <button data-target="page-admin" class="nav-button bg-gray-700 hover:bg-gray-800 text-white font-bold py-4 px-6 rounded-lg shadow-lg flex items-center justify-center space-x-3">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        <span>Admin Panel</span>
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        <span>Add Building</span>
                     </button>
                     <div class="pt-8">
                         <label for="import-file" class="text-teal-600 hover:text-teal-800 font-semibold cursor-pointer">
-                            Import Building Data File
+                            Import Building Data File (JSON, CSV, Excel)
                         </label>
-                        <input type="file" id="import-file" class="hidden" accept=".json">
+                        <input type="file" id="import-file" class="hidden" accept=".json,.csv,.xls,.xlsx">
                     </div>
                 </div>
             </div>
@@ -137,27 +142,45 @@
             
             <!-- 6. Settings Page -->
             <div id="page-settings" class="page">
-                <ul class="space-y-3">
-                    <li>
-                        <button id="export-data" class="w-full text-left bg-white p-4 rounded-lg shadow hover:bg-gray-50 flex justify-between items-center">
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="font-bold text-lg mb-2">Import Data</h3>
+                         <label for="import-file-settings" class="w-full text-left bg-white p-4 rounded-lg shadow hover:bg-gray-50 flex justify-between items-center cursor-pointer">
                             <div>
-                                <h3 class="font-bold text-lg">Export Data</h3>
-                                <p class="text-gray-600">Save the entire database to a JSON file.</p>
-                            </div>
-                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                        </button>
-                    </li>
-                     <li>
-                        <label for="import-file-settings" class="w-full text-left bg-white p-4 rounded-lg shadow hover:bg-gray-50 flex justify-between items-center cursor-pointer">
-                            <div>
-                                <h3 class="font-bold text-lg">Import Data</h3>
-                                <p class="text-gray-600">Overwrite data from a JSON file.</p>
+                                <p class="font-semibold">Import from File</p>
+                                <p class="text-gray-600 text-sm">Overwrite data from a JSON, CSV, or Excel file.</p>
                             </div>
                             <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         </label>
-                        <input type="file" id="import-file-settings" class="hidden" accept=".json">
-                    </li>
-                </ul>
+                        <input type="file" id="import-file-settings" class="hidden" accept=".json,.csv,.xls,.xlsx">
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-2">Export Data</h3>
+                        <div class="space-y-3">
+                             <button id="export-json" class="w-full text-left bg-white p-4 rounded-lg shadow hover:bg-gray-50 flex justify-between items-center">
+                                <div>
+                                    <p class="font-semibold">Export as JSON</p>
+                                    <p class="text-gray-600 text-sm">Best for backups and re-importing.</p>
+                                </div>
+                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            </button>
+                             <button id="export-csv" class="w-full text-left bg-white p-4 rounded-lg shadow hover:bg-gray-50 flex justify-between items-center">
+                                <div>
+                                    <p class="font-semibold">Export as CSV</p>
+                                    <p class="text-gray-600 text-sm">Good for spreadsheets.</p>
+                                </div>
+                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            </button>
+                             <button id="export-xlsx" class="w-full text-left bg-white p-4 rounded-lg shadow hover:bg-gray-50 flex justify-between items-center">
+                                <div>
+                                    <p class="font-semibold">Export as Excel (XLSX)</p>
+                                    <p class="text-gray-600 text-sm">Best for Excel users.</p>
+                                </div>
+                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
         
@@ -191,7 +214,9 @@
             const qrReader = document.getElementById('qr-reader');
             const importFileInput = document.getElementById('import-file');
             const importFileInputSettings = document.getElementById('import-file-settings');
-            const exportDataButton = document.getElementById('export-data');
+            const exportJsonButton = document.getElementById('export-json');
+            const exportCsvButton = document.getElementById('export-csv');
+            const exportXlsxButton = document.getElementById('export-xlsx');
             
             // --- DATABASE LOGIC (using localStorage) ---
             const db = {
@@ -207,11 +232,21 @@
                 // Save a building (add or update)
                 save: (buildingData) => {
                     const buildings = db.getAll();
-                    const index = buildings.findIndex(b => b.id === buildingData.id);
+                    // Ensure all required fields exist, even if empty
+                    const buildingToSave = {
+                        id: buildingData.id || db.uuid(),
+                        buildingName: buildingData.buildingName || '',
+                        address: buildingData.address || '',
+                        yearBuilt: buildingData.yearBuilt || '',
+                        buildingUseType: buildingData.buildingUseType || '',
+                        ownerName: buildingData.ownerName || '',
+                        notes: buildingData.notes || '',
+                    };
+                    const index = buildings.findIndex(b => b.id === buildingToSave.id);
                     if (index > -1) {
-                        buildings[index] = buildingData; // Update
+                        buildings[index] = buildingToSave; // Update
                     } else {
-                        buildings.push(buildingData); // Add
+                        buildings.push(buildingToSave); // Add
                     }
                     localStorage.setItem(DB_KEY, JSON.stringify(buildings));
                 },
@@ -470,47 +505,85 @@
             };
             
             // --- IMPORT/EXPORT LOGIC ---
-            const handleImport = async (event) => {
+            const handleImport = (event) => {
                 const file = event.target.files[0];
                 if (!file) return;
 
-                try {
-                    const text = await file.text();
-                    const buildings = JSON.parse(text);
-                    if (!Array.isArray(buildings)) throw new Error("Invalid format");
-                    
-                    if (confirm("This will overwrite all existing data. Are you sure?")) {
-                        db.clear();
-                        buildings.forEach(b => db.save(b));
-                        ui.showToast(`${buildings.length} buildings imported successfully!`);
-                        if(state.currentPage === 'page-admin') ui.renderAdminList();
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    let buildings = [];
+                    try {
+                        const fileExtension = file.name.split('.').pop().toLowerCase();
+                        if (fileExtension === 'json') {
+                            buildings = JSON.parse(e.target.result);
+                        } else if (fileExtension === 'csv') {
+                            const result = Papa.parse(e.target.result, { header: true, skipEmptyLines: true });
+                            buildings = result.data;
+                        } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+                            const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                            const sheetName = workbook.SheetNames[0];
+                            const worksheet = workbook.Sheets[sheetName];
+                            buildings = XLSX.utils.sheet_to_json(worksheet);
+                        } else {
+                            throw new Error('Unsupported file format.');
+                        }
+
+                        if (!Array.isArray(buildings)) throw new Error("Invalid file content.");
+                        
+                        if (confirm(`This will import ${buildings.length} records and overwrite all existing data. Are you sure?`)) {
+                            db.clear();
+                            buildings.forEach(b => db.save(b));
+                            ui.showToast(`${buildings.length} buildings imported successfully!`);
+                            if(state.currentPage === 'page-admin') ui.renderAdminList();
+                        }
+
+                    } catch (err) {
+                        ui.showToast("Failed to import file. Make sure it's a valid and correctly formatted file.", true);
+                        console.error(err);
                     }
-                } catch (e) {
-                    ui.showToast("Failed to import file. Make sure it's a valid backup.", true);
-                    console.error(e);
-                }
+                };
+                reader.readAsBinaryString(file);
                 event.target.value = null; // Reset file input
             };
+            
+            const createAndDownloadFile = (filename, content, type) => {
+                const blob = new Blob([content], { type });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
 
-            const handleExport = () => {
+            const handleExport = (format) => {
                 const buildings = db.getAll();
                 if (buildings.length === 0) {
                     ui.showToast("No data to export.", true);
                     return;
                 }
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(buildings, null, 2));
-                const downloadAnchorNode = document.createElement('a');
-                downloadAnchorNode.setAttribute("href", dataStr);
-                downloadAnchorNode.setAttribute("download", "building_backup.json");
-                document.body.appendChild(downloadAnchorNode);
-                downloadAnchorNode.click();
-                downloadAnchorNode.remove();
-                ui.showToast("Data exported successfully!");
+                
+                if (format === 'json') {
+                    const content = JSON.stringify(buildings, null, 2);
+                    createAndDownloadFile('building_backup.json', content, 'application/json');
+                } else if (format === 'csv') {
+                    const content = Papa.unparse(buildings);
+                    createAndDownloadFile('building_backup.csv', content, 'text/csv;charset=utf-8;');
+                } else if (format === 'xlsx') {
+                    const worksheet = XLSX.utils.json_to_sheet(buildings);
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, "Buildings");
+                    XLSX.writeFile(workbook, "building_backup.xlsx");
+                }
+                
+                ui.showToast(`Data exported as ${format.toUpperCase()} successfully!`);
             };
 
             importFileInput.addEventListener('change', handleImport);
             importFileInputSettings.addEventListener('change', handleImport);
-            exportDataButton.addEventListener('click', handleExport);
+            exportJsonButton.addEventListener('click', () => handleExport('json'));
+            exportCsvButton.addEventListener('click', () => handleExport('csv'));
+            exportXlsxButton.addEventListener('click', () => handleExport('xlsx'));
 
             // --- INITIALIZATION ---
             showPage('page-home'); // Start on the home page
