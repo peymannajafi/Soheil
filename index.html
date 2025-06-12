@@ -185,7 +185,7 @@
                     <div class="bg-white p-4 rounded-lg shadow">
                          <h3 class="font-bold text-lg mb-4 border-b pb-2 text-blue-800" data-lang="form_section_profile"></h3>
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
+                            <div class="md:col-span-2">
                                 <label for="buildingUseType" class="block text-sm font-medium text-gray-700" data-lang="form_property_type"></label>
                                 <select id="buildingUseType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 </select>
@@ -217,11 +217,6 @@
                             <div class="flex items-center mt-2 md:mt-8">
                                 <input type="checkbox" id="garage" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                                 <label for="garage" class="ml-2 block text-sm text-gray-900" data-lang="form_garage"></label>
-                            </div>
-                            <div class="md:col-span-2">
-                                <label for="euClassification" class="block text-sm font-medium text-gray-700" data-lang="form_eu_classification"></label>
-                                <select id="euClassification" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                </select>
                             </div>
                         </div>
                     </div>
@@ -402,8 +397,7 @@
                     no_buildings_found: "No buildings found.", click_plus_to_add: "Click the '+' button to add one.",
                     search_placeholder: "Search by Zip Code...", no_search_results: "No buildings match your search.", try_different_search: "Try a different zip code.",
                     form_section_address: "Address & Basic Info", form_building_name: "Building Name / Profile Name *", form_street: "Street", form_city: "City", form_state_province: "State/Province", form_zip_postal: "Zip/Postal Code", form_country: "Country/Region", form_webpage: "Web Page",
-                    form_section_profile: "Property Profile", form_property_type: "Property Type", form_year_built: "Year Built", form_sqm: "Square Meters (m²)", form_bedrooms: "Bedrooms", form_bathrooms: "Bathrooms", form_garage: "Garage", form_eu_classification: "EU Building Classification (CC)",
-                    form_property_type_residential: 'Residential', form_property_type_commercial: 'Commercial', form_property_type_industrial: 'Industrial', form_property_type_institutional: 'Institutional', form_property_type_mixed: 'Mixed-Use', form_property_type_other: 'Other',
+                    form_section_profile: "Property Profile", form_property_type: "Property Type", form_year_built: "Year Built", form_sqm: "Square Meters (m²)", form_bedrooms: "Bedrooms", form_bathrooms: "Bathrooms", form_garage: "Garage",
                     form_eu_select: 'Select a classification...', form_eu_111: 'Residential - One-dwelling', form_eu_112: 'Residential - Multi-dwelling', form_eu_122: 'Commercial - Office Building', form_eu_123: 'Commercial - Wholesale and retail trade', form_eu_125: 'Commercial - Industrial and warehouse', form_eu_126: 'Public - Entertainment, education, hospital', form_eu_127: 'Other non-residential',
                     form_section_financials: "Financials", form_loan_amount: "Loan Amount", form_assessed_value: "Assessed Value", form_current_value: "Current Value", form_down_payment: "Down Payment", form_monthly_mortgage: "Monthly Mortgage", form_housing_dues: "Housing Dues", form_tax: "Tax", form_insurance: "Insurance",
                     form_section_location: "GPS Location", form_latitude: "Latitude", form_longitude: "Longitude", form_get_location: "Get Current Location",
@@ -424,9 +418,8 @@
                     no_buildings_found: "هیچ ساختمانی یافت نشد.", click_plus_to_add: "برای افزودن، روی دکمه '+' کلیک کنید.",
                     search_placeholder: "جستجو بر اساس کد پستی...", no_search_results: "هیچ ساختمانی با جستجوی شما مطابقت ندارد.", try_different_search: "یک کد پستی دیگر را امتحان کنید.",
                     form_section_address: "آدرس و اطلاعات اولیه", form_building_name: "نام ساختمان / نام پروفایل *", form_street: "خیابان", form_city: "شهر", form_state_province: "استان/ایالت", form_zip_postal: "کد پستی", form_country: "کشور", form_webpage: "صفحه وب",
-                    form_section_profile: "مشخصات ملک", form_property_type: "نوع ملک", form_year_built: "سال ساخت", form_sqm: "متر مربع (m²)", form_bedrooms: "اتاق خواب", form_bathrooms: "حمام", form_garage: "پارکینگ", form_eu_classification: "طبقه‌بندی ساختمان (EU)",
-                    form_property_type_residential: 'مسکونی', form_property_type_commercial: 'تجاری', form_property_type_industrial: 'صنعتی', form_property_type_institutional: 'اداری', form_property_type_mixed: 'مختلط', form_property_type_other: 'دیگر',
-                    form_eu_select: 'یک طبقه‌بندی انتخاب کنید...', form_eu_111: 'مسکونی - یک واحدی', form_eu_112: 'مسکونی - چند واحدی', form_eu_122: 'تجاری - اداری', form_eu_123: 'تجاری - عمده و خرده فروشی', form_eu_125: 'صنعتی و انبار', form_eu_126: 'عمومی - تفریحی، آموزشی، بیمارستانی', form_eu_127: 'سایر غیرمسکونی‌ها',
+                    form_section_profile: "مشخصات ملک", form_property_type: "نوع ملک (طبقه‌بندی EU)", form_year_built: "سال ساخت", form_sqm: "متر مربع (m²)", form_bedrooms: "اتاق خواب", form_bathrooms: "حمام", form_garage: "پارکینگ",
+                    form_eu_select: 'یک طبقه‌بندی انتخاب کنید...', form_eu_111: 'مسکونی - یک واحدی', form_eu_112: 'مسکونی - چند واحدی', form_eu_122: 'تجاری - اداری', form_eu_123: 'تجاری - عمده و خرده فروشی', form_eu_125: '۱صنعتی و انبار', form_eu_126: 'عمومی - تفریحی، آموزشی، بیمارستانی', form_eu_127: 'سایر غیرمسکونی‌ها',
                     form_section_financials: "اطلاعات مالی", form_loan_amount: "مبلغ وام", form_assessed_value: "ارزش ارزیابی شده", form_current_value: "ارزش فعلی", form_down_payment: "پیش پرداخت", form_monthly_mortgage: "قسط ماهانه", form_housing_dues: "شارژ ساختمان", form_tax: "مالیات", form_insurance: "بیمه",
                     form_section_location: "موقعیت GPS", form_latitude: "عرض جغرافیایی", form_longitude: "طول جغرافیایی", form_get_location: "دریافت موقعیت مکانی فعلی",
                     form_section_photos: "عکس‌ها", form_photos_note: "توجه: ذخیره عکس‌های زیاد و بزرگ ممکن است سرعت برنامه را کاهش دهد. فضای ذخیره‌سازی توسط مرورگر شما محدود است.", form_upload_gallery: "آپلود از گالری", form_take_photo: "گرفتن عکس",
@@ -492,7 +485,6 @@
                     webpage: buildingData.webpage || '',
                     yearBuilt: buildingData.yearBuilt || '',
                     buildingUseType: buildingData.buildingUseType || '',
-                    euClassification: buildingData.euClassification || '',
                     loanAmount: buildingData.loanAmount || '',
                     assessedValue: buildingData.assessedValue || '',
                     currentValue: buildingData.currentValue || '',
@@ -573,25 +565,15 @@
                     
                     const propertyTypeSelect = document.getElementById('buildingUseType');
                     propertyTypeSelect.innerHTML = `
-                        <option>${translate('form_property_type_residential') || 'Residential'}</option>
-                        <option>${translate('form_property_type_commercial') || 'Commercial'}</option>
-                        <option>${translate('form_property_type_industrial') || 'Industrial'}</option>
-                        <option>${translate('form_property_type_institutional') || 'Institutional'}</option>
-                        <option>${translate('form_property_type_mixed') || 'Mixed-Use'}</option>
-                        <option>${translate('form_property_type_other') || 'Other'}</option>
+                        <option value="">${translate('form_eu_select')}</option>
+                        <option value="${translate('form_eu_111')}">${translate('form_eu_111')}</option>
+                        <option value="${translate('form_eu_112')}">${translate('form_eu_112')}</option>
+                        <option value="${translate('form_eu_122')}">${translate('form_eu_122')}</option>
+                        <option value="${translate('form_eu_123')}">${translate('form_eu_123')}</option>
+                        <option value="${translate('form_eu_125')}">${translate('form_eu_125')}</option>
+                        <option value="${translate('form_eu_126')}">${translate('form_eu_126')}</option>
+                        <option value="${translate('form_eu_127')}">${translate('form_eu_127')}</option>
                     `;
-
-                     const euSelect = document.getElementById('euClassification');
-                     euSelect.innerHTML = `
-                        <option value="">${translate('form_eu_select') || 'Select a classification...'}</option>
-                        <option value="111">${translate('form_eu_111') || 'Residential - One-dwelling'}</option>
-                        <option value="112">${translate('form_eu_112') || 'Residential - Multi-dwelling'}</option>
-                        <option value="122">${translate('form_eu_122') || 'Commercial - Office Building'}</option>
-                        <option value="123">${translate('form_eu_123') || 'Commercial - Wholesale and retail trade'}</option>
-                        <option value="125">${translate('form_eu_125') || 'Commercial - Industrial and warehouse'}</option>
-                        <option value="126">${translate('form_eu_126') || 'Public - Entertainment, education, hospital'}</option>
-                        <option value="127">${translate('form_eu_127') || 'Other non-residential'}</option>
-                     `;
                 },
 
                 renderAdminList: (searchTerm = '') => {
@@ -688,7 +670,6 @@
 
                     const profileSection = createSection('form_section_profile');
                     addField(profileSection, 'form_property_type', building.buildingUseType);
-                    addField(profileSection, 'form_eu_classification', building.euClassification);
                     addField(profileSection, 'form_year_built', building.yearBuilt);
                     addField(profileSection, 'form_sqm', building.squareFeet);
                     addField(profileSection, 'form_bedrooms', building.bedrooms);
@@ -975,7 +956,10 @@
             const handleExport = (format) => {
                 const buildings = db.getAll();
                 if (buildings.length === 0) { ui.showToast("toast_no_data_export", true); return; }
-                const cleanBuildings = buildings.map(b => { const { photos, ...rest } = b; return rest; });
+                const cleanBuildings = buildings.map(b => { 
+                    const { photos, ...rest } = b;
+                    return rest; 
+                });
                 if (format === 'json') { createAndDownloadFile('building_backup.json', JSON.stringify(buildings, null, 2), 'application/json'); } 
                 else if (format === 'csv') { createAndDownloadFile('building_backup.csv', Papa.unparse(cleanBuildings), 'text/csv;charset=utf-8;'); } 
                 else if (format === 'xlsx') {
