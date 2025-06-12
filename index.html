@@ -264,6 +264,20 @@
                                 <label for="webpage" class="block text-sm font-medium text-gray-700" data-lang="form_webpage"></label>
                                 <input type="url" id="webpage" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#03396c] focus:ring-[#03396c]">
                             </div>
+                            <!-- GPS Location Fields moved here -->
+                             <div class="md:col-span-2 border-t pt-4 mt-2">
+                                 <div class="flex items-center space-x-4 mb-2">
+                                    <div class="flex-1">
+                                        <label for="latitude" class="block text-sm font-medium text-gray-700" data-lang="form_latitude"></label>
+                                        <input type="text" id="latitude" readonly class="mt-1 bg-gray-100 block w-full rounded-md border-gray-300 shadow-sm">
+                                    </div>
+                                     <div class="flex-1">
+                                        <label for="longitude" class="block text-sm font-medium text-gray-700" data-lang="form_longitude"></label>
+                                        <input type="text" id="longitude" readonly class="mt-1 bg-gray-100 block w-full rounded-md border-gray-300 shadow-sm">
+                                    </div>
+                                 </div>
+                                  <button type="button" id="get-location-btn" class="w-full mt-2 bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg" data-lang="form_get_location"></button>
+                             </div>
                          </div>
                     </div>
 
@@ -368,22 +382,6 @@
                                 <span id="insurance-formatted" class="text-sm text-gray-500 block mt-1"></span>
                             </div>
                          </div>
-                    </div>
-                    
-                    <!-- Location Section -->
-                     <div class="bg-white p-4 rounded-lg shadow">
-                         <h3 class="font-bold text-lg mb-4 border-b pb-2 text-[#03396c]" data-lang="form_section_location"></h3>
-                         <div class="flex items-center space-x-4 mb-2">
-                            <div class="flex-1">
-                                <label for="latitude" class="block text-sm font-medium text-gray-700" data-lang="form_latitude"></label>
-                                <input type="text" id="latitude" readonly class="mt-1 bg-gray-100 block w-full rounded-md border-gray-300 shadow-sm">
-                            </div>
-                             <div class="flex-1">
-                                <label for="longitude" class="block text-sm font-medium text-gray-700" data-lang="form_longitude"></label>
-                                <input type="text" id="longitude" readonly class="mt-1 bg-gray-100 block w-full rounded-md border-gray-300 shadow-sm">
-                            </div>
-                         </div>
-                          <button type="button" id="get-location-btn" class="w-full mt-2 bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg" data-lang="form_get_location"></button>
                     </div>
 
                     <!-- Photos Section -->
@@ -800,6 +798,11 @@
                         webpageRow.innerHTML = `<p class="text-sm font-medium text-gray-500">${translate('form_webpage')}</p><a href="${building.webpage}" target="_blank" rel="noopener noreferrer" class="text-[#03396c] hover:underline break-all">${building.webpage}</a>`;
                         mainInfoSection.lastChild.appendChild(webpageRow);
                     }
+                     if (building.latitude && building.longitude) {
+                        const locationRow = document.createElement('div');
+                        locationRow.innerHTML = `<p class="text-sm font-medium text-gray-500">${translate('form_section_location')}</p><a href="https://www.google.com/maps?q=${building.latitude},${building.longitude}" target="_blank" rel="noopener noreferrer" class="text-[#03396c] hover:underline">${building.latitude}, ${building.longitude}</a>`;
+                        mainInfoSection.lastChild.appendChild(locationRow);
+                    }
                     content.appendChild(mainInfoSection);
 
                     const profileSection = createSection('form_section_profile');
@@ -826,12 +829,6 @@
                     addField(otherSection, 'ownerName', building.ownerName);
                     addField(otherSection, 'form_section_notes', building.notes);
                     if (otherSection.lastChild.children.length > 0) content.appendChild(otherSection);
-
-                    if (building.latitude && building.longitude) {
-                        const locationSection = createSection('form_section_location');
-                        locationSection.lastChild.innerHTML = `<p class="text-lg mt-1">${building.latitude}, ${building.longitude}</p><a href="https://www.google.com/maps?q=${building.latitude},${building.longitude}" target="_blank" rel="noopener noreferrer" class="text-[#03396c] hover:underline">${translate('detail_open_maps')}</a>`;
-                        content.appendChild(locationSection);
-                    }
 
                     if (building.photos && building.photos.length > 0) {
                          const photoSection = createSection('form_section_photos');
