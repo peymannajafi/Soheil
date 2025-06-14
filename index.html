@@ -30,6 +30,9 @@
         html[dir="rtl"] body {
             font-family: 'Vazirmatn', sans-serif;
         }
+        html[dir="rtl"] #back-button {
+            transform: scaleX(-1);
+        }
         .page {
             display: none; /* Hide all pages by default */
         }
@@ -731,11 +734,6 @@
                         `;
                         propertyTypeSelect.value = currentPropValue;
                     }
-                    
-                    const garageProxyLabel = document.querySelector(`label[for="garage-proxy"]`);
-                    if(garageProxyLabel) {
-                        garageProxyLabel.textContent = translate('form_garage');
-                    }
                 },
 
                 renderPhotoThumbnails: () => {
@@ -1301,7 +1299,6 @@
                 generate: (building) => {
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
-                    const logo = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgNDAiPjwhLS0gU2ltcGxpZmllZCBSaWprc292ZXJoZWlkIExvZ28gLS0+PHRleHQgeD0iMCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiMwMzM5NmMiPlJpamtzb3ZlcmhlaWQ8L3RleHQ+PC9zdmc+';
                     
                     let y = 15;
                     const margin = 15;
