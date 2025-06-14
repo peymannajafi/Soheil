@@ -106,43 +106,6 @@
             box-shadow: 0 0 0 2px rgba(75, 0, 130, 0.2);
         }
         
-        .number-stepper {
-            display: flex;
-            align-items: center;
-            border: 1px solid var(--border-color);
-            border-radius: 0.25rem;
-            overflow: hidden;
-            width: fit-content;
-        }
-        .number-stepper input {
-            border: none;
-            text-align: center;
-            width: 4rem;
-            height: 2.5rem;
-            -moz-appearance: textfield;
-        }
-        .number-stepper input::-webkit-outer-spin-button,
-        .number-stepper input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .stepper-btn {
-            width: 2.5rem;
-            height: 2.5rem;
-            background-color: #f3f4f6;
-            color: var(--primary-color);
-            font-size: 1.5rem;
-            font-weight: 300;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-        }
-        .stepper-btn:hover {
-            background-color: #e5e7eb;
-        }
-        
         #qr-reader-container {
             width: 100%;
             max-width: 500px;
@@ -158,28 +121,6 @@
             border-radius: 0.5rem;
             background-color: var(--card-background-color);
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-        }
-        
-        .thumbnail-container { position: relative; }
-        .thumbnail-delete {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background-color: #e53e3e;
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-weight: bold;
-            border: 2px solid white;
-        }
-        html[dir="rtl"] .thumbnail-delete {
-            right: auto;
-            left: -10px;
         }
         
         #confirm-modal-overlay {
@@ -265,7 +206,7 @@
             </div>
 
             <div id="page-admin" class="page">
-                <div class="mb-6 sticky top-[61px] bg-[var(--background-color)] py-3 z-10">
+                <div class="mb-6 sticky top-[61px] py-3 z-10" style="background-color: var(--background-color);">
                     <div class="relative">
                         <input type="search" id="search-bar" class="form-input pl-10" autocomplete="off">
                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -313,9 +254,9 @@
                              <div><label for="buildingAddressState">State/Province:</label><input type="text" id="buildingAddressState" class="form-input"></div>
                              <div><label for="buildingAddressPostal">Postal Code:</label><input type="text" id="buildingAddressPostal" class="form-input"></div>
                              <div><label for="buildingAddressCountry">Country:</label><input type="text" id="buildingAddressCountry" class="form-input"></div>
-                             <div><label for="gpsLatitude">GPS Coordinates (Latitude):</label><input type="number" id="gpsLatitude" class="form-input"></div>
-                             <div><label for="gpsLongitude">GPS Coordinates (Longitude):</label><input type="number" id="gpsLongitude" class="form-input"></div>
-                             <div class="md:col-span-2"><button type="button" id="get-location-btn" class="btn btn-secondary w-full" data-lang="form_get_location">Get Current Location</button></div>
+                             <div><label for="gpsLatitude">GPS Latitude:</label><input type="number" step="any" id="gpsLatitude" class="form-input"></div>
+                             <div><label for="gpsLongitude">GPS Longitude:</label><input type="number" step="any" id="gpsLongitude" class="form-input"></div>
+                             <div class="md:col-span-2"><button type="button" id="get-location-btn" class="btn btn-secondary w-full">Get Current Location</button></div>
                              <div class="md:col-span-2"><label for="legalPropertyDescription">Legal Property Description:</label><textarea id="legalPropertyDescription" rows="3" class="form-textarea"></textarea></div>
                              <div><label for="plotLotNumber">Plot/Lot Number:</label><input type="text" id="plotLotNumber" class="form-input"></div>
                         </div>
@@ -324,70 +265,31 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div><label for="primaryUse">Primary Use/Occupancy Type:</label><select id="primaryUse" class="form-select"><option>Commercial Office</option><option>Residential</option><option>Retail</option><option>Industrial</option><option>Healthcare</option><option>Education</option><option>Other</option></select></div>
                             <div><label for="grossFloorArea">Gross Floor Area (m²):</label><input type="number" id="grossFloorArea" class="form-input"></div>
-                            <div><label for="floorsAboveGround">Number of Floors (Above Ground):</label><input type="number" id="floorsAboveGround" class="form-input"></div>
-                            <div><label for="floorsBelowGround">Number of Floors (Below Ground):</label><input type="number" id="floorsBelowGround" class="form-input"></div>
-                            <div><label for="constructionCompletionYear">Year of Original Construction Completion:</label><input type="date" id="constructionCompletionYear" class="form-input"></div>
+                            <div><label for="floorsAboveGround">Floors (Above Ground):</label><input type="number" id="floorsAboveGround" class="form-input"></div>
+                            <div><label for="floorsBelowGround">Floors (Below Ground):</label><input type="number" id="floorsBelowGround" class="form-input"></div>
+                            <div><label for="constructionCompletionYear">Construction Completion Year:</label><input type="date" id="constructionCompletionYear" class="form-input"></div>
                             <div><label for="majorRenovationYear">Major Renovation Year:</label><input type="date" id="majorRenovationYear" class="form-input"></div>
                         </div>
                         
                         <h4 class="form-subsection-header">1.4 Key Documents</h4>
                          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div><label for="sitePlanDrawing">Site Plan Drawing:</label><input type="file" id="sitePlanDrawing" class="form-input"></div>
-                            <div><label for="occupancyPermit">Building Occupancy Permit:</label><input type="file" id="occupancyPermit" class="form-input"></div>
-                            <div><label for="mainBuildingPhoto">Main Building Photograph:</label><input type="file" id="mainBuildingPhoto" class="form-input" accept="image/*"></div>
+                            <div><label for="occupancyPermit">Occupancy Permit:</label><input type="file" id="occupancyPermit" class="form-input"></div>
+                            <div><label for="mainBuildingPhoto">Main Building Photo:</label><input type="file" id="mainBuildingPhoto" class="form-input" accept="image/*"></div>
                         </div>
                     </div>
 
                     <!-- Section 2: Design & As-Built Information -->
                     <div class="section-container">
                         <h3 class="form-section-header">Section 2: Design & As-Built Information</h3>
-                        <h4 class="form-subsection-header">2.1 Architectural Data</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div><label for="architecturalModelLink">Link to 3D Architectural Model (BIM):</label><input type="url" id="architecturalModelLink" class="form-input"></div>
-                            <div><label for="asBuiltArchitecturalDrawings">As-Built Architectural Drawings (2D):</label><input type="file" id="asBuiltArchitecturalDrawings" class="form-input" multiple></div>
-                            <div><label for="roomSchedule">Master Room Schedule / Space List (.xlsx, .csv):</label><input type="file" id="roomSchedule" class="form-input" accept=".xlsx,.csv"></div>
-                            <div><label for="finishesSchedule">Master Finishes & Materials Schedule (.pdf, .xlsx):</label><input type="file" id="finishesSchedule" class="form-input" accept=".pdf,.xlsx"></div>
-                        </div>
-                        <h4 class="form-subsection-header">2.2 Structural Data</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div><label for="structuralSystemType">Structural System Type:</label><input type="text" id="structuralSystemType" class="form-input" placeholder="e.g., Steel Frame, Reinforced Concrete"></div>
-                            <div><label for="structuralModelLink">Link to 3D Structural Model (BIM):</label><input type="url" id="structuralModelLink" class="form-input"></div>
-                            <div><label for="asBuiltStructuralDrawings">As-Built Structural Drawings (2D):</label><input type="file" id="asBuiltStructuralDrawings" class="form-input" multiple></div>
-                            <div><label for="structuralMaterialSpecs">Structural Material Specifications:</label><input type="file" id="structuralMaterialSpecs" class="form-input"></div>
-                            <div><label for="floorLoadingCapacity">Floor Loading Capacity (kg/m² or psf):</label><input type="text" id="floorLoadingCapacity" class="form-input"></div>
-                        </div>
-                         <h4 class="form-subsection-header">2.3 Mechanical, Electrical & Plumbing (MEP) Data</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div><label for="mepModelLink">Link to 3D MEP Model (BIM):</label><input type="url" id="mepModelLink" class="form-input"></div>
-                            <div><label for="asBuiltMepDrawings">As-Built MEP Drawings (2D):</label><input type="file" id="asBuiltMepDrawings" class="form-input" multiple></div>
-                            <div><label for="mepEquipmentSchedule">Master MEP Equipment Schedule (.xlsx, .csv):</label><input type="file" id="mepEquipmentSchedule" class="form-input" accept=".xlsx,.csv"></div>
-                            <div><label for="electricalPanelSchedules">Electrical Panel Schedules:</label><input type="file" id="electricalPanelSchedules" class="form-input" multiple></div>
-                            <div class="md:col-span-2"><label for="utilityShutoffLocations">Main Utility Shut-off Locations:</label><textarea id="utilityShutoffLocations" class="form-textarea" rows="3" placeholder="Describe locations for Water, Gas, Electricity..."></textarea></div>
-                        </div>
+                        <!-- content -->
                     </div>
 
-                    <!-- Section 3: Construction & Handover Records -->
+                     <!-- Section 3: Construction & Handover Records -->
                     <div class="section-container">
                         <h3 class="form-section-header">Section 3: Construction & Handover Records</h3>
-                        <h4 class="form-subsection-header">3.1 Key Construction Info</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div><label for="generalContractor">Original General Contractor:</label><input type="text" id="generalContractor" class="form-input"></div>
-                            <div><label for="architectOfRecord">Original Architect of Record:</label><input type="text" id="architectOfRecord" class="form-input"></div>
-                            <div><label for="structuralEngineer">Original Structural Engineer:</label><input type="text" id="structuralEngineer" class="form-input"></div>
-                            <div><label for="mepEngineer">Original MEP Engineer:</label><input type="text" id="mepEngineer" class="form-input"></div>
-                            <div><label for="constructionStartDate">Construction Start Date:</label><input type="date" id="constructionStartDate" class="form-input"></div>
-                            <div><label for="officialHandoverDate">Official Handover Date:</label><input type="date" id="officialHandoverDate" class="form-input"></div>
-                        </div>
-                        <h4 class="form-subsection-header">3.2 Handover Documentation</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                             <div><label for="commissioningReport">Final Commissioning Report:</label><input type="file" id="commissioningReport" class="form-input"></div>
-                             <div><label for="changeOrdersLog">Log of Change Orders:</label><input type="file" id="changeOrdersLog" class="form-input"></div>
-                             <div><label for="rfiLog">Log of RFIs:</label><input type="file" id="rfiLog" class="form-input"></div>
-                             <div><label for="warrantyLog">Master Warranty Log (.xlsx, .csv):</label><input type="file" id="warrantyLog" class="form-input" accept=".xlsx,.csv"></div>
-                        </div>
+                       <!-- content -->
                     </div>
-
-                    <!-- ... other sections would go here ... -->
 
                     <div class="pt-6 flex justify-end items-center space-x-4">
                         <button type="button" id="form-cancel-btn" class="btn">Cancel</button>
@@ -438,7 +340,7 @@
 
             let db; // To hold the database instance
 
-            const state = { currentPage: 'page-home', history: [], activeScanner: null, photoCache: [], currentLang: localStorage.getItem(LANG_KEY) || 'en', isNewFormEntry: false, photosLoading: 0, confirmCallback: null };
+            const state = { currentPage: 'page-home', history: [], activeScanner: null, currentLang: localStorage.getItem(LANG_KEY) || 'en', isNewFormEntry: false, photosLoading: 0, confirmCallback: null };
 
             const translations = {
                 en: {
@@ -447,14 +349,9 @@
                     import_from_excel: "Import from Excel",
                     no_buildings_found: "No buildings found.", click_plus_to_add: "Click the '+' button above to add one.",
                     search_placeholder: "Search by Name or ZIP Code...", no_search_results: "No buildings match your search.", try_different_search: "Try a different search term.",
-                    form_section_address: "Address & Basic Info", form_building_name: "Building Name / Profile Name *", form_street: "Street", form_city: "City", form_state_province: "State/Province", form_zip_postal: "Zip/Postal Code", form_country: "Country/Region", form_webpage: "Web Page",
-                    form_latitude: "Latitude", form_longitude: "Longitude", form_get_location: "Get Current Location", form_section_location: "Location",
-                    form_section_profile: "Property Profile", form_property_type: "Property Type", form_year_built: "Year Built", form_sqm: "Square Meters (m²)", form_bedrooms: "Bedrooms", form_bathrooms: "Bathrooms", form_garage: "Garage",
-                    form_property_type_select: 'Select a classification...', form_eu_111: 'Residential - One-dwelling', form_eu_112: 'Residential - Multi-dwelling', form_eu_122: 'Commercial - Office Building', form_eu_123: 'Commercial - Wholesale and retail trade', form_eu_125: 'Commercial - Industrial and warehouse', form_eu_126: 'Public - Entertainment, education, hospital', form_eu_127: 'Other non-residential',
-                    form_section_financials: "Financials", form_loan_amount: "Loan Amount", form_assessed_value: "Assessed Value", form_current_value: "Current Value", form_down_payment: "Down Payment", form_monthly_mortgage: "Monthly Mortgage", form_housing_dues: "Housing Dues", form_tax: "Tax", form_insurance: "Insurance",
-                    form_section_photos: "Photos", form_photos_note: "Upload or take pictures of the building.", form_upload_gallery: "Upload", form_take_photo: "Take a photo", form_section_notes: "Notes",
                     generate_qr: "Generate QR & Save", scan_instruction: "Point your camera at a QR code.", confirm_delete: "Are you sure you want to delete this building?",
-                    toast_saved: "Building saved successfully!", toast_deleted: "Building deleted.", toast_camera_fail: "Could not start camera. Please grant permission.", toast_qr_not_found: "Building not found in local data.", toast_fill_fields: "Please fill in all required fields.", toast_photo_loading: "Please wait for photos to finish loading.", toast_photo_fail: "Failed to load photo.", toast_photo_size_limit: "Photo exceeds size limit of 5MB.", toast_location_captured: "Location captured!", toast_location_fail: "Could not get location.", toast_geo_unsupported: "Geolocation is not supported by your browser.",
+                    toast_saved: "Building saved successfully!", toast_deleted: "Building deleted.", toast_camera_fail: "Could not start camera. Please grant permission.", toast_qr_not_found: "Building not found in local data.", toast_fill_fields: "Please fill in all required fields.", 
+                    toast_location_captured: "Location captured!", toast_location_fail: "Could not get location.", toast_geo_unsupported: "Geolocation is not supported by your browser.",
                     toast_db_error: "Database error. Please refresh the page.",
                     toast_imported: "{count} records imported successfully!", toast_import_error: "Failed to import records. Please check the file format.",
                     yes: "Yes", no: "No", cancel: "Cancel",
@@ -466,15 +363,8 @@
                     import_from_excel: "ورود از اکسل",
                     no_buildings_found: "هیچ ساختمانی یافت نشد.", click_plus_to_add: "برای افزودن، روی دکمه '+' بالا کلیک کنید.",
                     search_placeholder: "جستجو بر اساس نام یا کد پستی...", no_search_results: "هیچ ساختمانی با جستجوی شما مطابقت ندارد.", try_different_search: "عبارت دیگری را امتحان کنید.",
-                    form_section_address: "آدرس و اطلاعات اولیه", form_building_name: "نام ساختمان / پروفایل *", form_street: "خیابان", form_city: "شهر", form_state_province: "استان/ایالت", form_zip_postal: "کد پستی", form_country: "کشور", form_webpage: "صفحه وب",
-                    form_latitude: "عرض جغرافیایی", form_longitude: "طول جغرافیایی", form_get_location: "دریافت موقعیت فعلی", form_section_location: "موقعیت مکانی",
-                    form_section_profile: "مشخصات ملک", form_property_type: "نوع ملک", form_year_built: "سال ساخت", form_sqm: "متر مربع", form_bedrooms: "اتاق خواب", form_bathrooms: "سرویس بهداشتی", form_garage: "پارکینگ",
-                    form_property_type_select: 'یک دسته را انتخاب کنید...', form_eu_111: 'مسکونی - یک واحدی', form_eu_112: 'مسکونی - چند واحدی', form_eu_122: 'تجاری - اداری', form_eu_123: 'تجاری - عمده و خرده فروشی', form_eu_125: 'صنعتی و انبار', form_eu_126: 'عمومی - تفریحی، آموزشی، بیمارستانی', form_eu_127: 'سایر غیرمسکونی‌ها',
-                    form_section_financials: "اطلاعات مالی", form_loan_amount: "مبلغ وام", form_assessed_value: "ارزش ارزیابی شده", form_current_value: "ارزش فعلی", form_down_payment: "پیش پرداخت", form_monthly_mortgage: "قسط ماهانه", form_housing_dues: "شارژ", form_tax: "مالیات", form_insurance: "بیمه",
-                    form_section_photos: "عکس‌ها", form_photos_note: "عکس‌های ساختمان را بارگذاری یا ثبت کنید.", form_upload_gallery: "بارگذاری", form_take_photo: "گرفتن عکس", form_section_notes: "یادداشت‌ها",
                     generate_qr: "ساختن QR و ذخیره", scan_instruction: "دوربین خود را به سمت کد QR بگیرید.", confirm_delete: "آیا از حذف این ساختمان مطمئن هستید؟",
                     toast_saved: "ساختمان با موفقیت ذخیره شد!", toast_deleted: "ساختمان حذف شد.", toast_camera_fail: "دوربین فعال نشد. لطفاً دسترسی را مجاز کنید.", toast_qr_not_found: "ساختمان در داده‌های محلی یافت نشد.", toast_fill_fields: "لطفاً تمام فیلدهای الزامی را پر کنید.",
-                    toast_photo_loading: "لطفاً منتظر بمانید تا بارگذاری عکس‌ها تمام شود.", toast_photo_fail: "بارگذاری عکس ناموفق بود.", toast_photo_size_limit: "حجم عکس از حد مجاز ۵ مگابایت بیشتر است.",
                     toast_location_captured: "موقعیت مکانی ثبت شد!", toast_location_fail: "دریافت موقعیت مکانی ناموفق بود.", toast_geo_unsupported: "موقعیت یابی توسط مرورگر شما پشتیبانی نمی‌شود.",
                     toast_db_error: "خطای پایگاه داده. لطفا صفحه را رفرش کنید.",
                     toast_imported: "{count} رکورد با موفقیت وارد شد!", toast_import_error: "وارد کردن رکوردها ناموفق بود. لطفاً فرمت فایل را بررسی کنید.",
@@ -484,7 +374,7 @@
             };
             
             const translate = (key, params = {}, lang = state.currentLang) => { let text = (translations[lang] || translations.en)[key] || key; for(const param in params) { text = text.replace(`{${param}}`, params[param]); } return text; };
-            const dom = { pages: document.querySelectorAll('.page'), headerTitle: document.getElementById('header-title'), backButton: document.getElementById('back-button'), headerActions: document.getElementById('header-actions'), buildingList: document.getElementById('building-list'), emptyAdminState: document.getElementById('empty-admin-state'), searchBar: document.getElementById('search-bar'), form: document.getElementById('building-form'), photoUploadInput: document.getElementById('photo-upload'), photoCaptureInput: document.getElementById('photo-capture'), saveProgressBar: document.getElementById('save-progress-bar'), formSaveBtn: document.getElementById('form-save-btn'), formCancelBtn: document.getElementById('form-cancel-btn'), confirmModalOverlay: document.getElementById('confirm-modal-overlay'), importExcelBtn: document.getElementById('import-excel-btn'), importExcelInput: document.getElementById('import-excel-input') };
+            const dom = { pages: document.querySelectorAll('.page'), headerTitle: document.getElementById('header-title'), backButton: document.getElementById('back-button'), headerActions: document.getElementById('header-actions'), buildingList: document.getElementById('building-list'), emptyAdminState: document.getElementById('empty-admin-state'), searchBar: document.getElementById('search-bar'), form: document.getElementById('building-form'), saveProgressBar: document.getElementById('save-progress-bar'), formSaveBtn: document.getElementById('form-save-btn'), formCancelBtn: document.getElementById('form-cancel-btn'), confirmModalOverlay: document.getElementById('confirm-modal-overlay'), importExcelBtn: document.getElementById('import-excel-btn'), importExcelInput: document.getElementById('import-excel-input') };
             
             // --- IndexedDB Functions ---
             function openDB() {
@@ -546,32 +436,6 @@
                 }
             };
 
-            // --- Helper Functions ---
-            const convertToEnglishNumerals = (str) => { if (typeof str !== 'string' && typeof str !== 'number') return str; return str.toString().replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)); };
-            const unformatCurrency = (str) => { if (typeof str !== 'string') return str; return str.replace(/[^0-9.-]+/g,""); }
-            const dataURItoBlob = (dataURI) => { const byteString = atob(dataURI.split(',')[1]); const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]; const ab = new ArrayBuffer(byteString.length); const ia = new Uint8Array(ab); for (let i = 0; i < byteString.length; i++) { ia[i] = byteString.charCodeAt(i); } return new Blob([ab], {type: mimeString}); };
-            const blobToDataURI = (blob) => { return new Promise(resolve => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.readAsDataURL(blob); }); }
-
-            const sanitizeBuilding = (data) => {
-                const sanitized = { id: data.id || crypto.randomUUID() };
-                const fields = [ 
-                    'formVersion', 'lastUpdated', 'completedBy', 'projectName', 'projectNumber', 'buildingName', 'buildingStatus',
-                    'buildingAddressStreet', 'buildingAddressCity', 'buildingAddressState', 'buildingAddressPostal', 'buildingAddressCountry',
-                    'gpsLatitude', 'gpsLongitude', 'legalPropertyDescription', 'plotLotNumber', 'primaryUse', 'grossFloorArea',
-                    'floorsAboveGround', 'floorsBelowGround', 'constructionCompletionYear', 'majorRenovationYear',
-                    'architecturalModelLink', 'structuralSystemType', 'structuralModelLink', 'floorLoadingCapacity', 'mepModelLink',
-                    'utilityShutoffLocations', 'generalContractor', 'architectOfRecord', 'structuralEngineer', 'mepEngineer',
-                    'constructionStartDate', 'officialHandoverDate'
-                ];
-                
-                fields.forEach(f => sanitized[f] = data[f] || '');
-                
-                sanitized.photos = []; // Reset photos, as they are now handled by individual file inputs.
-                // You would need to add logic here to handle the new file inputs and store them as Blobs.
-
-                return sanitized;
-            };
-
             const ui = {
                 updateText: () => {
                     document.documentElement.lang = state.currentLang;
@@ -612,20 +476,51 @@
                     }).append(qrContainer);
 
                     const content = document.getElementById('detail-content');
-                    content.innerHTML = ''; // Clear previous content
+                    content.innerHTML = '';
 
                     const createDetailField = (label, value) => {
                         if (!value) return '';
-                        return `<div class="flex justify-between py-2 border-b"><p class="font-medium text-gray-600">${label}</p><p class="text-right">${value}</p></div>`;
+                        return `<div class="flex justify-between py-2 border-b"><p class="font-medium text-gray-600">${label}</p><p class="text-right text-gray-800 break-all">${value}</p></div>`;
                     };
                     
-                    let detailHtml = '<div class="section-container space-y-2">';
-                    detailHtml += createDetailField('Project Name', b.projectName);
-                    detailHtml += createDetailField('Building Status', b.buildingStatus);
-                    detailHtml += createDetailField('Address', `${b.buildingAddressStreet || ''}, ${b.buildingAddressCity || ''}`);
-                    detailHtml += createDetailField('Gross Floor Area (m²)', b.grossFloorArea);
-                    detailHtml += createDetailField('Year of Construction', b.constructionCompletionYear);
-                    detailHtml += '</div>';
+                    const createSection = (title, data) => {
+                        const fieldsHtml = Object.entries(data)
+                            .map(([label, value]) => createDetailField(label, value))
+                            .join('');
+
+                        if (fieldsHtml.trim() === '') return '';
+                        
+                        return `
+                            <div class="section-container">
+                                <h3 class="form-section-header">${title}</h3>
+                                <div class="space-y-2">${fieldsHtml}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    let detailHtml = createSection('Core Information', {
+                        'Project Name': b.projectName,
+                        'Project Number': b.projectNumber,
+                        'Building Status': b.buildingStatus,
+                        'Address': `${b.buildingAddressStreet || ''}, ${b.buildingAddressCity || ''} ${b.buildingAddressState || ''} ${b.buildingAddressPostal || ''}`.trim(),
+                        'Country': b.buildingAddressCountry,
+                        'GPS': b.gpsLatitude && b.gpsLongitude ? `${b.gpsLatitude}, ${b.gpsLongitude}` : '',
+                        'Primary Use': b.primaryUse,
+                        'Gross Floor Area (m²)': b.grossFloorArea,
+                        'Floors Above Ground': b.floorsAboveGround,
+                        'Floors Below Ground': b.floorsBelowGround,
+                        'Construction Year': b.constructionCompletionYear ? new Date(b.constructionCompletionYear).getFullYear() : '',
+                        'Renovation Year': b.majorRenovationYear ? new Date(b.majorRenovationYear).getFullYear() : ''
+                    });
+
+                     detailHtml += createSection('Construction & Handover', {
+                        'General Contractor': b.generalContractor,
+                        'Architect of Record': b.architectOfRecord,
+                        'Structural Engineer': b.structuralEngineer,
+                        'MEP Engineer': b.mepEngineer,
+                        'Construction Start': b.constructionStartDate,
+                        'Handover Date': b.officialHandoverDate
+                    });
 
                     content.innerHTML = detailHtml;
                 },
@@ -672,7 +567,6 @@
                     case 'page-form': 
                         state.isNewFormEntry=!params.id; 
                         dom.headerTitle.textContent = translate(state.isNewFormEntry?'add_building_title':'edit_building_title');
-                        document.getElementById('lastUpdated').value = new Date().toLocaleDateString();
                         
                         if(params.id) {
                             const buildingData = await dbOp.getById(params.id);
@@ -680,7 +574,6 @@
                                 for (const key in buildingData) {
                                     const el = document.getElementById(key);
                                     if(el) {
-                                        // Handle file inputs separately as their value cannot be programmatically set
                                         if(el.type !== 'file') {
                                            el.value = buildingData[key];
                                         }
@@ -735,24 +628,17 @@
 
                 const data={}; const inputs=dom.form.querySelectorAll('input,select,textarea');
                 
-                const filePromises = [];
-                
                 inputs.forEach(i=>{
                     if(i.id) {
                         if (i.type === 'file') {
-                            if (i.files && i.files.length > 0) {
-                                // For simplicity, we'll store the file name. 
-                                // Storing the file content would require more complex handling.
-                                data[i.id] = i.files[0].name;
-                            }
+                            data[i.id] = i.files && i.files.length > 0 ? i.files[0].name : '';
                         } else {
                             data[i.id] = i.value;
                         }
                     }
                 });
                 
-                const sanitizedData = sanitizeBuilding(data);
-                await dbOp.save(sanitizedData); 
+                await dbOp.save(data); 
 
                 dom.saveProgressBar.style.width='100%';
                 ui.showToast('toast_saved');
@@ -767,13 +653,8 @@
                 const buildings = data || await dbOp.getAll();
                 if (buildings.length === 0) { ui.showToast("toast_no_data_export", true); return; }
                 
-                const dataToExport = buildings.map(b => {
-                    const { photos, ...rest } = b; // Exclude photo blobs from Excel
-                    return rest;
-                });
-
                 if (format === 'xlsx') { 
-                    const ws = XLSX.utils.json_to_sheet(dataToExport); 
+                    const ws = XLSX.utils.json_to_sheet(buildings); 
                     const wb = XLSX.utils.book_new(); 
                     XLSX.utils.book_append_sheet(wb, ws, "Buildings"); 
                     XLSX.writeFile(wb, "Building_Export.xlsx"); 
@@ -823,12 +704,95 @@
 
             const pdf = {
                 generate: async (b) => {
-                   // ... PDF generation logic ...
+                    const { jsPDF } = window.jspdf; 
+                    const doc = new jsPDF();
+                    const FONT = "Helvetica"; 
+                    doc.setFont(FONT);
+
+                    const margin = 15;
+                    const pageW = doc.internal.pageSize.getWidth();
+                    let y = 20;
+
+                    doc.setFontSize(22);
+                    doc.setFont(FONT, 'bold');
+                    doc.setTextColor(getComputedStyle(document.documentElement).getPropertyValue('--primary-color'));
+                    doc.text(b.buildingName || "Building Details", margin, y);
+                    y += 15;
+
+                    const addSectionToPdf = (title, data) => {
+                        if (Object.values(data).every(v => !v)) return; // Skip empty sections
+                        
+                        if (y > 260) { doc.addPage(); y = 20; }
+                        
+                        doc.setFontSize(16);
+                        doc.setFont(FONT, 'bold');
+                        doc.setTextColor(getComputedStyle(document.documentElement).getPropertyValue('--primary-color'));
+                        doc.text(title, margin, y);
+                        y += 8;
+
+                        const tableBody = Object.entries(data)
+                            .filter(([_, value]) => value) // Filter out empty values
+                            .map(([label, value]) => [label, value]);
+
+                        if (tableBody.length > 0) {
+                            doc.autoTable({
+                                startY: y,
+                                body: tableBody,
+                                theme: 'grid',
+                                headStyles: { fillColor: [75, 0, 130] },
+                                styles: { font: FONT, fontSize: 10, cellPadding: 2 },
+                                columnStyles: { 0: { fontStyle: 'bold' } }
+                            });
+                            y = doc.autoTable.previous.finalY + 10;
+                        }
+                    };
+
+                    addSectionToPdf('Core Information', {
+                        'Project Name': b.projectName,
+                        'Building Status': b.buildingStatus,
+                        'Address': `${b.buildingAddressStreet || ''}, ${b.buildingAddressCity || ''}`,
+                        'Postal Code': b.buildingAddressPostal,
+                        'Construction Year': b.constructionCompletionYear ? new Date(b.constructionCompletionYear).getFullYear() : '',
+                    });
+                    
+                     addSectionToPdf('Construction Details', {
+                        'General Contractor': b.generalContractor,
+                        'Architect of Record': b.architectOfRecord,
+                        'Handover Date': b.officialHandoverDate
+                    });
+
+                    doc.save(`Building-${b.buildingName.replace(/\s/g,'_')}.pdf`);
                 }
             };
 
             const handleExcelImport = (event) => {
-                // ... import logic ...
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const buildings = XLSX.utils.sheet_to_json(firstSheet);
+
+                        if (buildings.length > 0) {
+                            for (const buildingData of buildings) {
+                                if(!buildingData.id) buildingData.id = crypto.randomUUID();
+                                await dbOp.save(buildingData);
+                            }
+                            ui.showToast('toast_imported', false, {count: buildings.length});
+                            await ui.renderAdminList();
+                        }
+                    } catch (err) {
+                        console.error("Import error:", err);
+                        ui.showToast('toast_import_error', true);
+                    } finally {
+                        event.target.value = '';
+                    }
+                };
+                reader.readAsArrayBuffer(file);
             };
 
             // --- Event Listeners ---
@@ -846,7 +810,6 @@
             dom.importExcelBtn.addEventListener('click', () => dom.importExcelInput.click());
             dom.importExcelInput.addEventListener('change', handleExcelImport);
             
-
             // INITIALIZATION
             async function init() {
                 try {
