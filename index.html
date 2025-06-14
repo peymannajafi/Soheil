@@ -7,18 +7,20 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Font Links -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
 
-
+    <!-- JS Libraries -->
     <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Vazir font for jsPDF -->
+    <script src="https://raw.githack.com/MrMili/jsPDF-AutoTable-Standard-Font-Vazir/master/Vazir-normal.js"></script>
 
 
     <style>
@@ -521,7 +523,7 @@
     <script>
         // --- APPLICATION LOGIC ---
         document.addEventListener('DOMContentLoaded', () => {
-
+            
             // --- STATE & CONFIG ---
             const DB_KEY = 'qrBuildingApp_buildings';
             const LANG_KEY = 'qrBuildingApp_lang';
@@ -576,7 +578,7 @@
                     form_section_profile: "مشخصات ملک", form_property_type: "نوع ملک (طبقه‌بندی EU)", form_year_built: "سال ساخت", form_sqm: "متر مربع (m²)", form_bedrooms: "اتاق خواب", form_bathrooms: "حمام", form_garage: "پارکینگ",
                     form_eu_select: 'یک طبقه‌بندی انتخاب کنید...', form_eu_111: 'مسکونی - یک واحدی', form_eu_112: 'مسکونی - چند واحدی', form_eu_122: 'تجاری - اداری', form_eu_123: 'تجاری - عمده و خرده فروشی', form_eu_125: '۱صنعتی و انبار', form_eu_126: 'عمومی - تفریحی، آموزشی، بیمارستانی', form_eu_127: 'سایر غیرمسکونی‌ها',
                     form_section_financials: "اطلاعات مالی", form_loan_amount: "مبلغ وام", form_assessed_value: "ارزش ارزیابی شده", form_current_value: "ارزش فعلی", form_down_payment: "پیش پرداخت", form_monthly_mortgage: "قسط ماهانه", form_housing_dues: "شارژ ساختمان", form_tax: "مالیات", form_insurance: "بیمه",
-                    form_section_location: "GPS Location", form_latitude: "عرض جغرافیایی", form_longitude: "طول جغرافیایی", form_get_location: "دریافت موقعیت مکانی فعلی",
+                    form_section_location: "موقعیت مکانی", form_latitude: "عرض جغرافیایی", form_longitude: "طول جغرافیایی", form_get_location: "دریافت موقعیت مکانی فعلی",
                     form_section_photos: "عکس‌ها", form_photos_note: "توجه: ذخیره عکس‌های زیاد و بزرگ ممکن است سرعت برنامه را کاهش دهد. فضای ذخیره‌سازی توسط مرورگر شما محدود است.", form_upload_gallery: "آپلود از گالری", form_take_photo: "گرفتن عکس",
                     form_section_notes: "یادداشت‌ها",
                     scan_instruction: "دوربین خود را به سمت کد QR بگیرید. دسترسی به دوربین الزامی است.",
@@ -604,7 +606,8 @@
                 if (isNaN(number) || number === '' || number === null) return '';
                 const numericValue = Number(number);
                 if (state.currentLang === 'fa') {
-                    return new Intl.NumberFormat('fa-IR', { style: 'currency', currency: 'IRR', minimumFractionDigits: 0 }).format(numericValue);
+                    // Using a simple number format for IRR as currency style might not be universally supported
+                    return new Intl.NumberFormat('fa-IR').format(numericValue) + ' ریال';
                 } else {
                     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(numericValue); // Using de-DE for Euro formatting
                 }
@@ -1294,119 +1297,152 @@
                 }
                 ui.showToast('toast_exported', false, {format: format.toUpperCase()});
             };
-
+            
+            // --- PDF Generation Module ---
             const pdf = {
-                generate: (building) => {
+                // Arabic/Persian shaping logic
+                shapeText: function(text) {
+                    if (!text) return '';
+                     const charMap = {
+                        'ا': {i: '\uFE8D', m: '\uFE8E', f: '\uFE8E', isConnected: false}, 'أ': {i: '\uFE83', m: '\uFE84', f: '\uFE84', isConnected: false}, 'إ': {i: '\uFE87', m: '\uFE88', f: '\uFE88', isConnected: false}, 'آ': {i: '\uFE81', m: '\uFE82', f: '\uFE82', isConnected: false}, 'ب': {i: '\uFE91', m: '\uFE92', f: '\uFE90', isConnected: true}, 'پ': {i: '\uFB58', m: '\uFB59', f: '\uFB57', isConnected: true}, 'ت': {i: '\uFE97', m: '\uFE98', f: '\uFE96', isConnected: true}, 'ث': {i: '\uFE9B', m: '\uFE9C', f: '\uFE9A', isConnected: true}, 'ج': {i: '\uFEA3', m: '\uFEA4', f: '\uFEA2', isConnected: true}, 'چ': {i: '\uFB7C', m: '\uFB7D', f: '\uFB7B', isConnected: true}, 'ح': {i: '\uFEA7', m: '\uFEA8', f: '\uFEA6', isConnected: true}, 'خ': {i: '\uFEAB', m: '\uFEAC', f: '\uFEAA', isConnected: true}, 'د': {i: '\uFEAD', m: '\uFEAE', f: '\uFEAE', isConnected: false}, 'ذ': {i: '\uFEAF', m: '\uFEB0', f: '\uFEB0', isConnected: false}, 'ر': {i: '\uFEB1', m: '\uFEB2', f: '\uFEB2', isConnected: false}, 'ز': {i: '\uFEB3', m: '\uFEB4', f: '\uFEB4', isConnected: false}, 'ژ': {i: '\uFB8A', m: '\uFB8B', f: '\uFB8B', isConnected: false}, 'س': {i: '\uFEB7', m: '\uFEB8', f: '\uFEB6', isConnected: true}, 'ش': {i: '\uFEBB', m: '\uFEBC', f: '\uFEBA', isConnected: true}, 'ص': {i: '\uFEBF', m: '\uFEC0', f: '\uFEBE', isConnected: true}, 'ض': {i: '\uFEC3', m: '\uFEC4', f: '\uFEC2', isConnected: true}, 'ط': {i: '\uFEC7', m: '\uFEC8', f: '\uFEC6', isConnected: true}, 'ظ': {i: '\uFECB', m: '\uFECC', f: '\uFECA', isConnected: true}, 'ع': {i: '\uFECF', m: '\uFED0', f: '\uFECE', isConnected: true}, 'غ': {i: '\uFED3', m: '\uFED4', f: '\uFED2', isConnected: true}, 'ف': {i: '\uFED7', m: '\uFED8', f: '\uFED6', isConnected: true}, 'ق': {i: '\uFEDB', m: '\uFEDC', f: '\uFEDA', isConnected: true}, 'ک': {i: '\uFEDF', m: '\uFEE0', f: '\uFEDE', isConnected: true}, 'گ': {i: '\uFB94', m: '\uFB95', f: '\uFB93', isConnected: true}, 'ل': {i: '\uFEE3', m: '\uFEE4', f: '\uFEE2', isConnected: true}, 'م': {i: '\uFEE7', m: '\uFEE8', f: '\uFEE6', isConnected: true}, 'ن': {i: '\uFEEB', m: '\uFEEC', f: '\uFEEA', isConnected: true}, 'و': {i: '\uFEED', m: '\uFEEE', f: '\uFEEE', isConnected: false}, 'ه': {i: '\uFEF3', m: '\uFEF4', f: '\uFEF2', isConnected: true}, 'ی': {i: '\uFEF7', m: '\uFEF8', f: '\uFEF6', isConnected: true}, ' ': { i: ' ', m: ' ', f: ' ', isConnected: false}
+                    };
+
+                    let shaped = '';
+                    for (let i = 0; i < text.length; i++) {
+                        const prev = text[i - 1] ? charMap[text[i - 1]] : null;
+                        const curr = charMap[text[i]];
+                        const next = text[i + 1] ? charMap[text[i + 1]] : null;
+
+                        let form = 'i'; // Default to initial form
+                        if (prev && prev.isConnected) {
+                            form = 'm'; // Medial form
+                        }
+                        if (next === null || (next && !next.isConnected)) {
+                           if (form === 'm') form = 'f'; // Final form
+                        }
+                        if (prev === null || (prev && !prev.isConnected)) {
+                            if (form === 'm') form = 'i';
+                        }
+                        
+                        shaped += curr ? curr[form] : text[i];
+                    }
+                    return shaped.split('').reverse().join('');
+                },
+
+                generate: function(building) {
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
-                    
-                    let y = 15;
+                    const FONT_NAME = 'Vazir'; // Using 'Vazir' as defined in the loaded script
+                    const isFa = state.currentLang === 'fa';
+                    let yPos = 20;
                     const margin = 15;
-                    const pageWidth = doc.internal.pageSize.getWidth();
-                    const pageHeight = doc.internal.pageSize.getHeight();
+                    const pageW = doc.internal.pageSize.getWidth();
+                    const pageH = doc.internal.pageSize.getHeight();
+                    const rightMargin = pageW - margin;
 
-                    const addHeader = () => {
-                        doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(16);
-                        doc.setTextColor('#03396c');
-                        doc.text('BIM', margin, 20);
-                        
-                        doc.setDrawColor(200);
-                        doc.line(margin, 25, pageWidth - margin, 25);
-                        y = 35;
-                    };
-                    
-                    const addFooter = () => {
-                        const pageCount = doc.internal.getNumberOfPages();
-                        for (let i = 1; i <= pageCount; i++) {
-                            doc.setPage(i);
-                            doc.setFontSize(8);
-                            doc.setTextColor(150);
-                            const text = `Page ${i} of ${pageCount} | Generated at: ${new Date().toLocaleDateString('nl-NL')}`;
-                            doc.text(text, margin, pageHeight - 10);
+                    const processText = (txt) => isFa ? this.shapeText(String(txt)) : String(txt);
+
+                    const addText = (text, x, y, options = {}) => {
+                        if (y > pageH - 20) {
+                            doc.addPage();
+                            y = 20;
                         }
+                        doc.text(text, x, y, options);
+                        return y;
                     };
 
-                    const addSection = (title, data) => {
-                        if (y > 250) doc.addPage();
-                        doc.setFont('helvetica', 'bold');
+                    const drawSection = (title, data) => {
+                        yPos += 10;
+                        if (yPos > pageH - 25) { doc.addPage(); yPos = 20; }
+                        doc.setFont(isFa ? FONT_NAME : 'helvetica', 'bold');
                         doc.setFontSize(14);
                         doc.setTextColor('#03396c');
-                        doc.text(title, margin, y);
-                        y += 8;
-                        doc.setFont('helvetica', 'normal');
+                        addText(processText(title), isFa ? rightMargin : margin, yPos, { align: isFa ? 'right' : 'left' });
+                        yPos += 7;
+                        
+                        doc.setDrawColor(200);
+                        doc.line(margin, yPos, pageW - margin, yPos);
+                        yPos += 8;
+
+                        doc.setFont(isFa ? FONT_NAME : 'helvetica', 'normal');
                         doc.setFontSize(11);
                         doc.setTextColor(50);
-                        
+
                         data.forEach(item => {
-                            if (y > 270) {
-                                doc.addPage();
-                                addHeader();
+                            if (item.value) {
+                                if (yPos > pageH - 20) { doc.addPage(); yPos = 20; }
+                                if(isFa) {
+                                    const shapedLabel = processText(item.label);
+                                    const shapedValue = processText(item.value);
+                                    const line = `${shapedValue} : ${shapedLabel}`;
+                                    addText(line, rightMargin, yPos, { align: 'right' });
+                                } else {
+                                     addText(item.label + ':', margin, yPos);
+                                     addText(item.value, 70, yPos);
+                                }
+                                yPos += 7;
                             }
-                             if(item.value) {
-                                doc.text(`${item.label}:`, margin, y);
-                                doc.text(String(item.value), 60, y);
-                                y += 7;
-                             }
                         });
-                        y+= 5;
                     };
+
+                    // --- PDF GENERATION FLOW ---
+                    if (isFa) {
+                        doc.setFont(FONT_NAME);
+                    }
+
+                    doc.setFontSize(18);
+                    doc.setFont(isFa ? FONT_NAME : 'helvetica', 'bold');
+                    doc.setTextColor('#03396c');
+                    addText(processText(building.buildingName), isFa ? rightMargin : margin, yPos, { align: isFa ? 'right' : 'left' });
                     
-                    addHeader();
+                    doc.setFontSize(11);
+                    doc.setFont(isFa ? FONT_NAME : 'helvetica', 'normal');
+                    doc.setTextColor(100);
+                    const fullAddress = [building.address, building.city, building.zipPostal].filter(Boolean).join('، ');
+                    yPos += 7;
+                    addText(processText(fullAddress), isFa ? rightMargin : margin, yPos, { align: isFa ? 'right' : 'left' });
 
-                    // Main Info
                     const qrInstance = new QRCodeStyling({ width: 250, height: 250, data: String(building.id) });
-                    qrInstance.getRawData('png').then((blob) => {
-                        if(!blob) return;
+                    qrInstance.getRawData('png').then(blob => {
+                        if (!blob) {
+                            console.error("Could not generate QR code blob.");
+                            return;
+                        }
                         const reader = new FileReader();
-                        reader.onload = function (event) {
+                        reader.onload = function(event) {
                             const qrDataUrl = event.target.result;
+                            doc.addImage(qrDataUrl, 'PNG', pageW - margin - 35, 15, 30, 30);
+                            yPos += 25;
 
-                            doc.addImage(qrDataUrl, 'PNG', pageWidth - margin - 40, y, 40, 40);
-                            doc.setFontSize(18);
-                            doc.setFont('helvetica', 'bold');
-                            doc.setTextColor('#03396c');
-                            doc.text(building.buildingName, margin, y);
-                            doc.setFontSize(11);
-                            doc.setTextColor(100);
-                            doc.text([building.address, building.city, building.zipPostal].filter(Boolean).join(', '), margin, y + 8);
-                            y += 50;
-
-                            // All other sections
-                            addSection('Property Profile', [
+                            const profileData = [
                                 { label: translate('form_property_type'), value: building.buildingUseType },
                                 { label: translate('form_year_built'), value: building.yearBuilt },
                                 { label: translate('form_sqm'), value: building.squareFeet },
                                 { label: translate('form_bedrooms'), value: building.bedrooms },
                                 { label: translate('form_bathrooms'), value: building.bathrooms },
                                 { label: translate('form_garage'), value: building.garage ? translate('yes') : translate('no') },
-                            ]);
+                            ];
+                            drawSection(translate('form_section_profile'), profileData);
 
-                             addSection('Financials', [
+                            const financialData = [
                                 { label: translate('form_loan_amount'), value: formatCurrency(building.loanAmount) },
                                 { label: translate('form_assessed_value'), value: formatCurrency(building.assessedValue) },
                                 { label: translate('form_current_value'), value: formatCurrency(building.currentValue) },
-                                { label: translate('form_down_payment'), value: formatCurrency(building.downPayment) },
-                                { label: translate('form_monthly_mortgage'), value: formatCurrency(building.monthlyMortgage) },
-                                { label: translate('form_housing_dues'), value: formatCurrency(building.housingDues) },
-                                { label: translate('form_tax'), value: formatCurrency(building.tax) },
-                                { label: translate('form_insurance'), value: formatCurrency(building.insurance) },
-                            ]);
+                            ];
+                            drawSection(translate('form_section_financials'), financialData);
+                            
+                            if (building.notes) {
+                                 drawSection(translate('form_section_notes'), [{label: '', value: building.notes}]);
+                            }
 
-                             if(building.notes) {
-                                doc.addPage();
-                                addHeader();
-                                addSection('Notes', [{label: '', value: building.notes}]);
-                             }
-
-
-                            addFooter();
                             doc.save(`Building-Info-${building.buildingName.replace(/\s+/g, '_')}.pdf`);
                         };
+                        reader.onerror = () => console.error("Could not read QR blob.");
                         reader.readAsDataURL(blob);
-                    });
+                    }).catch(err => console.error("QR Code generation failed", err));
                 }
             };
+
 
             // --- EVENT LISTENERS ---
             backButton.addEventListener('click', goBack);
