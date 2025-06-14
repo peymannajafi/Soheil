@@ -618,16 +618,23 @@
                 state.currentPage = pageId; dom.pages.forEach(p=>p.classList.remove('active')); document.getElementById(pageId).classList.add('active');
                 dom.backButton.classList.toggle('hidden', state.history.length === 0); dom.headerActions.innerHTML = '';
                 
-                // Clear header title by default, only set it for specific pages
                 dom.headerTitle.textContent = ''; 
 
                 switch(pageId) {
                     case 'page-home': dom.headerTitle.textContent = translate('app_title'); break;
                     case 'page-admin': 
                         dom.headerTitle.textContent = translate('admin_title');
-                        dom.headerActions.innerHTML=`<button id="add-btn" class="p-2 rounded-full text-white hover:bg-black/20"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></button>`; 
-                        document.getElementById('add-btn').onclick=()=>showPage('page-form'); 
-                        dom.searchBar.value=''; 
+                        dom.headerActions.innerHTML = `
+                            <button id="export-all-btn" class="p-2 rounded-full text-white hover:bg-black/20" title="Export All to Excel">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            </button>
+                            <button id="add-btn" class="p-2 rounded-full text-white hover:bg-black/20" title="Add New Building">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                            </button>
+                        `; 
+                        document.getElementById('export-all-btn').onclick = () => handleExport('xlsx');
+                        document.getElementById('add-btn').onclick = () => showPage('page-form'); 
+                        dom.searchBar.value = ''; 
                         await ui.renderAdminList(); 
                         break;
                     case 'page-form': 
@@ -885,4 +892,4 @@
         });
     </script>
 </body>
-</html>
+</ht
