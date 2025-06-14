@@ -472,6 +472,15 @@
                     });
                 }
             };
+            
+            const blobToDataURI = (blob) => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result);
+                    reader.onerror = e => reject(e.target.error);
+                    reader.readAsDataURL(blob);
+                });
+            }
 
             const ui = {
                 updateText: () => {
@@ -517,6 +526,10 @@
 
                     const createDetailField = (label, value) => {
                         if (!value) return '';
+                        // For file objects, display their name
+                        if (typeof value === 'object' && value.name) {
+                           value = value.name;
+                        }
                         return `<div class="flex justify-between py-2 border-b"><p class="font-medium text-gray-600">${label}</p><p class="text-right text-gray-800 break-all">${value}</p></div>`;
                     };
                     
@@ -693,14 +706,30 @@
 
                 const data={}; const inputs=dom.form.querySelectorAll('input,select,textarea');
                 
+                const filePromises = [];
+                
                 inputs.forEach(i=>{
                     if(i.id) {
-                        if (i.type === 'file') {
-                            data[i.id] = i.files && i.files.length > 0 ? i.files[0].name : '';
-                        } else {
+                        if (i.type === 'file' && i.files.length > 0) {
+                           for (const file of i.files) {
+                                filePromises.push(new Promise((resolve, reject) => {
+                                    const reader = new FileReader();
+                                    reader.onload = e => resolve({ id: i.id, file: { name: file.name, type: file.type, data: e.target.result } });
+                                    reader.onerror = err => reject(err);
+                                    reader.readAsArrayBuffer(file);
+                                }));
+                            }
+                        } else if (i.type !== 'file') {
                             data[i.id] = i.value;
                         }
                     }
+                });
+                
+                const fileData = await Promise.all(filePromises);
+                fileData.forEach(fileInfo => {
+                    if (!data[fileInfo.id]) data[fileInfo.id] = [];
+                     // For simplicity, just storing file names. For storing content, blobs would be better.
+                    data[fileInfo.id].push(fileInfo.file.name);
                 });
                 
                 await dbOp.save(data); 
@@ -770,7 +799,7 @@
             const pdf = {
                 generate: async (b) => {
                     const { jsPDF } = window.jspdf; 
-                    const doc = new jsPDF();
+                    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
                     const FONT = "Helvetica"; 
                     doc.setFont(FONT);
 
@@ -779,10 +808,10 @@
                     let y = 20;
 
                     // QR Code
-                    const qrInstance = new QRCodeStyling({ width: 40, height: 40, data: String(b.id), dotsOptions: { color: '#000000' } });
+                    const qrInstance = new QRCodeStyling({ width: 200, height: 200, data: String(b.id), dotsOptions: { color: '#000000' } });
                     const qrBlob = await qrInstance.getRawData('png');
                     const qrImage = await blobToDataURI(qrBlob);
-                    doc.addImage(qrImage, 'PNG', pageW - margin - 40, 15, 40, 40);
+                    doc.addImage(qrImage, 'PNG', pageW - margin - 30, 15, 30, 30);
 
                     // Title
                     doc.setFontSize(22);
@@ -793,22 +822,26 @@
 
                     const addField = (label, value) => {
                         if (!value) return;
-                        if (y > 270) { doc.addPage(); y = 20; }
-                        doc.setFontSize(11);
+                        if (y > 275) { doc.addPage(); y = 20; }
+                        doc.setFontSize(10);
                         doc.setFont(FONT, 'bold');
                         doc.text(label + ":", margin, y);
                         doc.setFont(FONT, 'normal');
-                        doc.text(String(value), margin + 40, y);
-                        y += 7;
+                        const splitValue = doc.splitTextToSize(String(value), pageW - margin * 2 - 35);
+                        doc.text(splitValue, margin + 35, y);
+                        y += (splitValue.length * 5) + 2;
                     };
                     
                     const addSectionHeader = (title) => {
-                         if (y > 250) { doc.addPage(); y = 20; }
+                         if (y > 265) { doc.addPage(); y = 20; }
                          y+=5;
-                         doc.setFontSize(16);
+                         doc.setFontSize(14);
                          doc.setFont(FONT, 'bold');
+                         doc.setTextColor('#333333');
                          doc.text(title, margin, y);
-                         y += 10;
+                         y += 8;
+                         doc.setDrawColor('#cccccc');
+                         doc.line(margin, y - 2, pageW - margin, y - 2);
                     }
 
                     addSectionHeader('Core Information');
@@ -827,16 +860,16 @@
                     addField('Renovation Year', b.majorRenovationYear ? new Date(b.majorRenovationYear).getFullYear() : '');
                     
                     addSectionHeader('Design & As-Built');
-                    addField('Architectural Model', b.architecturalModelLink);
-                    addField('Structural System', b.structuralSystemType);
+                    addField('Arch. Model', b.architecturalModelLink);
+                    addField('Struct. System', b.structuralSystemType);
                     addField('Floor Loading', b.floorLoadingCapacity);
                     addField('MEP Model', b.mepModelLink);
                     addField('Utility Shut-offs', b.utilityShutoffLocations);
 
                     addSectionHeader('Construction & Handover');
-                    addField('General Contractor', b.generalContractor);
+                    addField('Contractor', b.generalContractor);
                     addField('Architect', b.architectOfRecord);
-                    addField('Structural Engineer', b.structuralEngineer);
+                    addField('Struct. Engineer', b.structuralEngineer);
                     addField('MEP Engineer', b.mepEngineer);
                     addField('Construction Start', b.constructionStartDate);
                     addField('Handover Date', b.officialHandoverDate);
@@ -844,10 +877,10 @@
                     addSectionHeader('Attached Documents');
                     const documentFields = {
                         'Site Plan': b.sitePlanDrawing, 'Occupancy Permit': b.occupancyPermit, 'Main Photo': b.mainBuildingPhoto,
-                        'Architectural Drawings': b.asBuiltArchitecturalDrawings, 'Room Schedule': b.roomSchedule, 'Finishes Schedule': b.finishesSchedule,
-                        'Structural Drawings': b.asBuiltStructuralDrawings, 'Structural Specs': b.structuralMaterialSpecs,
+                        'Arch. Drawings': b.asBuiltArchitecturalDrawings, 'Room Schedule': b.roomSchedule, 'Finishes Schedule': b.finishesSchedule,
+                        'Struct. Drawings': b.asBuiltStructuralDrawings, 'Struct. Specs': b.structuralMaterialSpecs,
                         'MEP Drawings': b.asBuiltMepDrawings, 'MEP Equipment': b.mepEquipmentSchedule, 'Elec. Panels': b.electricalPanelSchedules,
-                        'Commissioning Report': b.commissioningReport, 'Change Orders': b.changeOrdersLog, 'RFIs': b.rfiLog, 'Warranty Log': b.warrantyLog
+                        'Commissioning': b.commissioningReport, 'Change Orders': b.changeOrdersLog, 'RFIs': b.rfiLog, 'Warranty Log': b.warrantyLog
                     };
                     Object.entries(documentFields).forEach(([label, value]) => addField(label, value));
                     
