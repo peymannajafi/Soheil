@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Offline Building Info</title>
+    <title>Building Information Hub</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -19,15 +19,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- Vazir font for jsPDF -->
-    <script src="https://raw.githack.com/MrMili/jsPDF-AutoTable-Standard-Font-Vazir/master/Vazir-normal.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        /* Basic styles and theme setup */
+        :root {
+            --primary-color: #03396c;
+            --primary-color-dark: #022a50;
+            --primary-color-light: #044a88;
+            --background-color: #F7F7F5;
+            --card-background-color: #FFFFFF;
+            --text-color: #37352F;
+            --text-color-light: #5E5C56;
+            --border-color: #EAEAEA;
+        }
+
         body {
             font-family: 'Ubuntu', sans-serif;
-            background-color: #F7F7F5; /* Notion-like light grey background */
+            background-color: var(--background-color);
+            color: var(--text-color);
         }
         html[dir="rtl"] body {
             font-family: 'Vazirmatn', sans-serif;
@@ -35,30 +44,76 @@
         html[dir="rtl"] #back-button {
             transform: scaleX(-1);
         }
-        .page {
-            display: none; /* Hide all pages by default */
+        .page { display: none; }
+        .page.active { display: block; }
+       
+        header {
+            background-color: var(--primary-color);
+            color: #FFFFFF;
         }
-        .page.active {
-            display: block; /* Show active page */
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+            background-color: var(--card-background-color);
+            transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
-        /* Custom styles for QR Scanner */
+        .btn:hover {
+            background-color: #f8f9fa;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: #FFFFFF;
+            border-color: var(--primary-color);
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-color-dark);
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.25rem;
+            background-color: var(--background-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(3, 57, 108, 0.2);
+        }
+        
         #qr-reader-container {
             width: 100%;
             max-width: 500px;
             margin: 0 auto;
             border-radius: 1rem;
             overflow: hidden;
-            border: 2px solid #EAEAEA; /* Softer border */
+            border: 1px solid var(--border-color);
         }
-        /* Thumbnail styles */
-        .thumbnail-container {
-            position: relative;
+
+        .section-container {
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background-color: var(--card-background-color);
+            box-shadow: none;
         }
+        
+        .thumbnail-container { position: relative; }
         .thumbnail-delete {
             position: absolute;
             top: -10px;
             right: -10px;
-            background-color: red;
+            background-color: #e53e3e;
             color: white;
             border-radius: 50%;
             width: 24px;
@@ -75,151 +130,41 @@
             left: -10px;
         }
         
-        /* Wheel Selector Styles */
-        #wheel-selector-overlay {
+        #confirm-modal-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.4); /* Slightly lighter overlay */
-            z-index: 100;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
             display: flex;
+            align-items: center;
             justify-content: center;
-            align-items: flex-end;
+            z-index: 1000;
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.3s, visibility 0.3s;
         }
-        #wheel-selector-overlay.visible {
+        #confirm-modal-overlay.visible {
             opacity: 1;
             visibility: visible;
         }
-        #wheel-selector {
-            background-color: white;
-            width: 100%;
-            max-width: 450px;
-            border-top-left-radius: 1rem;
-            border-top-right-radius: 1rem;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-        }
-        #wheel-selector-overlay.visible #wheel-selector {
-            transform: translateY(0);
-        }
-        #wheel-selector-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid #EAEAEA;
-        }
-        #wheel-selector-container {
-            height: 224px; /* 5 rows * 40px + padding */
-            overflow-y: scroll;
-            scroll-snap-type: y mandatory;
-            -webkit-overflow-scrolling: touch;
-        }
-        #wheel-selector-options {
-            padding-top: 80px; /* Center first item */
-            padding-bottom: 80px; /* Center last item */
-        }
-        #wheel-selector-options .option {
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-            scroll-snap-align: center;
-            color: #9ca3af;
-            transition: color 0.2s, transform 0.2s;
-            transform: scale(0.9);
-        }
-        #wheel-selector-indicator {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 48px;
-            transform: translateY(-50%);
-            border-top: 1px solid #EAEAEA;
-            border-bottom: 1px solid #EAEAEA;
-            pointer-events: none;
-        }
-        
-        /* Notion-Style Adjustments */
-        #app {
-          max-w-5xl mx-auto; /* Wider for a more spacious feel */
-        }
-        header {
-          background-color: #03396c; /* User's chosen color */
-          color: #FFFFFF; /* White text for contrast */
-          box-shadow: none;
-        }
-        .nav-button {
-          background-color: #FFFFFF;
-          color: #37352F;
-          border: 1px solid #EAEAEA;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-          transition: background-color 0.2s;
-        }
-        .nav-button:hover {
-          background-color: #F7F7F5;
-        }
-        #search-bar {
-          background-color: #FFFFFF;
-          border: 1px solid #EAEAEA;
-          box-shadow: none;
-        }
-        #search-bar:focus {
-          border-color: #03396c;
-          box-shadow: 0 0 0 2px rgba(3, 57, 108, 0.2); /* Focus ring */
-        }
-        .notion-card {
-          background-color: #FFFFFF;
-          border: 1px solid #EAEAEA; /* Borders for cards */
-          box-shadow: none;
-          border-radius: 0.5rem;
-        }
-        .notion-input {
-            background-color: transparent !important;
-            border: none !important;
-            border-bottom: 1px solid #e2e8f0 !important;
-            border-radius: 0 !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            box-shadow: none !important;
-            transition: border-color 0.2s ease-in-out;
-        }
-        .notion-input:focus {
-            --tw-ring-shadow: 0 0 #0000 !important;
-            border-color: #03396c !important;
+        #confirm-modal {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
         }
 
-        /* Correctly hide/show desktop vs mobile inputs */
-        @media (max-width: 768px) {
-            .desktop-input {
-                display: none !important;
-            }
-        }
-        @media (min-width: 769px) {
-            .mobile-wheel-trigger {
-                display: none !important;
-            }
-        }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
-    <div id="save-progress-bar" class="fixed top-0 left-0 h-1 bg-[#01babc] w-0 transition-all duration-500 z-[100]"></div>
+<body class="bg-gray-50">
+    <div id="save-progress-bar" class="fixed top-0 left-0 h-1 bg-[var(--primary-color-light)] w-0 transition-all duration-500 z-[1001]"></div>
 
-    <!-- Main Application Container -->
     <div id="app" class="max-w-4xl mx-auto">
-
-        <!-- Header -->
         <header class="sticky top-0 z-50">
             <div class="mx-auto px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <svg id="back-button" class="w-6 h-6 cursor-pointer hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    <svg id="back-button" class="w-6 h-6 cursor-pointer hidden text-white hover:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                     <h1 id="header-title" class="text-xl font-bold"></h1>
                 </div>
                  <div class="flex items-center space-x-4">
@@ -229,1264 +174,483 @@
             </div>
         </header>
 
-        <main class="p-4 md:p-8">
-            <!-- ========== PAGES ========== -->
-
-            <!-- 1. Home Page -->
+        <main class="p-4 md:p-6">
             <div id="page-home" class="page active">
-                <div class="flex flex-col space-y-4 max-w-sm mx-auto mt-16 text-center">
-                    <button data-target="page-scanner" class="nav-button bg-[#03396c] text-white font-bold py-3 px-6 rounded-lg shadow-sm flex items-center justify-center space-x-3">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                        <span data-lang="scan_qr"></span>
-                    </button>
-                    <button data-target="page-admin" class="nav-button font-bold py-3 px-6 rounded-lg flex items-center justify-center space-x-3">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                <div class="flex flex-col items-center justify-center h-[70vh] text-center">
+                    <h2 id="home-title" data-lang="app_title" class="text-3xl font-bold text-[var(--text-color)] mb-6"></h2>
+                    <button data-target="page-admin" class="btn btn-primary w-full max-w-sm">
                         <span data-lang="add_building"></span>
                     </button>
-                    <div class="pt-8">
-                        <label for="import-file" class="text-[#03396c] hover:text-opacity-80 font-semibold cursor-pointer" data-lang="import_data_file"></label>
-                        <input type="file" id="import-file" class="hidden" accept=".json,.csv,.xls,.xlsx">
-                    </div>
                 </div>
             </div>
 
-            <!-- 2. Admin Page -->
             <div id="page-admin" class="page">
-                <div class="mb-4 sticky top-[56px] bg-gray-50 py-2 z-10">
-                    <input type="search" id="search-bar" class="w-full p-2 rounded-lg" autocomplete="off">
+                <div class="mb-6 sticky top-[61px] bg-[var(--background-color)] py-3 z-10">
+                     <div class="relative">
+                        <input type="search" id="search-bar" class="form-input pl-10" autocomplete="off">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                    </div>
                 </div>
-                <div id="building-list" class="space-y-2">
-                    <!-- Building list items will be inserted here -->
-                </div>
-                <div id="empty-admin-state" class="text-center mt-16 text-gray-500 hidden">
-                    <p data-lang="no_buildings_found"></p>
-                    <p data-lang="click_plus_to_add"></p>
+                <div id="building-list" class="space-y-3"></div>
+                <div id="empty-admin-state" class="text-center py-16 text-gray-500 hidden">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900" data-lang="no_buildings_found"></h3>
+                    <p class="mt-1 text-sm text-gray-500" data-lang="click_plus_to_add"></p>
                 </div>
             </div>
 
-            <!-- 3. Building Form Page -->
             <div id="page-form" class="page relative">
-                <form id="building-form" class="space-y-12">
-                    <input type="hidden" id="id">
-                    
-                    <!-- Basic Info & Address Section -->
-                    <div>
-                         <h3 class="font-bold text-xl mb-4 text-gray-800" data-lang="form_section_address"></h3>
-                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <form id="building-form" class="space-y-8">
+                     <input type="hidden" id="id">
+                     <div class="section-container">
+                        <h3 class="font-bold text-xl mb-6" data-lang="form_section_address"></h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="md:col-span-2">
-                                <label for="buildingName" class="block text-sm font-medium text-gray-600" data-lang="form_building_name"></label>
-                                <input type="text" id="buildingName" required class="notion-input mt-1 block w-full">
+                                <label for="buildingName" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_building_name"></label>
+                                <input type="text" id="buildingName" required class="form-input">
                             </div>
                             <div>
-                                <label for="address" class="block text-sm font-medium text-gray-600" data-lang="form_street"></label>
-                                <input type="text" id="address" class="notion-input mt-1 block w-full">
+                                <label for="street" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_street"></label>
+                                <input type="text" id="street" class="form-input">
                             </div>
-                             <div>
-                                <label for="city" class="block text-sm font-medium text-gray-600" data-lang="form_city"></label>
-                                <input type="text" id="city" class="notion-input mt-1 block w-full">
-                            </div>
-                              <div>
-                                <label for="stateProvince" class="block text-sm font-medium text-gray-600" data-lang="form_state_province"></label>
-                                <input type="text" id="stateProvince" class="notion-input mt-1 block w-full">
-                            </div>
-                             <div>
-                                <label for="zipPostal" class="block text-sm font-medium text-gray-600" data-lang="form_zip_postal"></label>
-                                <input type="text" id="zipPostal" class="notion-input mt-1 block w-full">
-                            </div>
-                             <div>
-                                <label for="country" class="block text-sm font-medium text-gray-600" data-lang="form_country"></label>
-                                <input type="text" id="country" class="notion-input mt-1 block w-full">
-                            </div>
-                             <div>
-                                <label for="webpage" class="block text-sm font-medium text-gray-600" data-lang="form_webpage"></label>
-                                <input type="url" id="webpage" class="notion-input mt-1 block w-full">
-                            </div>
-                             <div class="md:col-span-2 border-t pt-6 mt-2">
-                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                                    <div>
-                                        <label for="latitude" class="block text-sm font-medium text-gray-600" data-lang="form_latitude"></label>
-                                        <input type="text" id="latitude" readonly class="notion-input mt-1 block w-full bg-gray-100">
-                                    </div>
-                                     <div>
-                                        <label for="longitude" class="block text-sm font-medium text-gray-600" data-lang="form_longitude"></label>
-                                        <input type="text" id="longitude" readonly class="notion-input mt-1 block w-full bg-gray-100">
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <button type="button" id="get-location-btn" class="w-full mt-2 bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg" data-lang="form_get_location"></button>
-                                    </div>
-                                 </div>
-                             </div>
-                         </div>
-                    </div>
-
-                    <!-- Property Profile Section -->
-                    <div>
-                        <h3 class="font-bold text-xl mb-4 text-gray-800" data-lang="form_section_profile"></h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                           <!-- Property Type -->
-                            <div class="md:col-span-2">
-                                <label for="buildingUseType" class="block text-sm font-medium text-gray-600" data-lang="form_property_type"></label>
-                                <select id="buildingUseType" class="desktop-input notion-input mt-1 block w-full"></select>
-                                <button type="button" class="mobile-wheel-trigger w-full text-left p-2 mt-1 border border-gray-200 rounded-md" data-target="buildingUseType"></button>
-                            </div>
-                            <!-- Year Built -->
-                            <div>
-                                <label for="yearBuilt" class="block text-sm font-medium text-gray-600" data-lang="form_year_built"></label>
-                                <input type="number" id="yearBuilt" class="desktop-input notion-input mt-1 block w-full">
-                                <button type="button" class="mobile-wheel-trigger w-full text-left p-2 mt-1 border border-gray-200 rounded-md" data-target="yearBuilt"></button>
-                            </div>
-                            <!-- Square Feet -->
-                            <div>
-                                <label for="squareFeet" class="block text-sm font-medium text-gray-600" data-lang="form_sqm"></label>
-                                <input type="number" id="squareFeet" class="notion-input mt-1 block w-full">
-                            </div>
-                            <!-- Bedrooms -->
-                            <div>
-                                <label for="bedrooms" class="block text-sm font-medium text-gray-600" data-lang="form_bedrooms"></label>
-                                <input type="number" id="bedrooms" class="desktop-input notion-input mt-1 block w-full" value="0">
-                                <button type="button" class="mobile-wheel-trigger w-full text-left p-2 mt-1 border border-gray-200 rounded-md" data-target="bedrooms"></button>
-                            </div>
-                            <!-- Bathrooms -->
-                            <div>
-                                <label for="bathrooms" class="block text-sm font-medium text-gray-600" data-lang="form_bathrooms"></label>
-                                <input type="number" id="bathrooms" class="desktop-input notion-input mt-1 block w-full" value="0">
-                                <button type="button" class="mobile-wheel-trigger w-full text-left p-2 mt-1 border border-gray-200 rounded-md" data-target="bathrooms"></button>
-                            </div>
-                             <!-- Garage -->
-                            <div class="md:col-span-2">
-                                <label for="garage" class="block text-sm font-medium text-gray-600" data-lang="form_garage"></label>
-                                <!-- The checkbox itself is the data source -->
-                                <input type="checkbox" id="garage" class="hidden"> 
-                                <!-- Desktop UI -->
-                                <div class="desktop-input flex items-center mt-2">
-                                     <input type="checkbox" id="garage-proxy" class="h-5 w-5 rounded border-gray-300 text-[#03396c] focus:ring-blue-500">
-                                     <label for="garage-proxy" class="ml-3 block text-base text-gray-800" data-lang="form_garage"></label>
+                            <div><label for="city" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_city"></label><input type="text" id="city" class="form-input"></div>
+                            <div><label for="stateProvince" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_state_province"></label><input type="text" id="stateProvince" class="form-input"></div>
+                            <div><label for="zipPostal" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_zip_postal"></label><input type="text" id="zipPostal" class="form-input"></div>
+                            <div><label for="country" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_country"></label><input type="text" id="country" class="form-input"></div>
+                            <div><label for="webpage" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_webpage"></label><input type="url" id="webpage" class="form-input"></div>
+                            <div class="md:col-span-2 border-t pt-6 mt-2">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div><label for="latitude" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_latitude"></label><input type="text" id="latitude" class="form-input bg-gray-100" readonly></div>
+                                    <div><label for="longitude" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_longitude"></label><input type="text" id="longitude" class="form-input bg-gray-100" readonly></div>
+                                    <div class="md:col-span-2"><button type="button" id="get-location-btn" class="btn btn-primary w-full" data-lang="form_get_location"></button></div>
                                 </div>
-                                <!-- Mobile UI -->
-                                <button type="button" class="mobile-wheel-trigger w-full text-left p-2 mt-1 border border-gray-200 rounded-md" data-target="garage"></button>
                             </div>
                         </div>
                     </div>
-
-
-                    <!-- Financial Section -->
-                     <div>
-                         <h3 class="font-bold text-xl mb-4 text-gray-800" data-lang="form_section_financials"></h3>
-                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                             <div>
-                                <label for="loanAmount" class="block text-sm font-medium text-gray-600" data-lang="form_loan_amount"></label>
-                                <input type="number" id="loanAmount" class="notion-input mt-1 block w-full">
-                            </div>
-                              <div>
-                                <label for="assessedValue" class="block text-sm font-medium text-gray-600" data-lang="form_assessed_value"></label>
-                                <input type="number" id="assessedValue" class="notion-input mt-1 block w-full">
-                            </div>
-                            <div>
-                                <label for="currentValue" class="block text-sm font-medium text-gray-600" data-lang="form_current_value"></label>
-                                <input type="number" id="currentValue" class="notion-input mt-1 block w-full">
-                            </div>
-                              <div>
-                                <label for="downPayment" class="block text-sm font-medium text-gray-600" data-lang="form_down_payment"></label>
-                                <input type="number" id="downPayment" class="notion-input mt-1 block w-full">
-                            </div>
-                            <div>
-                                <label for="monthlyMortgage" class="block text-sm font-medium text-gray-600" data-lang="form_monthly_mortgage"></label>
-                                <input type="number" id="monthlyMortgage" class="notion-input mt-1 block w-full">
-                            </div>
-                             <div>
-                                <label for="housingDues" class="block text-sm font-medium text-gray-600" data-lang="form_housing_dues"></label>
-                                <input type="number" id="housingDues" class="notion-input mt-1 block w-full">
-                            </div>
-                             <div>
-                                <label for="tax" class="block text-sm font-medium text-gray-600" data-lang="form_tax"></label>
-                                <input type="number" id="tax" class="notion-input mt-1 block w-full">
-                            </div>
-                             <div>
-                                <label for="insurance" class="block text-sm font-medium text-gray-600" data-lang="form_insurance"></label>
-                                <input type="number" id="insurance" class="notion-input mt-1 block w-full">
-                            </div>
-                         </div>
+                    <div class="section-container">
+                        <h3 class="font-bold text-xl mb-6" data-lang="form_section_profile"></h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="md:col-span-2"><label for="propertyType" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_property_type"></label><select id="propertyType" class="form-select"></select></div>
+                            <div><label for="yearBuilt" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_year_built"></label><input type="number" id="yearBuilt" placeholder="YYYY" class="form-input"></div>
+                            <div><label for="squareFeet" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_sqm"></label><input type="number" id="squareFeet" class="form-input"></div>
+                            <div><label for="bedrooms" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_bedrooms"></label><input type="number" id="bedrooms" class="form-input" min="0" value="0"></div>
+                            <div><label for="bathrooms" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_bathrooms"></label><input type="number" id="bathrooms" class="form-input" min="0" value="0"></div>
+                            <div class="md:col-span-2 flex items-center pt-2"><input type="checkbox" id="garage" class="h-4 w-4 text-[var(--primary-color)] border-gray-300 rounded focus:ring-[var(--primary-color)]"><label for="garage" class="ml-3 block text-sm text-gray-900" data-lang="form_garage"></label></div>
+                        </div>
+                        <h3 class="font-bold text-xl mb-6 mt-8 pt-8 border-t" data-lang="form_section_financials"></h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label for="loanAmount" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_loan_amount"></label><input type="number" id="loanAmount" class="form-input"></div>
+                            <div><label for="assessedValue" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_assessed_value"></label><input type="number" id="assessedValue" class="form-input"></div>
+                            <div><label for="currentValue" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_current_value"></label><input type="number" id="currentValue" class="form-input"></div>
+                            <div><label for="downPayment" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_down_payment"></label><input type="number" id="downPayment" class="form-input"></div>
+                            <div><label for="monthlyMortgage" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_monthly_mortgage"></label><input type="number" id="monthlyMortgage" class="form-input"></div>
+                            <div><label for="housingDues" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_housing_dues"></label><input type="number" id="housingDues" class="form-input"></div>
+                            <div><label for="tax" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_tax"></label><input type="number" id="tax" class="form-input"></div>
+                            <div><label for="insurance" class="block text-sm font-medium text-gray-700 mb-1" data-lang="form_insurance"></label><input type="number" id="insurance" class="form-input"></div>
+                        </div>
                     </div>
-                    
-                    <!-- Photos Section -->
-                    <div>
-                         <h3 class="font-bold text-xl mb-4 text-gray-800" data-lang="form_section_photos"></h3>
-                         <p class="text-sm text-gray-500 mb-4" data-lang="form_photos_note"></p>
-                         <div class="flex space-x-4">
-                             <label for="photo-upload" class="flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg cursor-pointer" data-lang="form_upload_gallery"></label>
-                             <input type="file" id="photo-upload" class="hidden" accept="image/*" multiple>
-                             <label for="photo-capture" class="flex-1 text-center bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg cursor-pointer" data-lang="form_take_photo"></label>
-                             <input type="file" id="photo-capture" class="hidden" accept="image/*" capture="environment">
-                         </div>
-                         <div id="photo-thumbnails" class="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-                         </div>
+                    <div class="section-container">
+                         <h3 class="font-bold text-xl mb-2" data-lang="form_section_photos"></h3>
+                        <p class="text-sm text-gray-500 mb-4" data-lang="form_photos_note"></p>
+                        <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                           <label for="photo-upload" class="btn w-full"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg><span data-lang="form_upload_gallery"></span></label>
+                           <input type="file" id="photo-upload" class="hidden" accept="image/*" multiple>
+                           <label for="photo-capture" class="btn btn-primary w-full"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span data-lang="form_take_photo"></span></label>
+                           <input type="file" id="photo-capture" class="hidden" accept="image/*" capture="environment">
+                        </div>
+                        <div id="photo-thumbnails" class="mt-6 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4"></div>
+                        <h3 class="font-bold text-xl mb-4 mt-8 pt-8 border-t" data-lang="form_section_notes"></h3>
+                        <textarea id="notes" rows="4" class="form-textarea"></textarea>
                     </div>
-
-                    <!-- Notes Section -->
-                    <div>
-                         <h3 class="font-bold text-xl mb-4 text-gray-800" data-lang="form_section_notes"></h3>
-                        <textarea id="notes" rows="4" class="notion-input mt-1 block w-full"></textarea>
-                    </div>
-
-                    <!-- Form Buttons -->
-                    <div class="pt-4 flex justify-end items-center space-x-4 border-t border-gray-200 mt-12">
-                        <button type="button" id="form-cancel-btn" class="font-bold text-gray-600 py-2 px-6 rounded-lg hover:bg-gray-100" data-lang="cancel"></button>
-                        <button type="button" id="form-save-btn" class="bg-[#03396c] text-white font-bold py-2 px-6 rounded-lg hover:bg-opacity-90 shadow-sm" data-lang="save"></button>
-                    </div>
-
+                    <div class="pt-6 flex justify-end items-center space-x-4"><button type="button" id="form-cancel-btn" class="btn" data-lang="cancel"></button><button type="button" id="form-save-btn" class="btn btn-primary" data-lang="generate_qr"></button></div>
                 </form>
             </div>
 
-            <!-- 4. Building Detail Page -->
-            <div id="page-detail" class="page">
-                <div id="detail-content" class="space-y-4">
-                    <!-- Detail rows and QR code will be inserted here -->
+            <div id="page-detail" class="page space-y-6">
+                <div class="section-container text-center">
+                   <h2 id="detail-building-name" class="text-2xl md:text-3xl font-bold text-gray-900 mb-2"></h2>
+                   <div id="detail-qr-code-container" class="mt-4 p-4 bg-white inline-block rounded-lg border border-gray-200 shadow-sm"></div>
+                </div>
+                <div id="detail-content" class="space-y-6"></div>
+                <div class="mt-2 flex flex-wrap justify-center gap-4">
+                    <button id="detail-download-qr-btn" class="btn"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg><span data-lang="download_qr_image"></span></button>
+                    <button id="detail-export-excel-btn" class="btn"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg><span data-lang="export_to_excel"></span></button>
+                    <button id="detail-export-pdf-btn" class="btn btn-primary"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><span data-lang="export_to_pdf"></span></button>
                 </div>
             </div>
 
-            <!-- 5. QR Scanner Page -->
             <div id="page-scanner" class="page">
-                <div id="qr-reader-container">
-                    <div id="qr-reader"></div>
-                </div>
+                <div id="qr-reader-container"><div id="qr-reader"></div></div>
                 <p class="text-center text-gray-500 mt-4" data-lang="scan_instruction"></p>
-            </div>
-            
-            <!-- 6. Settings Page -->
-            <div id="page-settings" class="page">
-                <div class="space-y-4">
-                    <div>
-                        <h3 class="font-bold text-lg mb-2" data-lang="settings_import_title"></h3>
-                         <label for="import-file-settings" class="w-full text-left bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 flex justify-between items-center cursor-pointer">
-                            <div>
-                                <p class="font-semibold" data-lang="settings_import_button"></p>
-                                <p class="text-gray-600 text-sm" data-lang="settings_import_desc"></p>
-                            </div>
-                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        </label>
-                        <input type="file" id="import-file-settings" class="hidden" accept=".json,.csv,.xls,.xlsx">
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-lg mb-2" data-lang="settings_export_title"></h3>
-                        <div class="space-y-3">
-                             <button id="export-json" class="w-full text-left bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 flex justify-between items-center">
-                                <div>
-                                    <p class="font-semibold" data-lang="settings_export_json"></p>
-                                    <p class="text-gray-600 text-sm" data-lang="settings_export_json_desc"></p>
-                                </div>
-                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                            </button>
-                             <button id="export-csv" class="w-full text-left bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 flex justify-between items-center">
-                                <div>
-                                    <p class="font-semibold" data-lang="settings_export_csv"></p>
-                                    <p class="text-gray-600 text-sm" data-lang="settings_export_csv_desc"></p>
-                                </div>
-                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                            </button>
-                             <button id="export-xlsx" class="w-full text-left bg-white p-4 rounded-lg shadow-sm hover:bg-gray-50 flex justify-between items-center">
-                                <div>
-                                    <p class="font-semibold" data-lang="settings_export_xlsx"></p>
-                                    <p class="text-gray-600 text-sm" data-lang="settings_export_xlsx_desc"></p>
-                                </div>
-                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
         </main>
         
-        <!-- Wheel Selector Modal -->
-        <div id="wheel-selector-overlay">
-            <div id="wheel-selector">
-                <div id="wheel-selector-header">
-                    <button id="wheel-cancel-btn" class="text-gray-600" data-lang="cancel">Cancel</button>
-                    <h4 id="wheel-title" class="font-bold text-lg"></h4>
-                    <button id="wheel-done-btn" class="font-bold text-[#03396c]" data-lang="done">Done</button>
-                </div>
-                <div class="relative">
-                    <div id="wheel-selector-container">
-                        <div id="wheel-selector-options"></div>
-                    </div>
-                    <div id="wheel-selector-indicator"></div>
+        <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 text-white py-2 px-4 rounded-lg shadow-lg transition-transform duration-300 translate-y-20 opacity-0"><p id="toast-message"></p></div>
+
+        <div id="confirm-modal-overlay">
+            <div id="confirm-modal">
+                <p id="confirm-modal-message" class="text-lg text-gray-800 mb-6"></p>
+                <div class="flex justify-center space-x-4">
+                    <button id="confirm-modal-no" class="btn w-28"></button>
+                    <button id="confirm-modal-yes" class="btn btn-primary w-28"></button>
                 </div>
             </div>
         </div>
-
-        <!-- Global Toast/Notification -->
-        <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300 opacity-0">
-            <p id="toast-message"></p>
-        </div>
-
     </div>
 
     <script>
-        // --- APPLICATION LOGIC ---
         document.addEventListener('DOMContentLoaded', () => {
-            
-            // --- STATE & CONFIG ---
             const DB_KEY = 'qrBuildingApp_buildings';
             const LANG_KEY = 'qrBuildingApp_lang';
-            const state = {
-                currentPage: 'page-home',
-                history: [], // For back button functionality
-                activeScanner: null,
-                photoCache: [], // Temporary cache for photos on the form page
-                currentLang: localStorage.getItem(LANG_KEY) || 'en',
-                isNewFormEntry: false, // To track if we are adding or editing
-                photosLoading: 0, // To track photo processing
-                wheel: {
-                    active: false,
-                    targetInput: null,
-                    targetTrigger: null,
-                    scrollTimeout: null,
-                    itemHeight: 48
-                }
-            };
+            const state = { currentPage: 'page-home', history: [], activeScanner: null, photoCache: [], currentLang: localStorage.getItem(LANG_KEY) || 'en', isNewFormEntry: false, photosLoading: 0, confirmCallback: null };
 
-            // --- TRANSLATIONS ---
             const translations = {
                 en: {
-                    app_title: "Building Information Hub", admin_title: "Admin: Records", add_building_title: "Add Building", edit_building_title: "Edit Building", scan_title: "Scan QR Code", settings_title: "Settings & Data", save: "Save",
-                    scan_qr: "Scan Building QR Code", add_building: "Add Building", import_data_file: "Import Building Data File (JSON, CSV, Excel)",
-                    no_buildings_found: "No buildings found.", click_plus_to_add: "Click the '+' button to add one.",
-                    search_placeholder: "Search by Zip Code...", no_search_results: "No buildings match your search.", try_different_search: "Try a different zip code.",
+                    app_title: "Building Information Hub", admin_title: "Building Records", add_building_title: "Add New Building", edit_building_title: "Edit Building", scan_title: "Scan QR Code", save: "Save",
+                    scan_qr: "Scan Building QR Code", add_building: "Add New Building",
+                    no_buildings_found: "No buildings found.", click_plus_to_add: "Click the '+' button above to add one.",
+                    search_placeholder: "Search by Name or ZIP Code...", no_search_results: "No buildings match your search.", try_different_search: "Try a different search term.",
                     form_section_address: "Address & Basic Info", form_building_name: "Building Name / Profile Name *", form_street: "Street", form_city: "City", form_state_province: "State/Province", form_zip_postal: "Zip/Postal Code", form_country: "Country/Region", form_webpage: "Web Page",
+                    form_latitude: "Latitude", form_longitude: "Longitude", form_get_location: "Get Current Location",
                     form_section_profile: "Property Profile", form_property_type: "Property Type", form_year_built: "Year Built", form_sqm: "Square Meters (m²)", form_bedrooms: "Bedrooms", form_bathrooms: "Bathrooms", form_garage: "Garage",
-                    form_eu_select: 'Select a classification...', form_eu_111: 'Residential - One-dwelling', form_eu_112: 'Residential - Multi-dwelling', form_eu_122: 'Commercial - Office Building', form_eu_123: 'Commercial - Wholesale and retail trade', form_eu_125: 'Commercial - Industrial and warehouse', form_eu_126: 'Public - Entertainment, education, hospital', form_eu_127: 'Other non-residential',
+                    form_property_type_select: 'Select a classification...', form_property_type_residential_single: 'Residential - Single Dwelling', form_property_type_residential_multi: 'Residential - Multi-dwelling', form_property_type_commercial_office: 'Commercial - Office',
                     form_section_financials: "Financials", form_loan_amount: "Loan Amount", form_assessed_value: "Assessed Value", form_current_value: "Current Value", form_down_payment: "Down Payment", form_monthly_mortgage: "Monthly Mortgage", form_housing_dues: "Housing Dues", form_tax: "Tax", form_insurance: "Insurance",
-                    form_section_location: "GPS Location", form_latitude: "Latitude", form_longitude: "Longitude", form_get_location: "Get Current Location",
-                    form_section_photos: "Photos", form_photos_note: "Note: Storing many large photos may slow down the app. Storage is limited by your browser.", form_upload_gallery: "Upload from Gallery", form_take_photo: "Take Photo",
-                    form_section_notes: "Notes",
-                    scan_instruction: "Point your camera at a QR code. Accessing your camera is required.",
-                    settings_import_title: "Import Data", settings_import_button: "Import from File", settings_import_desc: "Overwrite data from a JSON, CSV, or Excel file.",
-                    settings_export_title: "Export Data", settings_export_json: "Export as JSON", settings_export_json_desc: "Best for backups and re-importing.", settings_export_csv: "Export as CSV", settings_export_csv_desc: "Good for spreadsheets.", settings_export_xlsx: "Export as Excel (XLSX)", settings_export_xlsx_desc: "Best for Excel users.",
-                    confirm_delete: "Are you sure you want to delete this building?", confirm_import: "This will import {count} records and overwrite all existing data. Are you sure?",
-                    toast_saved: "Building saved successfully!", toast_deleted: "Building deleted.", toast_no_data_export: "No data to export.", toast_exported: "Data exported as {format} successfully!", toast_imported: "{count} buildings imported successfully!", toast_import_fail: "Failed to import file. Make sure it's a valid and correctly formatted file.",
-                    toast_location_captured: "Location captured!", toast_location_fail: "Could not get location. Please enable GPS.", toast_geo_unsupported: "Geolocation is not supported by your browser.",
-                    toast_camera_fail: "Could not start camera. Please grant permission.", toast_qr_not_found: "Building not found in local data.", toast_fill_fields: "Please fill in all required fields.",
-                    toast_photo_loading: "Please wait for photos to finish loading.", toast_photo_fail: "Failed to load photo. Please try again.",
-                    toast_photo_size_limit: "Photo exceeds size limit of {size}. Please choose a smaller file.",
-                    yes: "Yes", no: "No", cancel: "Cancel", done: "Done", detail_full_address: "Full Address", detail_other_info: "Other Information", detail_open_maps: "Open in Google Maps", detail_qr_code: "Building QR Code", detail_download_qr: "Download QR Code"
+                    form_section_photos: "Photos", form_photos_note: "Upload or take pictures of the building.", form_upload_gallery: "Upload", form_take_photo: "Take a photo", form_section_notes: "Notes",
+                    generate_qr: "Generate QR & Save", scan_instruction: "Point your camera at a QR code.", confirm_delete: "Are you sure you want to delete this building?",
+                    toast_saved: "Building saved successfully!", toast_deleted: "Building deleted.", toast_camera_fail: "Could not start camera. Please grant permission.", toast_qr_not_found: "Building not found in local data.", toast_fill_fields: "Please fill in all required fields.", toast_photo_loading: "Please wait for photos to finish loading.", toast_photo_fail: "Failed to load photo.", toast_photo_size_limit: "Photo exceeds size limit of 5MB.", toast_location_captured: "Location captured!", toast_location_fail: "Could not get location.", toast_geo_unsupported: "Geolocation is not supported by your browser.",
+                    yes: "Yes", no: "No", cancel: "Cancel",
+                    export_to_excel: "Export to Excel", export_to_pdf: "Download PDF", download_qr_image: "Download QR Image", toast_no_data_export: "No data to export.", toast_exported: "Data exported as {format} successfully!",
                 },
                 fa: {
-                    app_title: "مرکز اطلاعات ساختمان", admin_title: "مدیریت: رکوردها", add_building_title: "افزودن ساختمان", edit_building_title: "ویرایش ساختمان", scan_title: "اسکن کد QR", settings_title: "تنظیمات و داده‌ها", save: "ذخیره",
-                    scan_qr: "اسکن کد QR ساختمان", add_building: "افزودن ساختمان", import_data_file: "ورود اطلاعات از فایل (JSON, CSV, Excel)",
-                    no_buildings_found: "هیچ ساختمانی یافت نشد.", click_plus_to_add: "برای افزودن، روی دکمه '+' کلیک کنید.",
-                    search_placeholder: "جستجو بر اساس کد پستی...", no_search_results: "هیچ ساختمانی با جستجوی شما مطابقت ندارد.", try_different_search: "یک کد پستی دیگر را امتحان کنید.",
-                    form_section_address: "آدرس و اطلاعات اولیه", form_building_name: "نام ساختمان / نام پروفایل *", form_street: "خیابان", form_city: "شهر", form_state_province: "استان/ایالت", form_zip_postal: "کد پستی", form_country: "کشور", form_webpage: "صفحه وب",
-                    form_section_profile: "مشخصات ملک", form_property_type: "نوع ملک (طبقه‌بندی EU)", form_year_built: "سال ساخت", form_sqm: "متر مربع (m²)", form_bedrooms: "اتاق خواب", form_bathrooms: "حمام", form_garage: "پارکینگ",
-                    form_eu_select: 'یک طبقه‌بندی انتخاب کنید...', form_eu_111: 'مسکونی - یک واحدی', form_eu_112: 'مسکونی - چند واحدی', form_eu_122: 'تجاری - اداری', form_eu_123: 'تجاری - عمده و خرده فروشی', form_eu_125: '۱صنعتی و انبار', form_eu_126: 'عمومی - تفریحی، آموزشی، بیمارستانی', form_eu_127: 'سایر غیرمسکونی‌ها',
-                    form_section_financials: "اطلاعات مالی", form_loan_amount: "مبلغ وام", form_assessed_value: "ارزش ارزیابی شده", form_current_value: "ارزش فعلی", form_down_payment: "پیش پرداخت", form_monthly_mortgage: "قسط ماهانه", form_housing_dues: "شارژ ساختمان", form_tax: "مالیات", form_insurance: "بیمه",
-                    form_section_location: "موقعیت مکانی", form_latitude: "عرض جغرافیایی", form_longitude: "طول جغرافیایی", form_get_location: "دریافت موقعیت مکانی فعلی",
-                    form_section_photos: "عکس‌ها", form_photos_note: "توجه: ذخیره عکس‌های زیاد و بزرگ ممکن است سرعت برنامه را کاهش دهد. فضای ذخیره‌سازی توسط مرورگر شما محدود است.", form_upload_gallery: "آپلود از گالری", form_take_photo: "گرفتن عکس",
-                    form_section_notes: "یادداشت‌ها",
-                    scan_instruction: "دوربین خود را به سمت کد QR بگیرید. دسترسی به دوربین الزامی است.",
-                    settings_import_title: "ورود داده", settings_import_button: "ورود از فایل", settings_import_desc: "بازنویسی داده‌ها از فایل JSON، CSV یا Excel.",
-                    settings_export_title: "خروج داده", settings_export_json: "خروجی به صورت JSON", settings_export_json_desc: "بهترین گزینه برای پشتیبان‌گیری و ورود مجدد.", settings_export_csv: "خروجی به صورت CSV", settings_export_csv_desc: "مناسب برای صفحات گسترده.", settings_export_xlsx: "خروجی به صورت Excel (XLSX)", settings_export_xlsx_desc: "بهترین گزینه برای کاربران اکسل.",
-                    confirm_delete: "آیا از حذف این ساختمان مطمئن هستید؟", confirm_import: "این عملیات {count} رکورد را وارد کرده و تمام داده‌های موجود را بازنویسی می‌کند. آیا مطمئن هستید؟",
-                    toast_saved: "ساختمان با موفقیت ذخیره شد!", toast_deleted: "ساختمان حذف شد.", toast_no_data_export: "داده‌ای برای خروج وجود ندارد.", toast_exported: "داده‌ها با موفقیت به صورت {format} خروجی گرفته شد!", toast_imported: "{count} ساختمان با موفقیت وارد شد!", toast_import_fail: "ورود فایل ناموفق بود. از معتبر و صحیح بودن فرمت فایل اطمینان حاصل کنید.",
-                    toast_location_captured: "موقعیت مکانی ثبت شد!", toast_location_fail: "دریافت موقعیت مکانی ناموفق بود. لطفاً GPS را فعال کنید.", toast_geo_unsupported: "مرورگر شما از موقعیت‌یابی جغرافیایی پشتیبانی نمی‌کند.",
-                    toast_camera_fail: "دوربین فعال نشد. لطفاً دسترسی را مجاز کنید.", toast_qr_not_found: "ساختمان در داده‌های محلی یافت نشد.", toast_fill_fields: "لطفاً تمام فیلدهای الزامی را پر کنید.",
-                    toast_photo_loading: "لطفاً منتظر بمانید تا بارگذاری عکس‌ها تمام شود.", toast_photo_fail: "بارگذاری عکس ناموفق بود. لطفاً دوباره تلاش کنید.",
-                    toast_photo_size_limit: "حجم عکس از حد مجاز {size} بیشتر است. لطفاً فایل کوچکتری انتخاب کنید.",
-                    yes: "بله", no: "خیر", cancel: "لغو", done: "تایید", detail_full_address: "آدرس کامل", detail_other_info: "سایر اطلاعات", detail_open_maps: "باز کردن در نقشه گوگل", detail_qr_code: "کد QR ساختمان", detail_download_qr: "دانلود کد QR"
+                    app_title: "مرکز اطلاعات ساختمان", admin_title: "لیست ساختمان‌ها", add_building_title: "افزودن ساختمان جدید", edit_building_title: "ویرایش ساختمان", scan_title: "اسکن کد QR", save: "ذخیره",
+                    scan_qr: "اسکن کد QR ساختمان", add_building: "افزودن ساختمان جدید",
+                    no_buildings_found: "هیچ ساختمانی یافت نشد.", click_plus_to_add: "برای افزودن، روی دکمه '+' بالا کلیک کنید.",
+                    search_placeholder: "جستجو بر اساس نام یا کد پستی...", no_search_results: "هیچ ساختمانی با جستجوی شما مطابقت ندارد.", try_different_search: "عبارت دیگری را امتحان کنید.",
+                    form_section_address: "آدرس و اطلاعات اولیه", form_building_name: "نام ساختمان / پروفایل *", form_street: "خیابان", form_city: "شهر", form_state_province: "استان/ایالت", form_zip_postal: "کد پستی", form_country: "کشور", form_webpage: "صفحه وب",
+                    form_latitude: "عرض جغرافیایی", form_longitude: "طول جغرافیایی", form_get_location: "دریافت موقعیت فعلی",
+                    form_section_profile: "مشخصات ملک", form_property_type: "نوع ملک", form_year_built: "سال ساخت", form_sqm: "متر مربع", form_bedrooms: "اتاق خواب", form_bathrooms: "سرویس بهداشتی", form_garage: "پارکینگ",
+                    form_property_type_select: 'یک دسته را انتخاب کنید...', form_property_type_residential_single: 'مسکونی - تک واحدی', form_property_type_residential_multi: 'مسکونی - چند واحدی', form_property_type_commercial_office: 'تجاری - اداری',
+                    form_section_financials: "اطلاعات مالی", form_loan_amount: "مبلغ وام", form_assessed_value: "ارزش ارزیابی شده", form_current_value: "ارزش فعلی", form_down_payment: "پیش پرداخت", form_monthly_mortgage: "قسط ماهانه", form_housing_dues: "شارژ", form_tax: "مالیات", form_insurance: "بیمه",
+                    form_section_photos: "عکس‌ها", form_photos_note: "عکس‌های ساختمان را بارگذاری یا ثبت کنید.", form_upload_gallery: "بارگذاری", form_take_photo: "گرفتن عکس", form_section_notes: "یادداشت‌ها",
+                    generate_qr: "ساختن QR و ذخیره", scan_instruction: "دوربین خود را به سمت کد QR بگیرید.", confirm_delete: "آیا از حذف این ساختمان مطمئن هستید؟",
+                    toast_saved: "ساختمان با موفقیت ذخیره شد!", toast_deleted: "ساختمان حذف شد.", toast_camera_fail: "دوربین فعال نشد. لطفاً دسترسی را مجاز کنید.", toast_qr_not_found: "ساختمان در داده‌های محلی یافت نشد.", toast_fill_fields: "لطفاً تمام فیلدهای الزامی را پر کنید.",
+                    toast_photo_loading: "لطفاً منتظر بمانید تا بارگذاری عکس‌ها تمام شود.", toast_photo_fail: "بارگذاری عکس ناموفق بود.", toast_photo_size_limit: "حجم عکس از حد مجاز ۵ مگابایت بیشتر است.",
+                    toast_location_captured: "موقعیت مکانی ثبت شد!", toast_location_fail: "دریافت موقعیت مکانی ناموفق بود.", toast_geo_unsupported: "موقعیت یابی توسط مرورگر شما پشتیبانی نمی‌شود.",
+                    yes: "بله", no: "خیر", cancel: "لغو",
+                    export_to_excel: "خروجی اکسل", export_to_pdf: "دانلود PDF", download_qr_image: "دانلود تصویر QR", toast_no_data_export: "داده‌ای برای خروج وجود ندارد.", toast_exported: "داده‌ها با موفقیت به صورت {format} خروجی گرفته شد!",
                 }
             };
 
-            const translate = (key, params = {}) => {
-                let text = translations[state.currentLang][key] || key;
-                for(const param in params) {
-                    text = text.replace(`{${param}}`, params[param]);
-                }
-                return text;
-            }
+            const translate = (key, params = {}, lang = state.currentLang) => { let text = (translations[lang] || translations.en)[key] || key; for(const param in params) { text = text.replace(`{${param}}`, params[param]); } return text; };
+            const dom = { pages: document.querySelectorAll('.page'), headerTitle: document.getElementById('header-title'), backButton: document.getElementById('back-button'), headerActions: document.getElementById('header-actions'), buildingList: document.getElementById('building-list'), emptyAdminState: document.getElementById('empty-admin-state'), searchBar: document.getElementById('search-bar'), form: document.getElementById('building-form'), photoUploadInput: document.getElementById('photo-upload'), photoCaptureInput: document.getElementById('photo-capture'), saveProgressBar: document.getElementById('save-progress-bar'), formSaveBtn: document.getElementById('form-save-btn'), formCancelBtn: document.getElementById('form-cancel-btn'), confirmModalOverlay: document.getElementById('confirm-modal-overlay') };
 
-            const formatCurrency = (number) => {
-                if (isNaN(number) || number === '' || number === null) return '';
-                const numericValue = Number(number);
-                if (state.currentLang === 'fa') {
-                    // Using a simple number format for IRR as currency style might not be universally supported
-                    return new Intl.NumberFormat('fa-IR').format(numericValue) + ' ریال';
-                } else {
-                    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(numericValue); // Using de-DE for Euro formatting
-                }
-            };
+            const sanitizeBuilding = (data) => ({ id: data.id || crypto.randomUUID(), buildingName: data.buildingName || '', street: data.street || '', city: data.city || '', stateProvince: data.stateProvince || '', zipPostal: data.zipPostal || '', country: data.country || '', webpage: data.webpage || '', latitude: data.latitude || '', longitude: data.longitude || '', propertyType: data.propertyType || '', yearBuilt: data.yearBuilt || '', squareFeet: data.squareFeet || '', bedrooms: data.bedrooms || '0', bathrooms: data.bathrooms || '0', garage: data.garage || false, loanAmount: data.loanAmount || '', assessedValue: data.assessedValue || '', currentValue: data.currentValue || '', downPayment: data.downPayment || '', monthlyMortgage: data.monthlyMortgage || '', housingDues: data.housingDues || '', tax: data.tax || '', insurance: data.insurance || '', notes: data.notes || '', photos: Array.isArray(data.photos) ? data.photos : [] });
+            const db = { getAll: () => JSON.parse(localStorage.getItem(DB_KEY) || '[]'), getById: (id) => db.getAll().find(b => String(b.id) === String(id)), save: (data) => { const all = db.getAll(); const s = sanitizeBuilding(data); const i = all.findIndex(b => String(b.id) === String(s.id)); if (i > -1) all[i] = s; else all.push(s); localStorage.setItem(DB_KEY, JSON.stringify(all)); }, delete: (id) => { let all = db.getAll(); all = all.filter(b => String(b.id) !== String(id)); localStorage.setItem(DB_KEY, JSON.stringify(all)); } };
 
-            // --- DOM ELEMENTS ---
-            const pages = document.querySelectorAll('.page');
-            const headerTitle = document.getElementById('header-title');
-            const backButton = document.getElementById('back-button');
-            const headerActions = document.getElementById('header-actions');
-            const buildingList = document.getElementById('building-list');
-            const emptyAdminState = document.getElementById('empty-admin-state');
-            const searchBar = document.getElementById('search-bar');
-            const form = document.getElementById('building-form');
-            const qrReader = document.getElementById('qr-reader');
-            const importFileInput = document.getElementById('import-file');
-            const importFileInputSettings = document.getElementById('import-file-settings');
-            const exportJsonButton = document.getElementById('export-json');
-            const exportCsvButton = document.getElementById('export-csv');
-            const exportXlsxButton = document.getElementById('export-xlsx');
-            const photoUploadInput = document.getElementById('photo-upload');
-            const photoCaptureInput = document.getElementById('photo-capture');
-            const wheelOverlay = document.getElementById('wheel-selector-overlay');
-            const wheelContainer = document.getElementById('wheel-selector-container');
-            const wheelOptions = document.getElementById('wheel-selector-options');
-            const wheelTitle = document.getElementById('wheel-title');
-            const wheelDoneBtn = document.getElementById('wheel-done-btn');
-            const wheelCancelBtn = document.getElementById('wheel-cancel-btn');
-            const saveProgressBar = document.getElementById('save-progress-bar');
-            const formSaveBtn = document.getElementById('form-save-btn');
-            const formCancelBtn = document.getElementById('form-cancel-btn');
-            
-            // --- DATA SANITIZATION ---
-            const sanitizeBuilding = (buildingData) => {
-                let garageValue = buildingData.garage;
-                if(typeof garageValue === 'string') {
-                    garageValue = ['true', 'yes', '1'].includes(garageValue.toLowerCase());
-                }
-                return {
-                    id: buildingData.id || db.uuid(),
-                    buildingName: buildingData.buildingName || '',
-                    address: buildingData.address || '',
-                    city: buildingData.city || '',
-                    stateProvince: buildingData.stateProvince || '',
-                    zipPostal: buildingData.zipPostal || '',
-                    country: buildingData.country || '',
-                    webpage: buildingData.webpage || '',
-                    yearBuilt: buildingData.yearBuilt || '',
-                    buildingUseType: buildingData.buildingUseType || '',
-                    loanAmount: buildingData.loanAmount || '',
-                    assessedValue: buildingData.assessedValue || '',
-                    currentValue: buildingData.currentValue || '',
-                    squareFeet: buildingData.squareFeet || '',
-                    bedrooms: buildingData.bedrooms || '0',
-                    bathrooms: buildingData.bathrooms || '0',
-                    garage: garageValue,
-                    monthlyMortgage: buildingData.monthlyMortgage || '',
-                    housingDues: buildingData.housingDues || '',
-                    tax: buildingData.tax || '',
-                    insurance: buildingData.insurance || '',
-                    downPayment: buildingData.downPayment || '',
-                    latitude: buildingData.latitude || '',
-                    longitude: buildingData.longitude || '',
-                    ownerName: buildingData.ownerName || '',
-                    notes: buildingData.notes || '',
-                    photos: buildingData.photos && Array.isArray(buildingData.photos) ? buildingData.photos : [],
-                };
-            };
-            
-            // --- DATABASE LOGIC (using localStorage) ---
-            const db = {
-                uuid: () => {
-                    const buildings = db.getAll();
-                    if (buildings.length === 0) return 1;
-                    return Math.max(...buildings.map(b => Number(b.id) || 0)) + 1;
-                },
-                getAll: () => JSON.parse(localStorage.getItem(DB_KEY) || '[]'),
-                getById: (id) => db.getAll().find(b => String(b.id) === String(id)),
-                save: (buildingData) => {
-                    const buildings = db.getAll();
-                    const buildingToSave = sanitizeBuilding(buildingData);
-                    const index = buildings.findIndex(b => String(b.id) === String(buildingToSave.id));
-                    if (index > -1) {
-                        buildings[index] = buildingToSave; // Update
-                    } else {
-                        buildings.push(buildingToSave); // Add
-                    }
-                    localStorage.setItem(DB_KEY, JSON.stringify(buildings));
-                },
-                delete: (id) => {
-                    let buildings = db.getAll();
-                    buildings = buildings.filter(b => String(b.id) !== String(id));
-                    localStorage.setItem(DB_KEY, JSON.stringify(buildings));
-                },
-                clear: () => localStorage.removeItem(DB_KEY)
-            };
-            
-            // --- UI RENDERING & TRANSLATION ---
             const ui = {
                 updateText: () => {
                     document.documentElement.lang = state.currentLang;
                     document.documentElement.dir = state.currentLang === 'fa' ? 'rtl' : 'ltr';
                     document.getElementById('lang-switcher').textContent = state.currentLang === 'en' ? 'FA' : 'EN';
-                    
-                    document.querySelectorAll('[data-lang]').forEach(el => {
-                        const key = el.dataset.lang;
-                        if (key) el.textContent = translate(key);
-                    });
-                    
-                    const searchBarEl = document.getElementById('search-bar');
-                    if (searchBarEl) {
-                        searchBarEl.placeholder = translate('search_placeholder');
-                    }
-                    
-                    const propertyTypeSelect = document.getElementById('buildingUseType');
-                    if(propertyTypeSelect) {
-                        const currentPropValue = propertyTypeSelect.value;
-                        propertyTypeSelect.innerHTML = `
-                            <option value="">${translate('form_eu_select')}</option>
-                            <option value="${translate('form_eu_111')}">${translate('form_eu_111')}</option>
-                            <option value="${translate('form_eu_112')}">${translate('form_eu_112')}</option>
-                            <option value="${translate('form_eu_122')}">${translate('form_eu_122')}</option>
-                            <option value="${translate('form_eu_123')}">${translate('form_eu_123')}</option>
-                            <option value="${translate('form_eu_125')}">${translate('form_eu_125')}</option>
-                            <option value="${translate('form_eu_126')}">${translate('form_eu_126')}</option>
-                            <option value="${translate('form_eu_127')}">${translate('form_eu_127')}</option>
-                        `;
-                        propertyTypeSelect.value = currentPropValue;
-                    }
+                    document.querySelectorAll('[data-lang]').forEach(el => { if (el.dataset.lang) el.textContent = translate(el.dataset.lang); });
+                    dom.searchBar.placeholder = translate('search_placeholder');
+                    document.getElementById('home-title').textContent = translate('app_title');
+                    const propSelect = document.getElementById('propertyType');
+                    if(propSelect) { const val = propSelect.value; propSelect.innerHTML = `<option value="">${translate('form_property_type_select')}</option><option value="Residential - Single Dwelling">${translate('form_property_type_residential_single')}</option><option value="Residential - Multi-dwelling">${translate('form_property_type_residential_multi')}</option><option value="Commercial - Office">${translate('form_property_type_commercial_office')}</option>`; propSelect.value = val; }
                 },
-
                 renderPhotoThumbnails: () => {
-                    const container = document.getElementById('photo-thumbnails');
-                    container.innerHTML = '';
-                    state.photoCache.forEach((photoSrc, index) => {
-                        const thumbContainer = document.createElement('div');
-                        thumbContainer.className = 'thumbnail-container';
-                        const img = document.createElement('img');
-                        img.src = photoSrc;
-                        img.className = 'w-full h-auto rounded-lg shadow-md';
-                        const deleteBtn = document.createElement('div');
-                        deleteBtn.className = 'thumbnail-delete';
-                        deleteBtn.innerHTML = '&times;';
-                        deleteBtn.onclick = () => {
-                            state.photoCache.splice(index, 1);
-                            ui.renderPhotoThumbnails();
-                        };
-                        thumbContainer.appendChild(img);
-                        thumbContainer.appendChild(deleteBtn);
-                        container.appendChild(thumbContainer);
-                    });
+                    const container = document.getElementById('photo-thumbnails'); container.innerHTML = '';
+                    state.photoCache.forEach((src, i) => { const div = document.createElement('div'); div.className = 'thumbnail-container'; div.innerHTML = `<img src="${src}" class="w-full h-24 object-cover rounded-lg shadow-md"><div class="thumbnail-delete">&times;</div>`; div.querySelector('.thumbnail-delete').onclick = () => { state.photoCache.splice(i, 1); ui.renderPhotoThumbnails(); }; container.appendChild(div); });
                 },
-
-                renderAdminList: (searchTerm = '') => {
-                    let buildings = db.getAll();
-                    const normalizedSearchTerm = searchTerm.toLowerCase().trim();
-
-                    if (normalizedSearchTerm) {
-                        buildings = buildings.filter(building => 
-                            building.zipPostal && building.zipPostal.toLowerCase().includes(normalizedSearchTerm)
-                        );
-                    }
-                    
-                    buildingList.innerHTML = '';
-                    
+                renderAdminList: (term = '') => {
+                    let buildings = db.getAll(); const normTerm = term.toLowerCase().trim();
+                    if (normTerm) buildings = buildings.filter(b => (b.buildingName && b.buildingName.toLowerCase().includes(normTerm)) || (b.zipPostal && b.zipPostal.toLowerCase().includes(normTerm)));
+                    dom.buildingList.innerHTML = '';
                     if (buildings.length === 0) {
-                        emptyAdminState.classList.remove('hidden');
-                        const noBuildingsMsg = document.querySelector('#empty-admin-state p[data-lang="no_buildings_found"]');
-                        const clickPlusMsg = document.querySelector('#empty-admin-state p[data-lang="click_plus_to_add"]');
-                        
-                        if (normalizedSearchTerm) {
-                            noBuildingsMsg.textContent = translate('no_search_results');
-                            clickPlusMsg.textContent = translate('try_different_search');
-                        } else {
-                            noBuildingsMsg.textContent = translate('no_buildings_found');
-                            clickPlusMsg.textContent = translate('click_plus_to_add');
-                        }
+                        dom.emptyAdminState.classList.remove('hidden'); const msg1 = dom.emptyAdminState.querySelector('[data-lang="no_buildings_found"]'); const msg2 = dom.emptyAdminState.querySelector('[data-lang="click_plus_to_add"]');
+                        if (normTerm) { msg1.textContent = translate('no_search_results'); msg2.textContent = translate('try_different_search'); } else { msg1.textContent = translate('no_buildings_found'); msg2.textContent = translate('click_plus_to_add'); }
                     } else {
-                        emptyAdminState.classList.add('hidden');
-                        buildings.forEach(building => {
-                            const item = document.createElement('div');
-                            item.className = 'notion-card p-4 hover:bg-gray-50 cursor-pointer';
-                            item.dataset.id = building.id;
-                            const zipBadge = building.zipPostal ? `<span class="bg-blue-100 text-blue-800 text-xs font-medium ${state.currentLang === 'fa' ? 'me-2' : 'ms-2'} px-2.5 py-0.5 rounded-full">${building.zipPostal}</span>` : '';
-                            item.innerHTML = `
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h3 class="font-bold text-lg text-gray-800">${building.buildingName}</h3>
-                                        <p class="text-gray-500">${building.address || 'No address'}</p>
-                                    </div>
-                                    ${zipBadge}
-                                </div>
-                            `;
-                            item.addEventListener('click', () => showPage('page-detail', { buildingId: building.id }));
-                            buildingList.appendChild(item);
-                        });
+                        dom.emptyAdminState.classList.add('hidden');
+                        buildings.forEach(b => { const item = document.createElement('div'); item.className = 'bg-white p-4 rounded-md border border-gray-200 hover:border-[var(--primary-color)] hover:shadow-sm cursor-pointer flex justify-between items-center'; item.dataset.id = b.id; item.innerHTML = `<div><h3 class="font-bold text-lg">${b.buildingName}</h3><p class="text-gray-500">${b.street || 'No address'}</p></div><span class="text-gray-500">${b.zipPostal||''}</span>`; item.onclick = () => showPage('page-detail', { id: b.id }); dom.buildingList.appendChild(item); });
                     }
                 },
-                
-                renderDetail: (building, isAdminView, isNewSave = false) => {
-                    const content = document.getElementById('detail-content');
-                    content.innerHTML = '';
-
-                    const createSection = (titleKey, isFirst = false) => {
-                        const section = document.createElement('div');
-                        section.className = 'notion-card p-6';
-                        const sectionContent = document.createElement('div');
-                        sectionContent.className = 'space-y-4';
-                        if (titleKey) {
-                             const heading = document.createElement('h3');
-                             heading.className = 'font-bold text-xl mb-4 text-gray-800';
-                             heading.textContent = translate(titleKey);
-                             section.appendChild(heading);
-                        } else if(isFirst) {
-                            const heading = document.createElement('h2');
-                            heading.className = 'font-bold text-2xl mb-2 text-gray-900';
-                            heading.textContent = building.buildingName;
-                            section.appendChild(heading);
-                        }
-                        section.appendChild(sectionContent);
-                        return section;
-                    };
-                    
-                    const createFieldRow = (labelKey, value) => {
-                         if (!value && value !== false && value !== 0) return null;
-                         const row = document.createElement('div');
-                         row.innerHTML = `<p class="text-sm font-medium text-gray-500">${translate(labelKey)}</p><p class="text-base mt-1 break-words text-gray-800">${value}</p>`;
-                         return row;
-                    };
-
-                    const addField = (section, labelKey, value, isCurrency = false) => {
-                        let displayValue = value;
-                        if (isCurrency) {
-                            displayValue = formatCurrency(value);
-                        }
-                        const row = createFieldRow(labelKey, displayValue);
-                        if(row) section.lastChild.appendChild(row);
-                    }
-
-                    const mainInfoSection = createSection(null, true);
-                    const fullAddress = [building.address, building.city, building.stateProvince, building.zipPostal, building.country].filter(Boolean).join(', ');
-                    addField(mainInfoSection, 'detail_full_address', fullAddress);
-                    if (building.webpage) {
-                        const webpageRow = document.createElement('div');
-                        webpageRow.innerHTML = `<p class="text-sm font-medium text-gray-500">${translate('form_webpage')}</p><a href="${building.webpage}" target="_blank" rel="noopener noreferrer" class="text-[#03396c] hover:underline break-all">${building.webpage}</a>`;
-                        mainInfoSection.lastChild.appendChild(webpageRow);
-                    }
-                     if (building.latitude && building.longitude) {
-                        const locationRow = document.createElement('div');
-                        locationRow.innerHTML = `<p class="text-sm font-medium text-gray-500">${translate('form_section_location')}</p><a href="https://www.google.com/maps?q=${building.latitude},${building.longitude}" target="_blank" rel="noopener noreferrer" class="text-[#03396c] hover:underline">${building.latitude}, ${building.longitude}</a>`;
-                        mainInfoSection.lastChild.appendChild(locationRow);
-                    }
-                    content.appendChild(mainInfoSection);
-
-                    const profileSection = createSection('form_section_profile');
-                    addField(profileSection, 'form_property_type', building.buildingUseType);
-                    addField(profileSection, 'form_year_built', building.yearBuilt);
-                    addField(profileSection, 'form_sqm', building.squareFeet);
-                    addField(profileSection, 'form_bedrooms', building.bedrooms);
-                    addField(profileSection, 'form_bathrooms', building.bathrooms);
-                    addField(profileSection, 'form_garage', building.garage ? translate('yes') : translate('no'));
-                    if (profileSection.lastChild.children.length > 0) content.appendChild(profileSection);
-
-                    const financialSection = createSection('form_section_financials');
-                    addField(financialSection, 'form_loan_amount', building.loanAmount, true);
-                    addField(financialSection, 'form_assessed_value', building.assessedValue, true);
-                    addField(financialSection, 'form_current_value', building.currentValue, true);
-                    addField(financialSection, 'form_down_payment', building.downPayment, true);
-                    addField(financialSection, 'form_monthly_mortgage', building.monthlyMortgage, true);
-                    addField(financialSection, 'form_housing_dues', building.housingDues, true);
-                    addField(financialSection, 'form_tax', building.tax, true);
-                    addField(financialSection, 'form_insurance', building.insurance, true);
-                    if (financialSection.lastChild.children.length > 0) content.appendChild(financialSection);
-
-                    const otherSection = createSection('detail_other_info');
-                    addField(otherSection, 'ownerName', building.ownerName);
-                    addField(otherSection, 'form_section_notes', building.notes);
-                    if (otherSection.lastChild.children.length > 0) content.appendChild(otherSection);
-
-                    if (building.photos && building.photos.length > 0) {
-                         const photoSection = createSection('form_section_photos');
-                         const photoGrid = document.createElement('div');
-                         photoGrid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4';
-                         building.photos.forEach(photoSrc => {
-                            photoGrid.innerHTML += `<img src="${photoSrc}" class="rounded-lg w-full h-auto object-cover shadow-md">`;
-                         });
-                         photoSection.lastChild.appendChild(photoGrid);
-                         content.appendChild(photoSection);
-                    }
-                    
-                    if (isAdminView || isNewSave) {
-                        const qrCard = document.createElement('div');
-                        qrCard.id = "qr-code-card";
-                        qrCard.className = 'notion-card p-6 text-center mt-4';
-                        qrCard.innerHTML = `<h3 class="text-lg font-bold text-gray-800 mb-2">${translate('detail_qr_code')}</h3><div id="detail-qr-code-container" class="mt-4 flex justify-center"></div><div class="mt-6 flex justify-center space-x-4"><button id="detail-download-qr-button" class="bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg">${translate('detail_download_qr')}</button></div>`;
-                        content.appendChild(qrCard);
-                        const qrCode = new QRCodeStyling({ width: 250, height: 250, data: String(building.id), dotsOptions: { color: '#03396c', type: 'rounded' }, backgroundOptions: { color: '#ffffff' }, cornersSquareOptions: { color: '#03396c', type: 'extra-rounded' }, cornersDotOptions: { color: '#03396c', type: 'dot' } });
-                        qrCode.append(document.getElementById('detail-qr-code-container'));
-                        document.getElementById('detail-download-qr-button').onclick = () => qrCode.download({ name: `qr-${building.buildingName.replace(/\s+/g, '-')}`, extension: 'png' });
-                    }
+                renderDetail: (b) => {
+                    document.getElementById('detail-building-name').textContent = b.buildingName;
+                    const qrContainer = document.getElementById('detail-qr-code-container'); qrContainer.innerHTML = ''; new QRCodeStyling({ width: 180, height: 180, data: String(b.id), dotsOptions: { color: '#03396c', type: 'rounded' } }).append(qrContainer);
+                    const content = document.getElementById('detail-content'); content.innerHTML = '';
+                    const createField = (lbl, val) => val || val === 0 || val === false ? `<div class="flex justify-between items-center py-2 border-b"><p class="text-sm font-medium text-gray-500">${translate(lbl)}</p><p class="text-sm text-right break-all">${val===true?translate('yes'):val===false?translate('no'):val}</p></div>` : '';
+                    const createLink = (lbl, val, url) => val ? `<div class="flex justify-between items-center py-2 border-b"><p class="text-sm font-medium text-gray-500">${translate(lbl)}</p><a href="${url}" target="_blank" class="text-sm text-blue-600 hover:underline text-right break-all">${val}</a></div>` : '';
+                    const fC = (n) => !isNaN(n)&&n!==''&&n!==null ? new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(n)) : '';
+                    let addr = [b.street,b.city,b.stateProvince,b.zipPostal,b.country].filter(Boolean).join(', '); let addrHTML = createField('form_street', addr) + createLink('form_webpage',b.webpage,b.webpage); if(b.latitude&&b.longitude) addrHTML+=createLink('form_section_location',`${b.latitude}, ${b.longitude}`,`https://www.google.com/maps?q=${b.latitude},${b.longitude}`); if(addrHTML) content.innerHTML+=`<div class="section-container"><h3 class="font-bold text-lg mb-2">${translate('form_section_address')}</h3>${addrHTML}</div>`;
+                    let profHTML = createField('form_property_type',b.propertyType)+createField('form_year_built',b.yearBuilt)+createField('form_sqm',b.squareFeet)+createField('form_bedrooms',b.bedrooms)+createField('form_bathrooms',b.bathrooms)+createField('form_garage',b.garage); if(profHTML) content.innerHTML+=`<div class="section-container"><h3 class="font-bold text-lg mb-2">${translate('form_section_profile')}</h3>${profHTML}</div>`;
+                    let finHTML = createField('form_loan_amount',fC(b.loanAmount))+createField('form_assessed_value',fC(b.assessedValue))+createField('form_current_value',fC(b.currentValue))+createField('form_down_payment',fC(b.downPayment))+createField('form_monthly_mortgage',fC(b.monthlyMortgage))+createField('form_housing_dues',fC(b.housingDues))+createField('form_tax',fC(b.tax))+createField('form_insurance',fC(b.insurance)); if(finHTML) content.innerHTML+=`<div class="section-container"><h3 class="font-bold text-lg mb-2">${translate('form_section_financials')}</h3>${finHTML}</div>`;
+                    let exHTML = ''; if(b.notes) exHTML+=`<div class="mb-6"><h3 class="font-bold text-lg mb-2">${translate('form_section_notes')}</h3><p class="text-gray-700 whitespace-pre-wrap text-sm">${b.notes}</p></div>`; if(b.photos&&b.photos.length>0) exHTML+=`<div><h3 class="font-bold text-lg mb-4">${translate('form_section_photos')}</h3><div class="grid grid-cols-2 sm:grid-cols-3 gap-4">${b.photos.map(src=>`<img src="${src}" class="rounded-lg w-full h-auto object-cover">`).join('')}</div></div>`; if(exHTML) content.innerHTML+=`<div class="section-container">${exHTML}</div>`;
                 },
-                
-                showToast: (message, isError = false, params = {}) => {
-                    const toast = document.getElementById('toast');
-                    const toastMessage = document.getElementById('toast-message');
-                    toastMessage.textContent = translate(message, params);
-                    toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300 opacity-100 ${isError ? 'bg-red-600' : 'bg-gray-900'}`;
-                    setTimeout(() => toast.classList.replace('opacity-100', 'opacity-0'), 3000);
-                }
+                showToast: (key, isErr = false, params = {}) => {
+                    const toast = document.getElementById('toast'); toast.querySelector('p').textContent = translate(key, params);
+                    toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg transition-transform duration-300 ${isErr?'bg-red-600':'bg-gray-800'}`;
+                    requestAnimationFrame(()=>{toast.style.opacity='1';toast.style.transform='translateY(0)';}); setTimeout(()=>{toast.style.opacity='0';toast.style.transform='translateY(5rem)';}, 3000);
+                },
+                showConfirmModal: (key, cb) => {
+                    document.getElementById('confirm-modal-message').textContent = translate(key);
+                    document.getElementById('confirm-modal-yes').textContent = translate('yes');
+                    document.getElementById('confirm-modal-no').textContent = translate('no');
+                    dom.confirmModalOverlay.classList.add('visible'); state.confirmCallback = cb;
+                },
+                hideConfirmModal: () => { dom.confirmModalOverlay.classList.remove('visible'); state.confirmCallback = null; }
             };
-            
-            // --- Wheel Selector Logic ---
-            const wheel = {
-                init() {
-                    wheelContainer.addEventListener('scroll', wheel.handleScroll);
-                    wheelCancelBtn.addEventListener('click', wheel.hide);
-                    wheelDoneBtn.addEventListener('click', wheel.confirmSelection);
-                },
-                show(target) {
-                    const trigger = document.querySelector(`.mobile-wheel-trigger[data-target="${target}"]`);
-                    state.wheel.targetInput = document.getElementById(target);
-                    state.wheel.targetTrigger = trigger;
-                    
-                    const label = document.querySelector(`label[for="${target}"]`).textContent;
-                    wheelTitle.textContent = label;
 
-                    let options = [];
-                    switch(target) {
-                        case 'buildingUseType':
-                             options = Array.from(state.wheel.targetInput.options).map(opt => ({value: opt.value, text: opt.textContent}));
-                             break;
-                        case 'yearBuilt':
-                            const currentYear = new Date().getFullYear();
-                            for (let y = currentYear; y >= 1900; y--) {
-                                options.push({value: y, text: y});
-                            }
-                            break;
-                        case 'bedrooms':
-                        case 'bathrooms':
-                            for(let i=0; i<=10; i++) { options.push({value: i, text: i}); }
-                            break;
-                        case 'garage':
-                            options.push({value: 'Yes', text: translate('yes')});
-                            options.push({value: 'No', text: translate('no')});
-                            break;
-                    }
-
-                    wheelOptions.innerHTML = '';
-                    options.forEach(opt => {
-                        const div = document.createElement('div');
-                        div.className = 'option';
-                        div.textContent = opt.text;
-                        div.dataset.value = opt.value;
-                        wheelOptions.appendChild(div);
-                    });
-
-                    // Set initial position
-                    let selectedValue;
-                    if(target === 'garage') {
-                         selectedValue = state.wheel.targetInput.checked ? 'Yes' : 'No';
-                    } else {
-                        selectedValue = state.wheel.targetInput.value;
-                    }
-                   
-                    const selectedIndex = options.findIndex(opt => String(opt.value) === String(selectedValue));
-                    const initialScrollTop = selectedIndex > -1 ? selectedIndex * state.wheel.itemHeight : 0;
-                    wheelContainer.scrollTop = initialScrollTop;
-
-                    wheelOverlay.classList.add('visible');
-                    wheel.highlightCurrent();
-                },
-                hide() {
-                    wheelOverlay.classList.remove('visible');
-                },
-                handleScroll() {
-                    clearTimeout(state.wheel.scrollTimeout);
-                    state.wheel.scrollTimeout = setTimeout(() => {
-                        wheel.snapToItem();
-                    }, 100); // Debounce scroll stop event
-                    wheel.highlightCurrent();
-                },
-                snapToItem() {
-                    const scrollTop = wheelContainer.scrollTop;
-                    const nearestIndex = Math.round(scrollTop / state.wheel.itemHeight);
-                    const targetScrollTop = nearestIndex * state.wheel.itemHeight;
-                    wheelContainer.scrollTo({
-                        top: targetScrollTop,
-                        behavior: 'smooth'
-                    });
-                },
-                highlightCurrent() {
-                    const scrollTop = wheelContainer.scrollTop;
-                    
-                    wheelOptions.querySelectorAll('.option').forEach(opt => {
-                        const optCenter = opt.offsetTop + (state.wheel.itemHeight / 2);
-                        
-                        if(Math.abs(scrollTop - (opt.offsetTop - (state.wheel.itemHeight*2))) < state.wheel.itemHeight / 2) {
-                             opt.style.color = '#03396c';
-                             opt.style.transform = 'scale(1)';
-                        } else {
-                            opt.style.color = '#9ca3af';
-                            opt.style.transform = `scale(0.9)`;
-                        }
-                    });
-                },
-                confirmSelection() {
-                    const scrollTop = wheelContainer.scrollTop;
-                    const selectedIndex = Math.round(scrollTop / state.wheel.itemHeight);
-                    const selectedOption = wheelOptions.children[selectedIndex];
-                    
-                    if (selectedOption) {
-                        const value = selectedOption.dataset.value;
-                        const text = selectedOption.textContent;
-
-                        if(state.wheel.targetInput.id === 'garage') {
-                             state.wheel.targetInput.checked = (value === 'Yes');
-                             const garageProxy = document.getElementById('garage-proxy');
-                             if (garageProxy) garageProxy.checked = (value === 'Yes');
-                        } else {
-                             state.wheel.targetInput.value = value;
-                        }
-
-                        state.wheel.targetTrigger.textContent = text;
-                    }
-                    wheel.hide();
-                }
-            };
-            
-
-            // --- PAGE NAVIGATION & HEADER CONTROL ---
             const showPage = (pageId, params = {}, isGoingBack = false) => {
-                if (state.activeScanner) { state.activeScanner.stop().catch(err => {}); state.activeScanner = null; }
-                if (!isGoingBack && state.currentPage !== pageId) { state.history.push(state.currentPage); }
-                state.currentPage = pageId;
-                pages.forEach(p => p.classList.remove('active'));
-                document.getElementById(pageId).classList.add('active');
-                backButton.classList.toggle('hidden', pageId === 'page-home');
-                headerActions.innerHTML = '';
-
+                window.scrollTo(0,0);
+                if (state.activeScanner) { state.activeScanner.stop().catch(()=>{}); state.activeScanner = null; }
+                if (!isGoingBack && state.currentPage !== pageId) { state.history.push({page: state.currentPage, id: dom.form.id.value}); }
+                state.currentPage = pageId; dom.pages.forEach(p=>p.classList.remove('active')); document.getElementById(pageId).classList.add('active');
+                dom.backButton.classList.toggle('hidden', state.history.length === 0); dom.headerActions.innerHTML = '';
                 let titleKey = 'app_title';
                 switch(pageId) {
-                    case 'page-admin': titleKey = 'admin_title'; break;
-                    case 'page-form':
-                        state.isNewFormEntry = !params.buildingId;
-                        titleKey = state.isNewFormEntry ? 'add_building_title' : 'edit_building_title'; 
-                        break;
-                    case 'page-detail': 
-                        const building = db.getById(params.buildingId);
-                        if (building) {
-                            headerTitle.textContent = building.buildingName;
-                        } else {
-                            headerTitle.textContent = translate('app_title');
-                        }
-                        break;
-                    case 'page-scanner': titleKey = 'scan_title'; break;
-                    case 'page-settings': titleKey = 'settings_title'; break;
+                    case 'page-admin': titleKey='admin_title'; dom.headerActions.innerHTML=`<button id="add-btn" class="p-2 rounded-full text-white hover:bg-black/20"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></button><button id="scan-btn" class="p-2 rounded-full text-white hover:bg-black/20"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2m8-12h2a2 2 0 012 2v2m-4 8h2a2 2 0 002-2v-2M7 12h10"></path></svg></button>`; document.getElementById('add-btn').onclick=()=>showPage('page-form'); document.getElementById('scan-btn').onclick=()=>showPage('page-scanner'); dom.searchBar.value=''; ui.renderAdminList(); break;
+                    case 'page-form': state.isNewFormEntry=!params.id; titleKey=state.isNewFormEntry?'add_building_title':'edit_building_title'; break;
+                    case 'page-detail': const b=db.getById(params.id); if(b) { dom.headerTitle.textContent=b.buildingName; dom.headerActions.innerHTML=`<button id="edit-btn" class="p-2 rounded-full text-white hover:bg-black/20"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z"></path></svg></button><button id="del-btn" class="p-2 rounded-full text-white hover:bg-red-500/50"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>`; document.getElementById('edit-btn').onclick=()=>showPage('page-form',{id:b.id}); document.getElementById('del-btn').onclick=()=>handleDelete(b.id); } break;
+                    case 'page-scanner': titleKey='scan_title'; break;
                 }
-                if (pageId !== 'page-detail') {
-                    headerTitle.textContent = translate(titleKey);
-                }
-
-                if (pageId === 'page-admin') {
-                    headerActions.innerHTML = `<div class="flex items-center space-x-2"><button id="add-building-btn" class="p-2 rounded-full hover:bg-black/20"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></button><button id="settings-btn" class="p-2 rounded-full hover:bg-black/20"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></button></div>`;
-                    document.getElementById('add-building-btn').onclick = () => showPage('page-form');
-                    document.getElementById('settings-btn').onclick = () => showPage('page-settings');
-                    searchBar.value = '';
-                    ui.renderAdminList();
-                } else if (pageId === 'page-form') {
-                    form.reset();
-                    state.photoCache = [];
-                    let currentId;
-                    if (params.buildingId) {
-                        const building = db.getById(params.buildingId);
-                        if (building) {
-                            currentId = building.id;
-                            for (const key in building) {
-                                const element = document.getElementById(key);
-                                if(element) {
-                                    if (element.type === 'checkbox') { element.checked = building[key]; } 
-                                    else { element.value = building[key]; }
-                                }
-                            }
-                            document.getElementById('id').value = building.id; 
-                            state.photoCache = [...(building.photos || [])];
-                        }
-                    } else {
-                        currentId = db.uuid();
-                        document.getElementById('id').value = currentId;
-                    }
-                    
-                    document.querySelectorAll('.mobile-wheel-trigger').forEach(trigger => {
-                        const targetId = trigger.dataset.target;
-                        const input = document.getElementById(targetId);
-                        let text = '';
-                        if (input) {
-                            if (targetId === 'garage') {
-                                text = input.checked ? translate('yes') : translate('no');
-                            } else if(targetId === 'buildingUseType' && input.options) {
-                                 text = input.options[input.selectedIndex]?.text || translate('form_eu_select');
-                            } else {
-                                text = input.value || '...';
-                            }
-                            trigger.textContent = text;
-                        }
-                    });
+                if (pageId !== 'page-detail') dom.headerTitle.textContent = translate(titleKey);
+                if (pageId === 'page-form') {
+                    dom.form.reset(); state.photoCache = []; dom.form.bedrooms.value='0'; dom.form.bathrooms.value='0';
+                    if (params.id) { const b = db.getById(params.id); if (b) { for (const key in b) { const el = document.getElementById(key); if (el) { if (el.type === 'checkbox') el.checked = b[key]; else el.value = b[key]; } } state.photoCache = [...(b.photos||[])]; } } else { dom.form.id.value = crypto.randomUUID(); }
                     ui.renderPhotoThumbnails();
-                    
-                    const garageCheckbox = document.getElementById('garage');
-                    const garageProxyCheckbox = document.getElementById('garage-proxy');
-                    if (garageCheckbox && garageProxyCheckbox) {
-                        garageProxyCheckbox.checked = garageCheckbox.checked;
-                        garageProxyCheckbox.addEventListener('change', () => {
-                            garageCheckbox.checked = garageProxyCheckbox.checked;
-                        });
-                    }
                 } else if (pageId === 'page-detail') {
-                    const building = db.getById(params.buildingId);
-                    if (building) {
-                        const fromAdmin = state.history.at(-1) === 'page-admin';
-                        if (fromAdmin || params.isNewSave) {
-                            headerActions.innerHTML = `<div class="flex items-center space-x-2"><button id="detail-download-pdf-btn" class="p-2 rounded-full hover:bg-black/20"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></button><button id="edit-btn" class="p-2 rounded-full hover:bg-black/20"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z"></path></svg></button><button id="delete-btn" class="p-2 rounded-full hover:bg-red-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>`;
-                            document.getElementById('edit-btn').onclick = () => showPage('page-form', { buildingId: building.id });
-                            document.getElementById('delete-btn').onclick = () => handleDelete(building.id);
-                            document.getElementById('detail-download-pdf-btn').onclick = () => pdf.generate(building);
-                        }
-                        ui.renderDetail(building, fromAdmin, params.isNewSave);
-
-                        if(params.isNewSave) {
-                             setTimeout(() => {
-                                 const qrCard = document.getElementById('qr-code-card');
-                                 if(qrCard) qrCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                             }, 100);
-                        }
-                    }
-                } else if(pageId === 'page-scanner') {
-                    startScanner();
-                }
+                    const b = db.getById(params.id); if (b) { ui.renderDetail(b); document.getElementById('detail-download-qr-btn').onclick=()=>downloadQrAsImage(b); document.getElementById('detail-export-excel-btn').onclick=()=>handleExport('xlsx',[b]); document.getElementById('detail-export-pdf-btn').onclick=()=>pdf.generate(b); } else { ui.showToast('toast_qr_not_found',true); goBack(); }
+                } else if (pageId === 'page-scanner') { startScanner(); }
             };
-            
-            const goBack = () => { if (state.history.length > 0) { const pageToGoBackTo = state.history.pop(); showPage(pageToGoBackTo, {}, true); } };
-            
+
+            const goBack = () => { if (state.history.length > 0) { const prev = state.history.pop(); showPage(prev.page, {id: prev.id}, true); } };
+            const handleDelete = (id) => ui.showConfirmModal('confirm_delete', () => { db.delete(id); ui.showToast('toast_deleted'); showPage('page-admin'); });
+
             const handleFormSave = () => {
-                if (state.photosLoading > 0) {
-                    ui.showToast('toast_photo_loading', true);
-                    return;
-                }
-                if (!form.checkValidity()) {
-                    ui.showToast('toast_fill_fields', true);
-                    return;
-                }
-                saveProgressBar.style.width = '100%';
-                const buildingData = {};
-                const inputs = form.querySelectorAll('input, select, textarea');
-                inputs.forEach(input => {
-                    if(input.id && input.id !== 'garage-proxy') {
-                        if (input.type === 'checkbox') { buildingData[input.id] = input.checked; } 
-                        else { buildingData[input.id] = input.value; }
-                    }
-                });
-                buildingData.photos = state.photoCache;
-                db.save(buildingData);
-                ui.showToast('toast_saved');
-
-                setTimeout(() => {
-                    if (state.isNewFormEntry) {
-                        showPage('page-detail', { buildingId: buildingData.id, isNewSave: true });
-                    } else {
-                        goBack();
-                    }
-                    saveProgressBar.style.width = '0%';
-                }, 500);
+                if (state.photosLoading > 0) { ui.showToast('toast_photo_loading', true); return; }
+                if (!dom.form.checkValidity()) { ui.showToast('toast_fill_fields', true); dom.form.reportValidity(); return; }
+                dom.saveProgressBar.style.width='100%';
+                const data={}; const inputs=dom.form.querySelectorAll('input,select,textarea');
+                inputs.forEach(i=>{if(i.id)data[i.id]=i.type==='checkbox'?i.checked:i.value;});
+                data.photos=state.photoCache; db.save(data); ui.showToast('toast_saved');
+                setTimeout(() => { showPage('page-detail', {id:data.id}); dom.saveProgressBar.style.width='0%'; }, 500);
             };
 
-            const handleDelete = (id) => { if (confirm(translate('confirm_delete'))) { db.delete(id); ui.showToast('toast_deleted'); goBack(); } };
-            
             const startScanner = () => {
-                const html5QrCode = new Html5Qrcode("qr-reader");
-                state.activeScanner = html5QrCode;
-                const onScanSuccess = (decodedText, decodedResult) => {
-                    if (state.activeScanner) {
-                       state.activeScanner.stop().then(ignore => {
-                            const building = db.getById(decodedText);
-                            if (building) {
-                                state.history.push('page-home');
-                                showPage('page-detail', { buildingId: building.id });
-                            } else {
-                                ui.showToast('toast_qr_not_found', true);
-                                goBack();
-                            }
-                        }).catch(err => console.error("Failed to stop scanner", err));
-                       state.activeScanner = null;
-                    }
+                state.activeScanner = new Html5Qrcode("qr-reader");
+                const onScanSuccess = (decodedText) => {
+                    if (state.activeScanner) { state.activeScanner.stop().then(() => { const b = db.getById(decodedText); if (b) { state.history.push({page:'page-admin'}); showPage('page-detail', { id: b.id }); } else { ui.showToast('toast_qr_not_found', true); goBack(); } }).catch(()=>{}); state.activeScanner = null; }
                 };
-                html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess).catch(err => ui.showToast("toast_camera_fail", true));
+                state.activeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess).catch(() => { ui.showToast("toast_camera_fail", true); goBack(); });
             };
-            
-            const handlePhotoFiles = (files, inputElement) => {
-                if (!files || files.length === 0) {
-                    if (inputElement) inputElement.value = null;
-                    return;
-                }
-                const saveBtn = document.getElementById('form-save-btn');
-                const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
-                Array.from(files).forEach(file => {
-                     if (file.size > MAX_FILE_SIZE) {
-                        ui.showToast('toast_photo_size_limit', true, { size: '5MB' });
-                        return; // Skip this file
-                    }
-
-                    state.photosLoading++;
-                    if(saveBtn) {
-                        saveBtn.disabled = true;
-                        saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                    }
-                    const reader = new FileReader();
-                    const doneLoading = () => {
-                        state.photosLoading--;
-                        if (state.photosLoading === 0 && saveBtn) {
-                            saveBtn.disabled = false;
-                            saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                        }
-                    };
-                    reader.onload = (e) => { 
-                        state.photoCache.push(e.target.result); 
-                        ui.renderPhotoThumbnails();
-                        doneLoading();
-                    };
-                    reader.onerror = () => {
-                        console.error("Error reading file.");
-                        ui.showToast('toast_photo_fail', true);
-                        doneLoading();
-                    };
+            const handlePhotoFiles = (files, inputEl) => {
+                if(!files||files.length===0){if(inputEl)inputEl.value=null;return;}
+                const MAX_SIZE=5*1024*1024;
+                Array.from(files).forEach(file=>{ if(file.size>MAX_SIZE){ui.showToast('toast_photo_size_limit',true);return;}
+                    state.photosLoading++; dom.formSaveBtn.disabled=true; dom.formSaveBtn.classList.add('opacity-50');
+                    const reader=new FileReader();
+                    const done=()=>{state.photosLoading--;if(state.photosLoading===0){dom.formSaveBtn.disabled=false;dom.formSaveBtn.classList.remove('opacity-50');}};
+                    reader.onload=(e)=>{state.photoCache.push(e.target.result);ui.renderPhotoThumbnails();done();};
+                    reader.onerror=()=>{ui.showToast('toast_photo_fail',true);done();};
                     reader.readAsDataURL(file);
                 });
-                if (inputElement) inputElement.value = null;
+                if(inputEl)inputEl.value=null;
             };
-            
-            const handleImport = (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    let buildings = [];
-                    try {
-                        const fileExtension = file.name.split('.').pop().toLowerCase();
-                        if (fileExtension === 'json') { buildings = JSON.parse(e.target.result); } 
-                        else if (fileExtension === 'csv') { buildings = Papa.parse(e.target.result, { header: true, skipEmptyLines: true }).data; } 
-                        else if (['xlsx', 'xls'].includes(fileExtension)) {
-                            const workbook = XLSX.read(e.target.result, { type: 'binary' });
-                            buildings = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                        } else { throw new Error('Unsupported file format.'); }
-                        if (!Array.isArray(buildings)) throw new Error("Invalid file content.");
-                        if (confirm(translate('confirm_import', {count: buildings.length}))) {
-                            const sanitizedBuildings = buildings.map(b => sanitizeBuilding(b));
-                            localStorage.setItem(DB_KEY, JSON.stringify(sanitizedBuildings));
-                            ui.showToast('toast_imported', false, {count: sanitizedBuildings.length});
-                            if(state.currentPage === 'page-admin') ui.renderAdminList(searchBar.value);
-                        }
-                    } catch (err) { ui.showToast('toast_import_fail', true); console.error(err); }
-                };
-                reader.readAsBinaryString(file);
-                event.target.value = null;
+
+            const handleExport = (format, data) => {
+                const buildings = data || db.getAll(); if (buildings.length === 0) { ui.showToast("toast_no_data_export", true); return; }
+                const clean = buildings.map(b => { const { photos, ...rest } = sanitizeBuilding(b); return rest; });
+                if (format === 'xlsx') { const ws = XLSX.utils.json_to_sheet(clean); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Buildings"); XLSX.writeFile(wb, "Building_Export.xlsx"); }
+                ui.showToast('toast_exported', false, {format: format.toUpperCase()});
             };
-            
-            const createAndDownloadFile = (filename, content, type) => {
+
+            const getLines = (ctx, text, maxWidth) => {
+                if (!text) return [];
+                const words = text.split(' ');
+                let lines = [];
+                let currentLine = words[0] || '';
+                for (let i = 1; i < words.length; i++) {
+                    let word = words[i];
+                    let width = ctx.measureText(currentLine + ' ' + word).width;
+                    if (width < maxWidth) {
+                        currentLine += ' ' + word;
+                    } else {
+                        lines.push(currentLine);
+                        currentLine = word;
+                    }
+                }
+                lines.push(currentLine);
+                return lines;
+            }
+
+            const downloadQrAsImage = async (building) => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const width = 400;
+                const padding = 20;
+                const qrSize = 150;
+
+                const name = building.buildingName || '';
+                const address = [building.street, building.city, building.stateProvince, building.zipPostal, building.country].filter(Boolean).join(', ');
+                
+                ctx.font = 'bold 24px Ubuntu';
+                const nameLines = getLines(ctx, name, width - padding * 2);
+                ctx.font = '16px Ubuntu';
+                const addressLines = getLines(ctx, address, width - padding * 2);
+
+                const height = (padding * 2) + (nameLines.length * 28) + 10 + (addressLines.length * 20) + 20 + qrSize;
+                canvas.width = width;
+                canvas.height = height;
+
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, width, height);
+
+                ctx.fillStyle = '#03396c';
+                ctx.font = 'bold 24px Ubuntu';
+                let y = padding + 24;
+                nameLines.forEach(line => {
+                    ctx.fillText(line, padding, y);
+                    y += 28;
+                });
+
+                y += 10;
+                ctx.fillStyle = '#37352F';
+                ctx.font = '16px Ubuntu';
+                addressLines.forEach(line => {
+                    ctx.fillText(line, padding, y);
+                    y += 20;
+                });
+
+                y += 20;
+                const qrInstance = new QRCodeStyling({ width: qrSize, height: qrSize, data: String(building.id), dotsOptions: { color: '#03396c' } });
+                const qrBlob = await qrInstance.getRawData('png');
+                const qrImage = await createImageBitmap(qrBlob);
+                
+                ctx.drawImage(qrImage, (width - qrSize) / 2, y);
+
                 const link = document.createElement('a');
-                link.href = URL.createObjectURL(new Blob([content], { type }));
-                link.download = filename;
+                link.download = `QR-${building.buildingName.replace(/\s/g, '_')}.png`;
+                link.href = canvas.toDataURL("image/png");
                 link.click();
             };
 
-            const handleExport = (format) => {
-                const buildings = db.getAll();
-                if (buildings.length === 0) { ui.showToast("toast_no_data_export", true); return; }
-                const cleanBuildings = buildings.map(b => { 
-                    const { photos, ...rest } = b;
-                    return rest; 
-                });
-                if (format === 'json') { createAndDownloadFile('building_backup.json', JSON.stringify(buildings, null, 2), 'application/json'); } 
-                else if (format === 'csv') { createAndDownloadFile('building_backup.csv', Papa.unparse(cleanBuildings), 'text/csv;charset=utf-8;'); } 
-                else if (format === 'xlsx') {
-                    const worksheet = XLSX.utils.json_to_sheet(cleanBuildings);
-                    const workbook = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(workbook, worksheet, "Buildings");
-                    XLSX.writeFile(workbook, "building_backup.xlsx");
-                }
-                ui.showToast('toast_exported', false, {format: format.toUpperCase()});
-            };
-            
-            // --- PDF Generation Module ---
             const pdf = {
-                // Arabic/Persian shaping logic
-                shapeText: function(text) {
-                    if (!text) return '';
-                     const charMap = {
-                        'ا': {i: '\uFE8D', m: '\uFE8E', f: '\uFE8E', isConnected: false}, 'أ': {i: '\uFE83', m: '\uFE84', f: '\uFE84', isConnected: false}, 'إ': {i: '\uFE87', m: '\uFE88', f: '\uFE88', isConnected: false}, 'آ': {i: '\uFE81', m: '\uFE82', f: '\uFE82', isConnected: false}, 'ب': {i: '\uFE91', m: '\uFE92', f: '\uFE90', isConnected: true}, 'پ': {i: '\uFB58', m: '\uFB59', f: '\uFB57', isConnected: true}, 'ت': {i: '\uFE97', m: '\uFE98', f: '\uFE96', isConnected: true}, 'ث': {i: '\uFE9B', m: '\uFE9C', f: '\uFE9A', isConnected: true}, 'ج': {i: '\uFEA3', m: '\uFEA4', f: '\uFEA2', isConnected: true}, 'چ': {i: '\uFB7C', m: '\uFB7D', f: '\uFB7B', isConnected: true}, 'ح': {i: '\uFEA7', m: '\uFEA8', f: '\uFEA6', isConnected: true}, 'خ': {i: '\uFEAB', m: '\uFEAC', f: '\uFEAA', isConnected: true}, 'د': {i: '\uFEAD', m: '\uFEAE', f: '\uFEAE', isConnected: false}, 'ذ': {i: '\uFEAF', m: '\uFEB0', f: '\uFEB0', isConnected: false}, 'ر': {i: '\uFEB1', m: '\uFEB2', f: '\uFEB2', isConnected: false}, 'ز': {i: '\uFEB3', m: '\uFEB4', f: '\uFEB4', isConnected: false}, 'ژ': {i: '\uFB8A', m: '\uFB8B', f: '\uFB8B', isConnected: false}, 'س': {i: '\uFEB7', m: '\uFEB8', f: '\uFEB6', isConnected: true}, 'ش': {i: '\uFEBB', m: '\uFEBC', f: '\uFEBA', isConnected: true}, 'ص': {i: '\uFEBF', m: '\uFEC0', f: '\uFEBE', isConnected: true}, 'ض': {i: '\uFEC3', m: '\uFEC4', f: '\uFEC2', isConnected: true}, 'ط': {i: '\uFEC7', m: '\uFEC8', f: '\uFEC6', isConnected: true}, 'ظ': {i: '\uFECB', m: '\uFECC', f: '\uFECA', isConnected: true}, 'ع': {i: '\uFECF', m: '\uFED0', f: '\uFECE', isConnected: true}, 'غ': {i: '\uFED3', m: '\uFED4', f: '\uFED2', isConnected: true}, 'ف': {i: '\uFED7', m: '\uFED8', f: '\uFED6', isConnected: true}, 'ق': {i: '\uFEDB', m: '\uFEDC', f: '\uFEDA', isConnected: true}, 'ک': {i: '\uFEDF', m: '\uFEE0', f: '\uFEDE', isConnected: true}, 'گ': {i: '\uFB94', m: '\uFB95', f: '\uFB93', isConnected: true}, 'ل': {i: '\uFEE3', m: '\uFEE4', f: '\uFEE2', isConnected: true}, 'م': {i: '\uFEE7', m: '\uFEE8', f: '\uFEE6', isConnected: true}, 'ن': {i: '\uFEEB', m: '\uFEEC', f: '\uFEEA', isConnected: true}, 'و': {i: '\uFEED', m: '\uFEEE', f: '\uFEEE', isConnected: false}, 'ه': {i: '\uFEF3', m: '\uFEF4', f: '\uFEF2', isConnected: true}, 'ی': {i: '\uFEF7', m: '\uFEF8', f: '\uFEF6', isConnected: true}, ' ': { i: ' ', m: ' ', f: ' ', isConnected: false}
-                    };
-
-                    let shaped = '';
-                    for (let i = 0; i < text.length; i++) {
-                        const prev = text[i - 1] ? charMap[text[i - 1]] : null;
-                        const curr = charMap[text[i]];
-                        const next = text[i + 1] ? charMap[text[i + 1]] : null;
-
-                        let form = 'i'; // Default to initial form
-                        if (prev && prev.isConnected) {
-                            form = 'm'; // Medial form
-                        }
-                        if (next === null || (next && !next.isConnected)) {
-                           if (form === 'm') form = 'f'; // Final form
-                        }
-                        if (prev === null || (prev && !prev.isConnected)) {
-                            if (form === 'm') form = 'i';
-                        }
-                        
-                        shaped += curr ? curr[form] : text[i];
-                    }
-                    return shaped.split('').reverse().join('');
-                },
-
-                generate: function(building) {
+                generate: (b) => {
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
-                    const FONT_NAME = 'Vazir'; // Using 'Vazir' as defined in the loaded script
-                    const isFa = state.currentLang === 'fa';
-                    let yPos = 20;
+                    const FONT = "Helvetica"; // Using a standard font for reliability
+                    doc.setFont(FONT);
+
                     const margin = 15;
                     const pageW = doc.internal.pageSize.getWidth();
-                    const pageH = doc.internal.pageSize.getHeight();
-                    const rightMargin = pageW - margin;
-
-                    const processText = (txt) => isFa ? this.shapeText(String(txt)) : String(txt);
-
-                    const addText = (text, x, y, options = {}) => {
-                        if (y > pageH - 20) {
-                            doc.addPage();
-                            y = 20;
-                        }
-                        doc.text(text, x, y, options);
-                        return y;
-                    };
-
-                    const drawSection = (title, data) => {
-                        yPos += 10;
-                        if (yPos > pageH - 25) { doc.addPage(); yPos = 20; }
-                        doc.setFont(isFa ? FONT_NAME : 'helvetica', 'bold');
-                        doc.setFontSize(14);
-                        doc.setTextColor('#03396c');
-                        addText(processText(title), isFa ? rightMargin : margin, yPos, { align: isFa ? 'right' : 'left' });
-                        yPos += 7;
-                        
-                        doc.setDrawColor(200);
-                        doc.line(margin, yPos, pageW - margin, yPos);
-                        yPos += 8;
-
-                        doc.setFont(isFa ? FONT_NAME : 'helvetica', 'normal');
-                        doc.setFontSize(11);
-                        doc.setTextColor(50);
-
-                        data.forEach(item => {
-                            if (item.value) {
-                                if (yPos > pageH - 20) { doc.addPage(); yPos = 20; }
-                                if(isFa) {
-                                    const shapedLabel = processText(item.label);
-                                    const shapedValue = processText(item.value);
-                                    const line = `${shapedValue} : ${shapedLabel}`;
-                                    addText(line, rightMargin, yPos, { align: 'right' });
-                                } else {
-                                     addText(item.label + ':', margin, yPos);
-                                     addText(item.value, 70, yPos);
-                                }
-                                yPos += 7;
-                            }
-                        });
-                    };
-
-                    // --- PDF GENERATION FLOW ---
-                    if (isFa) {
-                        doc.setFont(FONT_NAME);
-                    }
-
-                    doc.setFontSize(18);
-                    doc.setFont(isFa ? FONT_NAME : 'helvetica', 'bold');
-                    doc.setTextColor('#03396c');
-                    addText(processText(building.buildingName), isFa ? rightMargin : margin, yPos, { align: isFa ? 'right' : 'left' });
+                    let y = 0; 
                     
-                    doc.setFontSize(11);
-                    doc.setFont(isFa ? FONT_NAME : 'helvetica', 'normal');
-                    doc.setTextColor(100);
-                    const fullAddress = [building.address, building.city, building.zipPostal].filter(Boolean).join('، ');
-                    yPos += 7;
-                    addText(processText(fullAddress), isFa ? rightMargin : margin, yPos, { align: isFa ? 'right' : 'left' });
-
-                    const qrInstance = new QRCodeStyling({ width: 250, height: 250, data: String(building.id) });
+                    const qrInstance = new QRCodeStyling({ width: 300, height: 300, data: String(b.id) });
                     qrInstance.getRawData('png').then(blob => {
-                        if (!blob) {
-                            console.error("Could not generate QR code blob.");
-                            return;
-                        }
-                        const reader = new FileReader();
-                        reader.onload = function(event) {
-                            const qrDataUrl = event.target.result;
-                            doc.addImage(qrDataUrl, 'PNG', pageW - margin - 35, 15, 30, 30);
-                            yPos += 25;
+                         const reader = new FileReader();
+                         reader.readAsDataURL(blob);
+                         reader.onloadend = function() {
+                            const base64data = reader.result;                
+                            const qrWidth = 40;
+                            const qrHeight = 40;
+                            const qrX = pageW - margin - qrWidth;
+                            const qrY = margin;
+                            doc.addImage(base64data, 'PNG', qrX, qrY, qrWidth, qrHeight);
 
-                            const profileData = [
-                                { label: translate('form_property_type'), value: building.buildingUseType },
-                                { label: translate('form_year_built'), value: building.yearBuilt },
-                                { label: translate('form_sqm'), value: building.squareFeet },
-                                { label: translate('form_bedrooms'), value: building.bedrooms },
-                                { label: translate('form_bathrooms'), value: building.bathrooms },
-                                { label: translate('form_garage'), value: building.garage ? translate('yes') : translate('no') },
-                            ];
-                            drawSection(translate('form_section_profile'), profileData);
-
-                            const financialData = [
-                                { label: translate('form_loan_amount'), value: formatCurrency(building.loanAmount) },
-                                { label: translate('form_assessed_value'), value: formatCurrency(building.assessedValue) },
-                                { label: translate('form_current_value'), value: formatCurrency(building.currentValue) },
-                            ];
-                            drawSection(translate('form_section_financials'), financialData);
+                            doc.setFontSize(22);
+                            doc.setFont(FONT, 'bold');
+                            doc.setTextColor('#03396c');
+                            const titleMaxWidth = pageW - margin * 2 - qrWidth - 5;
+                            const titleLines = doc.splitTextToSize(b.buildingName, titleMaxWidth);
+                            doc.text(titleLines, margin, qrY + 5);
                             
-                            if (building.notes) {
-                                 drawSection(translate('form_section_notes'), [{label: '', value: building.notes}]);
-                            }
+                            y = qrY + qrHeight + 15;
 
-                            doc.save(`Building-Info-${building.buildingName.replace(/\s+/g, '_')}.pdf`);
-                        };
-                        reader.onerror = () => console.error("Could not read QR blob.");
-                        reader.readAsDataURL(blob);
-                    }).catch(err => console.error("QR Code generation failed", err));
+                            const addSection = (title, data) => {
+                                if (y > 260) { doc.addPage(); y = 20; }
+                                doc.setFontSize(16);
+                                doc.setFont(FONT, 'bold');
+                                doc.setTextColor('#03396c');
+                                doc.text(title, margin, y);
+                                y += 3;
+                                doc.setDrawColor(234, 234, 234);
+                                doc.line(margin, y, pageW - margin, y);
+                                y += 7;
+                                
+                                const tableBody = data.filter(i => i.value).map(i => [i.label, i.value]);
+                                if (tableBody.length > 0) {
+                                    doc.autoTable({
+                                        startY: y,
+                                        body: tableBody,
+                                        theme: 'plain',
+                                        styles: { font: FONT, fontStyle: 'normal', fontSize: 10, cellPadding: 2 },
+                                        columnStyles: { 0: { fontStyle: 'bold', textColor: '#37352F' } }
+                                    });
+                                    y = doc.autoTable.previous.finalY + 10;
+                                } else {
+                                     y += 5; // Add space even if section is empty
+                                }
+                            };
+
+                            const fC = (n) => !isNaN(n)&&n!==''&&n!==null?new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(n)):'';
+                            
+                            addSection(translate('form_section_address',{},'en'), [
+                                {label: translate('form_street',{},'en'), value: [b.street,b.city,b.stateProvince,b.zipPostal,b.country].filter(Boolean).join(', ')},
+                                {label: translate('form_webpage',{},'en'), value: b.webpage},
+                                {label: "Location", value: (b.latitude && b.longitude) ? `${b.latitude}, ${b.longitude}` : ''},
+                            ]);
+                            addSection(translate('form_section_profile',{},'en'), [
+                                {label: translate('form_property_type',{},'en'), value: b.propertyType},
+                                {label: translate('form_year_built',{},'en'), value: b.yearBuilt},
+                                {label: translate('form_sqm',{},'en'), value: b.squareFeet},
+                                {label: translate('form_bedrooms',{},'en'), value: b.bedrooms},
+                                {label: translate('form_bathrooms',{},'en'), value: b.bathrooms},
+                                {label: translate('form_garage',{},'en'), value: b.garage ? translate('yes',{},'en') : translate('no',{},'en')},
+                            ]);
+                            addSection(translate('form_section_financials',{},'en'), [
+                                {label: translate('form_loan_amount',{},'en'), value: fC(b.loanAmount)},
+                                {label: translate('form_assessed_value',{},'en'), value: fC(b.assessedValue)},
+                                {label: translate('form_current_value',{},'en'), value: fC(b.currentValue)},
+                                {label: translate('form_down_payment',{},'en'), value: fC(b.downPayment)},
+                                {label: translate('form_monthly_mortgage',{},'en'), value: fC(b.monthlyMortgage)},
+                                {label: translate('form_housing_dues',{},'en'), value: fC(b.housingDues)},
+                                {label: translate('form_tax',{},'en'), value: fC(b.tax)},
+                                {label: translate('form_insurance',{},'en'), value: fC(b.insurance)},
+                            ]);
+                            if(b.notes){
+                                if (y > 260) { doc.addPage(); y = 20; }
+                                doc.setFontSize(16);
+                                doc.setFont(FONT, 'bold');
+                                doc.text(translate('form_section_notes',{},'en'), margin, y);
+                                y += 7;
+                                doc.setFont(FONT, 'normal');
+                                doc.setFontSize(10);
+                                doc.text(b.notes, margin, y, { maxWidth: pageW - margin * 2 });
+                            }
+                            doc.save(`Building-${b.buildingName.replace(/\s/g,'_')}.pdf`);
+                        }
+                    });
                 }
             };
 
+            // EVENT LISTENERS
+            dom.backButton.addEventListener('click', goBack);
+            document.querySelectorAll('[data-target]').forEach(btn => btn.addEventListener('click', (e) => showPage(e.currentTarget.dataset.target)));
+            dom.photoUploadInput.addEventListener('change', (e) => handlePhotoFiles(e.target.files, e.target));
+            dom.photoCaptureInput.addEventListener('change', (e) => handlePhotoFiles(e.target.files, e.target));
+            document.getElementById('lang-switcher').addEventListener('click', () => { state.currentLang = state.currentLang === 'en' ? 'fa' : 'en'; localStorage.setItem(LANG_KEY, state.currentLang); ui.updateText(); const currentId = dom.form.id.value; showPage(state.currentPage, {id:currentId}, true); });
+            dom.searchBar.addEventListener('input', (e) => { if (state.currentPage === 'page-admin') ui.renderAdminList(e.target.value); });
+            dom.formSaveBtn.addEventListener('click', handleFormSave);
+            dom.formCancelBtn.addEventListener('click', goBack);
+            document.getElementById('get-location-btn').addEventListener('click', () => { if ('geolocation' in navigator) navigator.geolocation.getCurrentPosition(p => { document.getElementById('latitude').value = p.coords.latitude.toFixed(6); document.getElementById('longitude').value = p.coords.longitude.toFixed(6); ui.showToast('toast_location_captured'); }, () => ui.showToast('toast_location_fail', true)); else ui.showToast('toast_geo_unsupported', true); });
+            document.getElementById('confirm-modal-no').addEventListener('click', ui.hideConfirmModal);
+            document.getElementById('confirm-modal-yes').addEventListener('click', () => { if (typeof state.confirmCallback === 'function') state.confirmCallback(); ui.hideConfirmModal(); });
+            dom.confirmModalOverlay.addEventListener('click', (e) => { if (e.target === dom.confirmModalOverlay) ui.hideConfirmModal(); });
 
-            // --- EVENT LISTENERS ---
-            backButton.addEventListener('click', goBack);
-            document.querySelectorAll('.nav-button').forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.target)));
-            document.querySelectorAll('.mobile-wheel-trigger').forEach(btn => {
-                btn.addEventListener('click', (e) => wheel.show(e.target.dataset.target));
-            });
-            photoUploadInput.addEventListener('change', (e) => handlePhotoFiles(e.target.files, e.target));
-            photoCaptureInput.addEventListener('change', (e) => handlePhotoFiles(e.target.files, e.target));
-            document.getElementById('lang-switcher').addEventListener('click', () => {
-                state.currentLang = state.currentLang === 'en' ? 'fa' : 'en';
-                localStorage.setItem(LANG_KEY, state.currentLang);
-                ui.updateText();
-                const currentBuildingId = document.getElementById('id')?.value;
-                showPage(state.currentPage, { buildingId: currentBuildingId }, true); 
-            });
-            searchBar.addEventListener('input', (e) => {
-                if (state.currentPage === 'page-admin') {
-                    ui.renderAdminList(e.target.value);
-                }
-            });
-            importFileInput.addEventListener('change', handleImport);
-            importFileInputSettings.addEventListener('change', handleImport);
-            exportJsonButton.addEventListener('click', () => handleExport('json'));
-            exportCsvButton.addEventListener('click', () => handleExport('csv'));
-            exportXlsxButton.addEventListener('click', () => handleExport('xlsx'));
-            formSaveBtn.addEventListener('click', handleFormSave);
-            formCancelBtn.addEventListener('click', goBack);
-            
-            const locationBtn = document.getElementById('get-location-btn');
-            if(locationBtn) {
-                 locationBtn.addEventListener('click', () => {
-                    if ('geolocation' in navigator) {
-                        navigator.geolocation.getCurrentPosition(position => {
-                            document.getElementById('latitude').value = position.coords.latitude.toFixed(6);
-                            document.getElementById('longitude').value = position.coords.longitude.toFixed(6);
-                            ui.showToast('toast_location_captured');
-                        }, error => ui.showToast('toast_location_fail', true));
-                    } else { ui.showToast('toast_geo_unsupported', true); }
-                });
-            }
-
-            // --- INITIALIZATION ---
-            wheel.init();
+            // INITIALIZATION
             ui.updateText();
             showPage('page-home');
         });
