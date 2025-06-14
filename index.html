@@ -567,6 +567,26 @@
                         'Handover Date': b.officialHandoverDate
                     });
 
+                    const documentFields = {
+                        'Site Plan Drawing': b.sitePlanDrawing,
+                        'Occupancy Permit': b.occupancyPermit,
+                        'Main Building Photo': b.mainBuildingPhoto,
+                        'As-Built Architectural Drawings': b.asBuiltArchitecturalDrawings,
+                        'Room Schedule': b.roomSchedule,
+                        'Finishes Schedule': b.finishesSchedule,
+                        'As-Built Structural Drawings': b.asBuiltStructuralDrawings,
+                        'Structural Material Specs': b.structuralMaterialSpecs,
+                        'As-Built MEP Drawings': b.asBuiltMepDrawings,
+                        'MEP Equipment Schedule': b.mepEquipmentSchedule,
+                        'Electrical Panel Schedules': b.electricalPanelSchedules,
+                        'Commissioning Report': b.commissioningReport,
+                        'Log of Change Orders': b.changeOrdersLog,
+                        'Log of RFIs': b.rfiLog,
+                        'Master Warranty Log': b.warrantyLog
+                    };
+
+                    detailHtml += createSection('Attached Documents', documentFields);
+
                     content.innerHTML = detailHtml;
                 },
                 showToast: (key, isErr = false, params = {}) => {
@@ -758,71 +778,78 @@
                     const pageW = doc.internal.pageSize.getWidth();
                     let y = 20;
 
+                    // QR Code
+                    const qrInstance = new QRCodeStyling({ width: 40, height: 40, data: String(b.id), dotsOptions: { color: '#000000' } });
+                    const qrBlob = await qrInstance.getRawData('png');
+                    const qrImage = await blobToDataURI(qrBlob);
+                    doc.addImage(qrImage, 'PNG', pageW - margin - 40, 15, 40, 40);
+
+                    // Title
                     doc.setFontSize(22);
                     doc.setFont(FONT, 'bold');
                     doc.setTextColor(getComputedStyle(document.documentElement).getPropertyValue('--primary-color'));
                     doc.text(b.buildingName || "Building Details", margin, y);
                     y += 15;
 
-                    const addSectionToPdf = (title, data) => {
-                        if (Object.values(data).every(v => !v)) return;
-                        
-                        if (y > 260) { doc.addPage(); y = 20; }
-                        
-                        doc.setFontSize(16);
+                    const addField = (label, value) => {
+                        if (!value) return;
+                        if (y > 270) { doc.addPage(); y = 20; }
+                        doc.setFontSize(11);
                         doc.setFont(FONT, 'bold');
-                        doc.setTextColor(getComputedStyle(document.documentElement).getPropertyValue('--primary-color'));
-                        doc.text(title, margin, y);
-                        y += 8;
-
-                        const tableBody = Object.entries(data)
-                            .filter(([_, value]) => value)
-                            .map(([label, value]) => [label, value]);
-
-                        if (tableBody.length > 0) {
-                            doc.autoTable({
-                                startY: y,
-                                body: tableBody,
-                                theme: 'grid',
-                                headStyles: { fillColor: [75, 0, 130] },
-                                styles: { font: FONT, fontSize: 10, cellPadding: 2 },
-                                columnStyles: { 0: { fontStyle: 'bold' } }
-                            });
-                            y = doc.autoTable.previous.finalY + 10;
-                        }
+                        doc.text(label + ":", margin, y);
+                        doc.setFont(FONT, 'normal');
+                        doc.text(String(value), margin + 40, y);
+                        y += 7;
                     };
+                    
+                    const addSectionHeader = (title) => {
+                         if (y > 250) { doc.addPage(); y = 20; }
+                         y+=5;
+                         doc.setFontSize(16);
+                         doc.setFont(FONT, 'bold');
+                         doc.text(title, margin, y);
+                         y += 10;
+                    }
 
-                    addSectionToPdf('Core Information', {
-                        'Project Name': b.projectName,
-                        'Project Number': b.projectNumber,
-                        'Building Status': b.buildingStatus,
-                        'Address': `${b.buildingAddressStreet || ''}, ${b.buildingAddressCity || ''} ${b.buildingAddressState || ''} ${b.buildingAddressPostal || ''}`.trim(),
-                        'Country': b.buildingAddressCountry,
-                        'GPS': b.gpsLatitude && b.gpsLongitude ? `${b.gpsLatitude}, ${b.gpsLongitude}` : '',
-                        'Primary Use': b.primaryUse,
-                        'Gross Floor Area (m²)': b.grossFloorArea,
-                        'Floors Above Ground': b.floorsAboveGround,
-                        'Floors Below Ground': b.floorsBelowGround,
-                        'Construction Year': b.constructionCompletionYear ? new Date(b.constructionCompletionYear).getFullYear() : '',
-                        'Renovation Year': b.majorRenovationYear ? new Date(b.majorRenovationYear).getFullYear() : ''
-                    });
+                    addSectionHeader('Core Information');
+                    addField('Project Name', b.projectName);
+                    addField('Project Number', b.projectNumber);
+                    addField('Building Status', b.buildingStatus);
+                    addField('Address', `${b.buildingAddressStreet || ''}, ${b.buildingAddressCity || ''}`);
+                    addField('Postal Code', b.buildingAddressPostal);
+                    addField('Country', b.buildingAddressCountry);
+                    addField('GPS', b.gpsLatitude && b.gpsLongitude ? `${b.gpsLatitude}, ${b.gpsLongitude}` : '');
+                    addField('Primary Use', b.primaryUse);
+                    addField('Gross Floor Area (m²)', b.grossFloorArea);
+                    addField('Floors Above Ground', b.floorsAboveGround);
+                    addField('Floors Below Ground', b.floorsBelowGround);
+                    addField('Construction Year', b.constructionCompletionYear ? new Date(b.constructionCompletionYear).getFullYear() : '');
+                    addField('Renovation Year', b.majorRenovationYear ? new Date(b.majorRenovationYear).getFullYear() : '');
+                    
+                    addSectionHeader('Design & As-Built');
+                    addField('Architectural Model', b.architecturalModelLink);
+                    addField('Structural System', b.structuralSystemType);
+                    addField('Floor Loading', b.floorLoadingCapacity);
+                    addField('MEP Model', b.mepModelLink);
+                    addField('Utility Shut-offs', b.utilityShutoffLocations);
 
-                    addSectionToPdf('Design & As-Built Information', {
-                        'Architectural Model Link': b.architecturalModelLink,
-                        'Structural System Type': b.structuralSystemType,
-                        'Floor Loading Capacity': b.floorLoadingCapacity,
-                        'MEP Model Link': b.mepModelLink,
-                        'Utility Shut-off Locations': b.utilityShutoffLocations,
-                    });
-
-                     addSectionToPdf('Construction & Handover', {
-                        'General Contractor': b.generalContractor,
-                        'Architect of Record': b.architectOfRecord,
-                        'Structural Engineer': b.structuralEngineer,
-                        'MEP Engineer': b.mepEngineer,
-                        'Construction Start': b.constructionStartDate,
-                        'Handover Date': b.officialHandoverDate
-                    });
+                    addSectionHeader('Construction & Handover');
+                    addField('General Contractor', b.generalContractor);
+                    addField('Architect', b.architectOfRecord);
+                    addField('Structural Engineer', b.structuralEngineer);
+                    addField('MEP Engineer', b.mepEngineer);
+                    addField('Construction Start', b.constructionStartDate);
+                    addField('Handover Date', b.officialHandoverDate);
+                    
+                    addSectionHeader('Attached Documents');
+                    const documentFields = {
+                        'Site Plan': b.sitePlanDrawing, 'Occupancy Permit': b.occupancyPermit, 'Main Photo': b.mainBuildingPhoto,
+                        'Architectural Drawings': b.asBuiltArchitecturalDrawings, 'Room Schedule': b.roomSchedule, 'Finishes Schedule': b.finishesSchedule,
+                        'Structural Drawings': b.asBuiltStructuralDrawings, 'Structural Specs': b.structuralMaterialSpecs,
+                        'MEP Drawings': b.asBuiltMepDrawings, 'MEP Equipment': b.mepEquipmentSchedule, 'Elec. Panels': b.electricalPanelSchedules,
+                        'Commissioning Report': b.commissioningReport, 'Change Orders': b.changeOrdersLog, 'RFIs': b.rfiLog, 'Warranty Log': b.warrantyLog
+                    };
+                    Object.entries(documentFields).forEach(([label, value]) => addField(label, value));
                     
                     doc.save(`Building-${b.buildingName.replace(/\s/g,'_')}.pdf`);
                 }
