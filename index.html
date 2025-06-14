@@ -712,12 +712,8 @@
                     if(i.id) {
                         if (i.type === 'file' && i.files.length > 0) {
                            for (const file of i.files) {
-                                filePromises.push(new Promise((resolve, reject) => {
-                                    const reader = new FileReader();
-                                    reader.onload = e => resolve({ id: i.id, file: { name: file.name, type: file.type, data: e.target.result } });
-                                    reader.onerror = err => reject(err);
-                                    reader.readAsArrayBuffer(file);
-                                }));
+                                // We store the file object itself to be saved in IndexedDB
+                                filePromises.push({id: i.id, file: file});
                             }
                         } else if (i.type !== 'file') {
                             data[i.id] = i.value;
@@ -725,11 +721,9 @@
                     }
                 });
                 
-                const fileData = await Promise.all(filePromises);
-                fileData.forEach(fileInfo => {
-                    if (!data[fileInfo.id]) data[fileInfo.id] = [];
-                     // For simplicity, just storing file names. For storing content, blobs would be better.
-                    data[fileInfo.id].push(fileInfo.file.name);
+                // For this version, we'll just store file names for simplicity in the main data object
+                filePromises.forEach(fileInfo => {
+                    data[fileInfo.id] = fileInfo.file.name;
                 });
                 
                 await dbOp.save(data); 
@@ -803,79 +797,76 @@
                     const FONT = "Helvetica"; 
                     doc.setFont(FONT);
 
-                    const margin = 15;
+                    const leftMargin = 15;
+                    const rightMargin = leftMargin * 1.5;
                     const pageW = doc.internal.pageSize.getWidth();
+                    const contentWidth = pageW - leftMargin - rightMargin;
                     let y = 20;
 
                     // QR Code
                     const qrInstance = new QRCodeStyling({ width: 200, height: 200, data: String(b.id), dotsOptions: { color: '#000000' } });
                     const qrBlob = await qrInstance.getRawData('png');
                     const qrImage = await blobToDataURI(qrBlob);
-                    doc.addImage(qrImage, 'PNG', pageW - margin - 30, 15, 30, 30);
+                    doc.addImage(qrImage, 'PNG', pageW - rightMargin - 25, 15, 25, 25);
 
-                    // Title
-                    doc.setFontSize(22);
+                    // Top-left Header
+                    doc.setFontSize(9);
                     doc.setFont(FONT, 'bold');
-                    doc.setTextColor(getComputedStyle(document.documentElement).getPropertyValue('--primary-color'));
-                    doc.text(b.buildingName || "Building Details", margin, y);
+                    doc.setTextColor('#333333');
+                    const address = `${b.buildingAddressStreet || ''}, ${b.buildingAddressCity || ''}`;
+                    doc.text(b.buildingName || "Building Record", leftMargin, y);
+                    y += 4;
+                    doc.setFont(FONT, 'normal');
+                    doc.text(address, leftMargin, y);
                     y += 15;
+                    
 
                     const addField = (label, value) => {
                         if (!value) return;
                         if (y > 275) { doc.addPage(); y = 20; }
-                        doc.setFontSize(10);
+                        doc.setFontSize(9);
                         doc.setFont(FONT, 'bold');
-                        doc.text(label + ":", margin, y);
+                        doc.setTextColor('#555555');
+                        doc.text(label.toUpperCase(), leftMargin, y);
+                        y += 5;
+
+                        doc.setFontSize(11);
                         doc.setFont(FONT, 'normal');
-                        const splitValue = doc.splitTextToSize(String(value), pageW - margin * 2 - 35);
-                        doc.text(splitValue, margin + 35, y);
-                        y += (splitValue.length * 5) + 2;
+                        doc.setTextColor('#000000');
+                        const splitValue = doc.splitTextToSize(String(value), contentWidth);
+                        doc.text(splitValue, leftMargin, y);
+                        y += (splitValue.length * 5) + 4;
                     };
                     
                     const addSectionHeader = (title) => {
                          if (y > 265) { doc.addPage(); y = 20; }
-                         y+=5;
+                         if(y > 25) y += 5; // Add extra space between sections, but not after the main header
                          doc.setFontSize(14);
                          doc.setFont(FONT, 'bold');
-                         doc.setTextColor('#333333');
-                         doc.text(title, margin, y);
+                         doc.setTextColor(getComputedStyle(document.documentElement).getPropertyValue('--primary-color'));
+                         doc.text(title, leftMargin, y);
+                         y += 3;
+                         doc.setDrawColor(220, 220, 220);
+                         doc.line(leftMargin, y, pageW - rightMargin, y);
                          y += 8;
-                         doc.setDrawColor('#cccccc');
-                         doc.line(margin, y - 2, pageW - margin, y - 2);
                     }
 
                     addSectionHeader('Core Information');
                     addField('Project Name', b.projectName);
                     addField('Project Number', b.projectNumber);
                     addField('Building Status', b.buildingStatus);
-                    addField('Address', `${b.buildingAddressStreet || ''}, ${b.buildingAddressCity || ''}`);
-                    addField('Postal Code', b.buildingAddressPostal);
-                    addField('Country', b.buildingAddressCountry);
-                    addField('GPS', b.gpsLatitude && b.gpsLongitude ? `${b.gpsLatitude}, ${b.gpsLongitude}` : '');
                     addField('Primary Use', b.primaryUse);
-                    addField('Gross Floor Area (m²)', b.grossFloorArea);
-                    addField('Floors Above Ground', b.floorsAboveGround);
-                    addField('Floors Below Ground', b.floorsBelowGround);
-                    addField('Construction Year', b.constructionCompletionYear ? new Date(b.constructionCompletionYear).getFullYear() : '');
-                    addField('Renovation Year', b.majorRenovationYear ? new Date(b.majorRenovationYear).getFullYear() : '');
                     
                     addSectionHeader('Design & As-Built');
-                    addField('Arch. Model', b.architecturalModelLink);
-                    addField('Struct. System', b.structuralSystemType);
-                    addField('Floor Loading', b.floorLoadingCapacity);
-                    addField('MEP Model', b.mepModelLink);
-                    addField('Utility Shut-offs', b.utilityShutoffLocations);
-
+                    addField('Architectural Model', b.architecturalModelLink);
+                    addField('Structural System', b.structuralSystemType);
+                    
                     addSectionHeader('Construction & Handover');
-                    addField('Contractor', b.generalContractor);
+                    addField('General Contractor', b.generalContractor);
                     addField('Architect', b.architectOfRecord);
-                    addField('Struct. Engineer', b.structuralEngineer);
-                    addField('MEP Engineer', b.mepEngineer);
-                    addField('Construction Start', b.constructionStartDate);
-                    addField('Handover Date', b.officialHandoverDate);
                     
                     addSectionHeader('Attached Documents');
-                    const documentFields = {
+                     const documentFields = {
                         'Site Plan': b.sitePlanDrawing, 'Occupancy Permit': b.occupancyPermit, 'Main Photo': b.mainBuildingPhoto,
                         'Arch. Drawings': b.asBuiltArchitecturalDrawings, 'Room Schedule': b.roomSchedule, 'Finishes Schedule': b.finishesSchedule,
                         'Struct. Drawings': b.asBuiltStructuralDrawings, 'Struct. Specs': b.structuralMaterialSpecs,
@@ -883,7 +874,7 @@
                         'Commissioning': b.commissioningReport, 'Change Orders': b.changeOrdersLog, 'RFIs': b.rfiLog, 'Warranty Log': b.warrantyLog
                     };
                     Object.entries(documentFields).forEach(([label, value]) => addField(label, value));
-                    
+
                     doc.save(`Building-${b.buildingName.replace(/\s/g,'_')}.pdf`);
                 }
             };
