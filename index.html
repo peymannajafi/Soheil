@@ -1,16 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
-    <!-- Chosen Palette: A deep purple primary (#4A0072), complemented by a light grey background (#F7F7F5) and clean white cards (#FFFFFF) for a bold and modern look. -->
-    <!-- Application Structure Plan: A multi-page SPA design implemented with JS-managed views ('page-home', 'page-admin', 'page-form', 'page-detail', 'page-scanner'). This structure separates distinct user tasks (viewing a list, filling a form, seeing details) into clean, focused interfaces, improving usability. Navigation is centralized through a main list, with clear action buttons for creating new entries or drilling down into details. This is more intuitive than a monolithic page, as it guides the user through a logical workflow. -->
-    <!-- Visualization & Content Choices: 
-        - Building List (page-admin): Goal: Organize/Inform. Method: A dynamic HTML list rendered with JS. Interaction: Click to view details, Search to filter. Justification: Provides a clear, scannable overview of all records.
-        - Building Details (page-detail): Goal: Inform. Method: Structured HTML sections. Interaction: Buttons for Export, Download, Edit, Delete. Justification: Organizes a large amount of information into logical, digestible chunks (Address, Profile, Financials).
-        - QR Code (page-detail): Goal: Inform/Relationships. Method: Canvas rendering via 'qr-code-styling.js'. Interaction: Download as styled PNG. Justification: Provides a quick, machine-readable link to the digital record, and the styled download is perfect for physical asset tagging.
-        - Data Tables (PDF Export): Goal: Organize. Method: Table rendering via 'jspdf-autotable'. Interaction: N/A (static output). Justification: The table format is the clearest way to present structured data in a static document like a PDF.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Building Information Hub</title>
@@ -33,9 +23,9 @@
 
     <style>
         :root {
-            --primary-color: #4A0072;
-            --primary-color-dark: #3b005a;
-            --primary-color-light: #59008a;
+            --primary-color: #4B0082;
+            --primary-color-dark: #3a0069;
+            --primary-color-light: #6c23b2;
             --background-color: #F7F7F5;
             --card-background-color: #FFFFFF;
             --text-color: #37352F;
@@ -47,6 +37,7 @@
             font-family: 'Ubuntu', sans-serif;
             background-color: var(--background-color);
             color: var(--text-color);
+            background-image: linear-gradient(to top, #f3e8ff, #ffffff);
         }
         html[dir="rtl"] body {
             font-family: 'Vazirmatn', sans-serif;
@@ -56,10 +47,14 @@
         }
         .page { display: none; }
         .page.active { display: block; }
-       
+        
         header {
             background-color: var(--primary-color);
             color: #FFFFFF;
+        }
+        
+        #header-title {
+            font-weight: 400;
         }
 
         .btn {
@@ -73,11 +68,9 @@
             background-color: var(--card-background-color);
             transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
             cursor: pointer;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         }
-        .btn:hover {
-            background-color: #f8f9fa;
-        }
+       
         .btn-primary {
             background-color: var(--primary-color);
             color: #FFFFFF;
@@ -86,13 +79,18 @@
         .btn-primary:hover {
             background-color: var(--primary-color-dark);
         }
+
         .btn-secondary {
-            background-color: transparent;
             color: var(--primary-color);
             border-color: var(--primary-color);
         }
         .btn-secondary:hover {
-             background-color: rgba(74,0,114, 0.05);
+            background-color: rgba(75, 0, 130, 0.05);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .form-input, .form-textarea, .form-select {
@@ -100,13 +98,13 @@
             padding: 0.75rem;
             border: 1px solid var(--border-color);
             border-radius: 0.25rem;
-            background-color: var(--background-color);
+            background-color: #FFFFFF;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .form-input:focus, .form-textarea:focus, .form-select:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(74,0,114, 0.2);
+            box-shadow: 0 0 0 2px rgba(75, 0, 130, 0.2);
         }
         
         .number-stepper {
@@ -121,12 +119,8 @@
             border: none;
             text-align: center;
             width: 4rem;
-             height: 2.5rem;
+            height: 2.5rem;
             -moz-appearance: textfield;
-            background-color: white;
-        }
-        .number-stepper input:focus {
-             outline: none;
         }
         .number-stepper input::-webkit-outer-spin-button,
         .number-stepper input::-webkit-inner-spin-button {
@@ -164,7 +158,7 @@
             border: 1px solid var(--border-color);
             border-radius: 0.5rem;
             background-color: var(--card-background-color);
-            box-shadow: none;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
         }
         
         .thumbnail-container { position: relative; }
@@ -213,18 +207,17 @@
             max-width: 400px;
             text-align: center;
         }
-
     </style>
 </head>
 <body class="bg-gray-50">
     <div id="save-progress-bar" class="fixed top-0 left-0 h-1 bg-[var(--primary-color-light)] w-0 transition-all duration-500 z-[1001]"></div>
 
     <div id="app" class="max-w-4xl mx-auto">
-        <header class="sticky top-0 z-50">
+        <header class="sticky top-0 z-50 shadow-md">
             <div class="mx-auto px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <svg id="back-button" class="w-6 h-6 cursor-pointer hidden text-white hover:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    <h1 id="header-title" class="text-xl font-normal"></h1>
+                    <h1 id="header-title" class="text-xl"></h1>
                 </div>
                  <div class="flex items-center space-x-4">
                     <div id="header-actions"></div>
@@ -235,21 +228,30 @@
 
         <main class="p-4 md:p-6">
             <div id="page-home" class="page active">
-                <div class="flex flex-col items-center justify-center h-[70vh] text-center">
-                     <div class="flex flex-col space-y-4 w-full max-w-sm">
-                        <button data-target="page-admin" class="nav-button btn btn-primary w-full">
-                            <span data-lang="add_building"></span>
-                        </button>
-                        <button data-target="page-scanner" class="nav-button btn btn-secondary w-full">
-                             <span data-lang="scan_qr"></span>
-                        </button>
-                     </div>
+                <div class="flex flex-col items-center justify-center h-[70vh] text-center space-y-6">
+                    <h2 id="home-title" data-lang="app_title" class="text-4xl font-semibold text-[var(--text-color)] mb-8"></h2>
+                    
+                    <button data-target="page-admin" class="nav-button btn btn-primary w-full max-w-sm">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        <span data-lang="add_building"></span>
+                    </button>
+                    
+                    <button data-target="page-scanner" class="nav-button btn btn-secondary w-full max-w-sm">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2m8-12h2a2 2 0 012 2v2m-4 8h2a2 2 0 002-2v-2M7 12h10"></path></svg>
+                        <span data-lang="scan_qr"></span>
+                    </button>
+                    
+                    <button id="import-excel-btn" type="button" class="btn btn-secondary w-full max-w-sm">
+                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span data-lang="import_from_excel"></span>
+                    </button>
+                    <input type="file" id="import-excel-input" class="hidden" accept=".xlsx, .xls">
                 </div>
             </div>
 
             <div id="page-admin" class="page">
                 <div class="mb-6 sticky top-[61px] bg-[var(--background-color)] py-3 z-10">
-                     <div class="relative">
+                    <div class="relative">
                         <input type="search" id="search-bar" class="form-input pl-10" autocomplete="off">
                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -266,8 +268,8 @@
 
             <div id="page-form" class="page relative">
                 <form id="building-form" class="space-y-8">
-                     <input type="hidden" id="id">
-                     <div class="section-container">
+                    <input type="hidden" id="id">
+                    <div class="section-container">
                         <h3 class="font-bold text-xl mb-6" data-lang="form_section_address"></h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="md:col-span-2">
@@ -339,7 +341,7 @@
                         </div>
                     </div>
                     <div class="section-container">
-                         <h3 class="font-bold text-xl mb-2" data-lang="form_section_photos"></h3>
+                        <h3 class="font-bold text-xl mb-2" data-lang="form_section_photos"></h3>
                         <p class="text-sm text-gray-500 mb-4" data-lang="form_photos_note"></p>
                         <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                            <label for="photo-upload" class="btn w-full"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg><span data-lang="form_upload_gallery"></span></label>
@@ -389,80 +391,130 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const DB_KEY = 'qrBuildingApp_buildings';
+            const DB_NAME = 'BimHubDB';
+            const DB_VERSION = 1;
+            const STORE_NAME = 'buildings';
             const LANG_KEY = 'qrBuildingApp_lang';
+
+            let db; // To hold the database instance
+
             const state = { currentPage: 'page-home', history: [], activeScanner: null, photoCache: [], currentLang: localStorage.getItem(LANG_KEY) || 'en', isNewFormEntry: false, photosLoading: 0, confirmCallback: null };
 
             const translations = {
                 en: {
                     app_title: "Building Information Hub", admin_title: "Building Records", add_building_title: "Add New Building", edit_building_title: "Edit Building", scan_title: "Scan QR Code", save: "Save",
                     scan_qr: "Scan Building QR Code", add_building: "Add New Building",
+                    import_from_excel: "Import from Excel",
                     no_buildings_found: "No buildings found.", click_plus_to_add: "Click the '+' button above to add one.",
                     search_placeholder: "Search by Name or ZIP Code...", no_search_results: "No buildings match your search.", try_different_search: "Try a different search term.",
                     form_section_address: "Address & Basic Info", form_building_name: "Building Name / Profile Name *", form_street: "Street", form_city: "City", form_state_province: "State/Province", form_zip_postal: "Zip/Postal Code", form_country: "Country/Region", form_webpage: "Web Page",
-                    form_latitude: "Latitude", form_longitude: "Longitude", form_get_location: "Get Current Location",
+                    form_latitude: "Latitude", form_longitude: "Longitude", form_get_location: "Get Current Location", form_section_location: "Location",
                     form_section_profile: "Property Profile", form_property_type: "Property Type", form_year_built: "Year Built", form_sqm: "Square Meters (m²)", form_bedrooms: "Bedrooms", form_bathrooms: "Bathrooms", form_garage: "Garage",
-                    form_property_type_select: 'Select a classification...',
-                    form_eu_111: 'Residential - One-dwelling',
-                    form_eu_112: 'Residential - Multi-dwelling',
-                    form_eu_122: 'Commercial - Office Building',
-                    form_eu_123: 'Commercial - Wholesale and retail trade',
-                    form_eu_125: 'Commercial - Industrial and warehouse',
-                    form_eu_126: 'Public - Entertainment, education, hospital',
-                    form_eu_127: 'Other non-residential',
+                    form_property_type_select: 'Select a classification...', form_eu_111: 'Residential - One-dwelling', form_eu_112: 'Residential - Multi-dwelling', form_eu_122: 'Commercial - Office Building', form_eu_123: 'Commercial - Wholesale and retail trade', form_eu_125: 'Commercial - Industrial and warehouse', form_eu_126: 'Public - Entertainment, education, hospital', form_eu_127: 'Other non-residential',
                     form_section_financials: "Financials", form_loan_amount: "Loan Amount", form_assessed_value: "Assessed Value", form_current_value: "Current Value", form_down_payment: "Down Payment", form_monthly_mortgage: "Monthly Mortgage", form_housing_dues: "Housing Dues", form_tax: "Tax", form_insurance: "Insurance",
                     form_section_photos: "Photos", form_photos_note: "Upload or take pictures of the building.", form_upload_gallery: "Upload", form_take_photo: "Take a photo", form_section_notes: "Notes",
                     generate_qr: "Generate QR & Save", scan_instruction: "Point your camera at a QR code.", confirm_delete: "Are you sure you want to delete this building?",
                     toast_saved: "Building saved successfully!", toast_deleted: "Building deleted.", toast_camera_fail: "Could not start camera. Please grant permission.", toast_qr_not_found: "Building not found in local data.", toast_fill_fields: "Please fill in all required fields.", toast_photo_loading: "Please wait for photos to finish loading.", toast_photo_fail: "Failed to load photo.", toast_photo_size_limit: "Photo exceeds size limit of 5MB.", toast_location_captured: "Location captured!", toast_location_fail: "Could not get location.", toast_geo_unsupported: "Geolocation is not supported by your browser.",
+                    toast_db_error: "Database error. Please refresh the page.",
+                    toast_imported: "{count} records imported successfully!", toast_import_error: "Failed to import records. Please check the file format.",
                     yes: "Yes", no: "No", cancel: "Cancel",
                     export_to_excel: "Export to Excel", export_to_pdf: "Download PDF", download_qr_image: "Download QR Image", toast_no_data_export: "No data to export.", toast_exported: "Data exported as {format} successfully!",
                 },
                 fa: {
                     app_title: "مرکز اطلاعات ساختمان", admin_title: "لیست ساختمان‌ها", add_building_title: "افزودن ساختمان جدید", edit_building_title: "ویرایش ساختمان", scan_title: "اسکن کد QR", save: "ذخیره",
                     scan_qr: "اسکن کد QR ساختمان", add_building: "افزودن ساختمان جدید",
+                    import_from_excel: "ورود از اکسل",
                     no_buildings_found: "هیچ ساختمانی یافت نشد.", click_plus_to_add: "برای افزودن، روی دکمه '+' بالا کلیک کنید.",
                     search_placeholder: "جستجو بر اساس نام یا کد پستی...", no_search_results: "هیچ ساختمانی با جستجوی شما مطابقت ندارد.", try_different_search: "عبارت دیگری را امتحان کنید.",
                     form_section_address: "آدرس و اطلاعات اولیه", form_building_name: "نام ساختمان / پروفایل *", form_street: "خیابان", form_city: "شهر", form_state_province: "استان/ایالت", form_zip_postal: "کد پستی", form_country: "کشور", form_webpage: "صفحه وب",
-                    form_latitude: "عرض جغرافیایی", form_longitude: "طول جغرافیایی", form_get_location: "دریافت موقعیت فعلی",
+                    form_latitude: "عرض جغرافیایی", form_longitude: "طول جغرافیایی", form_get_location: "دریافت موقعیت فعلی", form_section_location: "موقعیت مکانی",
                     form_section_profile: "مشخصات ملک", form_property_type: "نوع ملک", form_year_built: "سال ساخت", form_sqm: "متر مربع", form_bedrooms: "اتاق خواب", form_bathrooms: "سرویس بهداشتی", form_garage: "پارکینگ",
-                    form_property_type_select: 'یک دسته را انتخاب کنید...',
-                    form_eu_111: 'مسکونی - یک واحدی',
-                    form_eu_112: 'مسکونی - چند واحدی',
-                    form_eu_122: 'تجاری - اداری',
-                    form_eu_123: 'تجاری - عمده و خرده فروشی',
-                    form_eu_125: 'صنعتی و انبار',
-                    form_eu_126: 'عمومی - تفریحی، آموزشی، بیمارستانی',
-                    form_eu_127: 'سایر غیرمسکونی‌ها',
+                    form_property_type_select: 'یک دسته را انتخاب کنید...', form_eu_111: 'مسکونی - یک واحدی', form_eu_112: 'مسکونی - چند واحدی', form_eu_122: 'تجاری - اداری', form_eu_123: 'تجاری - عمده و خرده فروشی', form_eu_125: 'صنعتی و انبار', form_eu_126: 'عمومی - تفریحی، آموزشی، بیمارستانی', form_eu_127: 'سایر غیرمسکونی‌ها',
                     form_section_financials: "اطلاعات مالی", form_loan_amount: "مبلغ وام", form_assessed_value: "ارزش ارزیابی شده", form_current_value: "ارزش فعلی", form_down_payment: "پیش پرداخت", form_monthly_mortgage: "قسط ماهانه", form_housing_dues: "شارژ", form_tax: "مالیات", form_insurance: "بیمه",
                     form_section_photos: "عکس‌ها", form_photos_note: "عکس‌های ساختمان را بارگذاری یا ثبت کنید.", form_upload_gallery: "بارگذاری", form_take_photo: "گرفتن عکس", form_section_notes: "یادداشت‌ها",
                     generate_qr: "ساختن QR و ذخیره", scan_instruction: "دوربین خود را به سمت کد QR بگیرید.", confirm_delete: "آیا از حذف این ساختمان مطمئن هستید؟",
                     toast_saved: "ساختمان با موفقیت ذخیره شد!", toast_deleted: "ساختمان حذف شد.", toast_camera_fail: "دوربین فعال نشد. لطفاً دسترسی را مجاز کنید.", toast_qr_not_found: "ساختمان در داده‌های محلی یافت نشد.", toast_fill_fields: "لطفاً تمام فیلدهای الزامی را پر کنید.",
                     toast_photo_loading: "لطفاً منتظر بمانید تا بارگذاری عکس‌ها تمام شود.", toast_photo_fail: "بارگذاری عکس ناموفق بود.", toast_photo_size_limit: "حجم عکس از حد مجاز ۵ مگابایت بیشتر است.",
                     toast_location_captured: "موقعیت مکانی ثبت شد!", toast_location_fail: "دریافت موقعیت مکانی ناموفق بود.", toast_geo_unsupported: "موقعیت یابی توسط مرورگر شما پشتیبانی نمی‌شود.",
+                    toast_db_error: "خطای پایگاه داده. لطفا صفحه را رفرش کنید.",
+                    toast_imported: "{count} رکورد با موفقیت وارد شد!", toast_import_error: "وارد کردن رکوردها ناموفق بود. لطفاً فرمت فایل را بررسی کنید.",
                     yes: "بله", no: "خیر", cancel: "لغو",
                     export_to_excel: "خروجی اکسل", export_to_pdf: "دانلود PDF", download_qr_image: "دانلود تصویر QR", toast_no_data_export: "داده‌ای برای خروج وجود ندارد.", toast_exported: "داده‌ها با موفقیت به صورت {format} خروجی گرفته شد!",
                 }
             };
-
+            
             const translate = (key, params = {}, lang = state.currentLang) => { let text = (translations[lang] || translations.en)[key] || key; for(const param in params) { text = text.replace(`{${param}}`, params[param]); } return text; };
-            const dom = { pages: document.querySelectorAll('.page'), headerTitle: document.getElementById('header-title'), backButton: document.getElementById('back-button'), headerActions: document.getElementById('header-actions'), buildingList: document.getElementById('building-list'), emptyAdminState: document.getElementById('empty-admin-state'), searchBar: document.getElementById('search-bar'), form: document.getElementById('building-form'), photoUploadInput: document.getElementById('photo-upload'), photoCaptureInput: document.getElementById('photo-capture'), saveProgressBar: document.getElementById('save-progress-bar'), formSaveBtn: document.getElementById('form-save-btn'), formCancelBtn: document.getElementById('form-cancel-btn'), confirmModalOverlay: document.getElementById('confirm-modal-overlay') };
+            const dom = { pages: document.querySelectorAll('.page'), headerTitle: document.getElementById('header-title'), backButton: document.getElementById('back-button'), headerActions: document.getElementById('header-actions'), buildingList: document.getElementById('building-list'), emptyAdminState: document.getElementById('empty-admin-state'), searchBar: document.getElementById('search-bar'), form: document.getElementById('building-form'), photoUploadInput: document.getElementById('photo-upload'), photoCaptureInput: document.getElementById('photo-capture'), saveProgressBar: document.getElementById('save-progress-bar'), formSaveBtn: document.getElementById('form-save-btn'), formCancelBtn: document.getElementById('form-cancel-btn'), confirmModalOverlay: document.getElementById('confirm-modal-overlay'), importExcelBtn: document.getElementById('import-excel-btn'), importExcelInput: document.getElementById('import-excel-input') };
             
-            const convertToEnglishNumerals = (str) => {
-                if (typeof str !== 'string' && typeof str !== 'number') return str;
-                return str.toString().replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-            };
-            
-            const unformatCurrency = (str) => {
-                if (typeof str !== 'string') return str;
-                return str.replace(/[^0-9.-]+/g,"");
+            // --- IndexedDB Functions ---
+            function openDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+                    request.onupgradeneeded = event => {
+                        db = event.target.result;
+                        if (!db.objectStoreNames.contains(STORE_NAME)) {
+                            db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        }
+                    };
+                    request.onsuccess = event => {
+                        db = event.target.result;
+                        resolve(db);
+                    };
+                    request.onerror = event => {
+                        console.error("IndexedDB error:", event.target.errorCode);
+                        reject(event.target.error);
+                    };
+                });
             }
+
+            const dbOp = {
+                save: (data) => {
+                    return new Promise((resolve, reject) => {
+                        const transaction = db.transaction([STORE_NAME], 'readwrite');
+                        const store = transaction.objectStore(STORE_NAME);
+                        const request = store.put(data);
+                        transaction.oncomplete = () => resolve(request.result);
+                        transaction.onerror = (event) => reject(event.target.error);
+                    });
+                },
+                getAll: () => {
+                    return new Promise((resolve, reject) => {
+                        const transaction = db.transaction([STORE_NAME], 'readonly');
+                        const store = transaction.objectStore(STORE_NAME);
+                        const request = store.getAll();
+                        transaction.oncomplete = () => resolve(request.result);
+                        transaction.onerror = (event) => reject(event.target.error);
+                    });
+                },
+                getById: (id) => {
+                     return new Promise((resolve, reject) => {
+                        const transaction = db.transaction([STORE_NAME], 'readonly');
+                        const store = transaction.objectStore(STORE_NAME);
+                        const request = store.get(id);
+                        transaction.oncomplete = () => resolve(request.result);
+                        transaction.onerror = (event) => reject(event.target.error);
+                    });
+                },
+                delete: (id) => {
+                     return new Promise((resolve, reject) => {
+                        const transaction = db.transaction([STORE_NAME], 'readwrite');
+                        const store = transaction.objectStore(STORE_NAME);
+                        const request = store.delete(id);
+                        transaction.oncomplete = () => resolve();
+                        transaction.onerror = (event) => reject(event.target.error);
+                    });
+                }
+            };
+
+            // --- Helper Functions ---
+            const convertToEnglishNumerals = (str) => { if (typeof str !== 'string' && typeof str !== 'number') return str; return str.toString().replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)); };
+            const unformatCurrency = (str) => { if (typeof str !== 'string') return str; return str.replace(/[^0-9.-]+/g,""); }
+            const dataURItoBlob = (dataURI) => { const byteString = atob(dataURI.split(',')[1]); const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]; const ab = new ArrayBuffer(byteString.length); const ia = new Uint8Array(ab); for (let i = 0; i < byteString.length; i++) { ia[i] = byteString.charCodeAt(i); } return new Blob([ab], {type: mimeString}); };
+            const blobToDataURI = (blob) => { return new Promise(resolve => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.readAsDataURL(blob); }); }
 
             const sanitizeBuilding = (data) => {
                 const sanitized = { id: data.id || crypto.randomUUID() };
-                const fields = [
-                    'buildingName', 'street', 'city', 'stateProvince', 'zipPostal', 'country', 'webpage', 
-                    'latitude', 'longitude', 'propertyType', 'notes'
-                ];
+                const fields = [ 'buildingName', 'street', 'city', 'stateProvince', 'zipPostal', 'country', 'webpage', 'latitude', 'longitude', 'propertyType', 'notes' ];
                 const numericFields = ['yearBuilt', 'squareFeet', 'bedrooms', 'bathrooms'];
                 const currencyFields = ['loanAmount', 'assessedValue', 'currentValue', 'downPayment', 'monthlyMortgage', 'housingDues', 'tax', 'insurance'];
                 
@@ -471,12 +523,10 @@
                 currencyFields.forEach(f => sanitized[f] = unformatCurrency(convertToEnglishNumerals(data[f])) || '');
                 
                 sanitized.garage = data.garage || false;
-                sanitized.photos = Array.isArray(data.photos) ? data.photos : [];
+                sanitized.photos = Array.isArray(data.photos) ? data.photos.map(p => (typeof p === 'string' && p.startsWith('data:')) ? dataURItoBlob(p) : p) : [];
 
                 return sanitized;
             };
-
-            const db = { getAll: () => JSON.parse(localStorage.getItem(DB_KEY) || '[]'), getById: (id) => db.getAll().find(b => String(b.id) === String(id)), save: (data) => { const all = db.getAll(); const s = sanitizeBuilding(data); const i = all.findIndex(b => String(b.id) === String(s.id)); if (i > -1) all[i] = s; else all.push(s); localStorage.setItem(DB_KEY, JSON.stringify(all)); }, delete: (id) => { let all = db.getAll(); all = all.filter(b => String(b.id) !== String(id)); localStorage.setItem(DB_KEY, JSON.stringify(all)); } };
 
             const ui = {
                 updateText: () => {
@@ -485,29 +535,31 @@
                     document.getElementById('lang-switcher').textContent = state.currentLang === 'en' ? 'FA' : 'EN';
                     document.querySelectorAll('[data-lang]').forEach(el => { if (el.dataset.lang) el.textContent = translate(el.dataset.lang); });
                     dom.searchBar.placeholder = translate('search_placeholder');
-                    
+                    document.getElementById('home-title').textContent = translate('app_title');
                     const propSelect = document.getElementById('propertyType');
                     if(propSelect) { 
                         const val = propSelect.value; 
-                        propSelect.innerHTML = `
-                            <option value="">${translate('form_property_type_select')}</option>
-                            <option value="Residential - One-dwelling">${translate('form_eu_111')}</option>
-                            <option value="Residential - Multi-dwelling">${translate('form_eu_112')}</option>
-                            <option value="Commercial - Office Building">${translate('form_eu_122')}</option>
-                            <option value="Commercial - Wholesale and retail trade">${translate('form_eu_123')}</option>
-                            <option value="Commercial - Industrial and warehouse">${translate('form_eu_125')}</option>
-                            <option value="Public - Entertainment, education, hospital">${translate('form_eu_126')}</option>
-                            <option value="Other non-residential">${translate('form_eu_127')}</option>
-                        `; 
+                        propSelect.innerHTML = `<option value="">${translate('form_property_type_select')}</option><option value="Residential - One-dwelling">${translate('form_eu_111')}</option><option value="Residential - Multi-dwelling">${translate('form_eu_112')}</option><option value="Commercial - Office Building">${translate('form_eu_122')}</option><option value="Commercial - Wholesale and retail trade">${translate('form_eu_123')}</option><option value="Commercial - Industrial and warehouse">${translate('form_eu_125')}</option><option value="Public - Entertainment, education, hospital">${translate('form_eu_126')}</option><option value="Other non-residential">${translate('form_eu_127')}</option>`; 
                         propSelect.value = val; 
                     }
                 },
                 renderPhotoThumbnails: () => {
                     const container = document.getElementById('photo-thumbnails'); container.innerHTML = '';
-                    state.photoCache.forEach((src, i) => { const div = document.createElement('div'); div.className = 'thumbnail-container'; div.innerHTML = `<img src="${src}" class="w-full h-24 object-cover rounded-lg shadow-md"><div class="thumbnail-delete">&times;</div>`; div.querySelector('.thumbnail-delete').onclick = () => { state.photoCache.splice(i, 1); ui.renderPhotoThumbnails(); }; container.appendChild(div); });
+                    state.photoCache.forEach((photoData, i) => { 
+                        const src = (typeof photoData === 'string') ? photoData : URL.createObjectURL(photoData);
+                        const div = document.createElement('div'); 
+                        div.className = 'thumbnail-container'; 
+                        div.innerHTML = `<img src="${src}" class="w-full h-24 object-cover rounded-lg shadow-md"><div class="thumbnail-delete">&times;</div>`; 
+                        div.querySelector('.thumbnail-delete').onclick = () => { 
+                            state.photoCache.splice(i, 1); 
+                            ui.renderPhotoThumbnails(); 
+                        }; 
+                        container.appendChild(div); 
+                    });
                 },
-                renderAdminList: (term = '') => {
-                    let buildings = db.getAll(); const normTerm = term.toLowerCase().trim();
+                renderAdminList: async (term = '') => {
+                    let buildings = await dbOp.getAll();
+                    const normTerm = term.toLowerCase().trim();
                     if (normTerm) buildings = buildings.filter(b => (b.buildingName && b.buildingName.toLowerCase().includes(normTerm)) || (b.zipPostal && b.zipPostal.toLowerCase().includes(normTerm)));
                     dom.buildingList.innerHTML = '';
                     if (buildings.length === 0) {
@@ -515,12 +567,20 @@
                         if (normTerm) { msg1.textContent = translate('no_search_results'); msg2.textContent = translate('try_different_search'); } else { msg1.textContent = translate('no_buildings_found'); msg2.textContent = translate('click_plus_to_add'); }
                     } else {
                         dom.emptyAdminState.classList.add('hidden');
-                        buildings.forEach(b => { const item = document.createElement('div'); item.className = 'bg-white p-4 rounded-md border border-gray-200 hover:border-[var(--primary-color)] hover:shadow-sm cursor-pointer flex justify-between items-center'; item.dataset.id = b.id; item.innerHTML = `<div><h3 class="font-bold text-lg">${b.buildingName}</h3><p class="text-gray-500">${b.street || 'No address'}</p></div><span class="text-gray-500">${b.zipPostal||''}</span>`; item.onclick = () => showPage('page-detail', { id: b.id }); dom.buildingList.appendChild(item); });
+                        buildings.forEach(b => { const item = document.createElement('div'); item.className = 'bg-white p-4 rounded-md border border-gray-200 hover:border-[var(--primary-color)] hover:shadow-sm cursor-pointer flex justify-between items-center'; item.dataset.id = b.id; item.innerHTML = `<div><h3 class="font-bold text-lg">${b.buildingName}</h3><p class="text-gray-500">${b.street || 'No address'}</p></div><span class="text-gray-500">${b.zipPostal||''}</span>`; item.onclick = async () => await showPage('page-detail', { id: b.id }); dom.buildingList.appendChild(item); });
                     }
                 },
-                renderDetail: (b) => {
+                renderDetail: async (b) => {
                     document.getElementById('detail-building-name').textContent = b.buildingName;
-                    const qrContainer = document.getElementById('detail-qr-code-container'); qrContainer.innerHTML = ''; new QRCodeStyling({ width: 180, height: 180, data: String(b.id), dotsOptions: { color: '#03396c', type: 'rounded' } }).append(qrContainer);
+                    const qrContainer = document.getElementById('detail-qr-code-container'); qrContainer.innerHTML = ''; 
+                    new QRCodeStyling({ 
+                        width: 180, 
+                        height: 180, 
+                        data: String(b.id), 
+                        dotsOptions: { color: '#000000', type: 'square' }, // Black, square dots
+                        backgroundOptions: { color: '#ffffff' }
+                    }).append(qrContainer);
+
                     const content = document.getElementById('detail-content'); content.innerHTML = '';
                     const createField = (lbl, val) => val || val === 0 || val === false ? `<div class="flex justify-between items-center py-2 border-b"><p class="text-sm font-medium text-gray-500">${translate(lbl)}</p><p class="text-sm text-right break-all">${val===true?translate('yes'):val===false?translate('no'):val}</p></div>` : '';
                     const createLink = (lbl, val, url) => val ? `<div class="flex justify-between items-center py-2 border-b"><p class="text-sm font-medium text-gray-500">${translate(lbl)}</p><a href="${url}" target="_blank" class="text-sm text-blue-600 hover:underline text-right break-all">${val}</a></div>` : '';
@@ -528,7 +588,15 @@
                     let addr = [b.street,b.city,b.stateProvince,b.zipPostal,b.country].filter(Boolean).join(', '); let addrHTML = createField('form_street', addr) + createLink('form_webpage',b.webpage,b.webpage); if(b.latitude&&b.longitude) addrHTML+=createLink('form_section_location',`${b.latitude}, ${b.longitude}`,`https://www.google.com/maps?q=${b.latitude},${b.longitude}`); if(addrHTML) content.innerHTML+=`<div class="section-container"><h3 class="font-bold text-lg mb-2">${translate('form_section_address')}</h3>${addrHTML}</div>`;
                     let profHTML = createField('form_property_type',b.propertyType)+createField('form_year_built',b.yearBuilt)+createField('form_sqm',b.squareFeet)+createField('form_bedrooms',b.bedrooms)+createField('form_bathrooms',b.bathrooms)+createField('form_garage',b.garage); if(profHTML) content.innerHTML+=`<div class="section-container"><h3 class="font-bold text-lg mb-2">${translate('form_section_profile')}</h3>${profHTML}</div>`;
                     let finHTML = createField('form_loan_amount',fC(b.loanAmount))+createField('form_assessed_value',fC(b.assessedValue))+createField('form_current_value',fC(b.currentValue))+createField('form_down_payment',fC(b.downPayment))+createField('form_monthly_mortgage',fC(b.monthlyMortgage))+createField('form_housing_dues',fC(b.housingDues))+createField('form_tax',fC(b.tax))+createField('form_insurance',fC(b.insurance)); if(finHTML) content.innerHTML+=`<div class="section-container"><h3 class="font-bold text-lg mb-2">${translate('form_section_financials')}</h3>${finHTML}</div>`;
-                    let exHTML = ''; if(b.notes) exHTML+=`<div class="mb-6"><h3 class="font-bold text-lg mb-2">${translate('form_section_notes')}</h3><p class="text-gray-700 whitespace-pre-wrap text-sm">${b.notes}</p></div>`; if(b.photos&&b.photos.length>0) exHTML+=`<div><h3 class="font-bold text-lg mb-4">${translate('form_section_photos')}</h3><div class="grid grid-cols-2 sm:grid-cols-3 gap-4">${b.photos.map(src=>`<img src="${src}" class="rounded-lg w-full h-auto object-cover">`).join('')}</div></div>`; if(exHTML) content.innerHTML+=`<div class="section-container">${exHTML}</div>`;
+                    
+                    let exHTML = ''; 
+                    if(b.notes) exHTML+=`<div class="mb-6"><h3 class="font-bold text-lg mb-2">${translate('form_section_notes')}</h3><p class="text-gray-700 whitespace-pre-wrap text-sm">${b.notes}</p></div>`; 
+                    if(b.photos && b.photos.length > 0) {
+                        const photoPromises = b.photos.map(blob => blobToDataURI(blob));
+                        const photoDataURIs = await Promise.all(photoPromises);
+                        exHTML+=`<div><h3 class="font-bold text-lg mb-4">${translate('form_section_photos')}</h3><div class="grid grid-cols-2 sm:grid-cols-3 gap-4">${photoDataURIs.map(src=>`<img src="${src}" class="rounded-lg w-full h-auto object-cover">`).join('')}</div></div>`; 
+                    }
+                    if(exHTML) content.innerHTML+=`<div class="section-container">${exHTML}</div>`;
                 },
                 showToast: (key, isErr = false, params = {}) => {
                     const toast = document.getElementById('toast'); toast.querySelector('p').textContent = translate(key, params);
@@ -544,61 +612,102 @@
                 hideConfirmModal: () => { dom.confirmModalOverlay.classList.remove('visible'); state.confirmCallback = null; }
             };
 
-            const showPage = (pageId, params = {}, isGoingBack = false) => {
+            const showPage = async (pageId, params = {}, isGoingBack = false) => {
                 window.scrollTo(0,0);
                 if (state.activeScanner) { state.activeScanner.stop().catch(()=>{}); state.activeScanner = null; }
                 if (!isGoingBack && state.currentPage !== pageId) { state.history.push({page: state.currentPage, id: dom.form.id.value}); }
                 state.currentPage = pageId; dom.pages.forEach(p=>p.classList.remove('active')); document.getElementById(pageId).classList.add('active');
                 dom.backButton.classList.toggle('hidden', state.history.length === 0); dom.headerActions.innerHTML = '';
-                let titleKey = 'app_title';
+                
+                // Clear header title by default, only set it for specific pages
+                dom.headerTitle.textContent = ''; 
+
                 switch(pageId) {
-                    case 'page-admin': titleKey='admin_title'; dom.headerActions.innerHTML=`<button id="add-btn" class="p-2 rounded-full text-white hover:bg-black/20"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></button>`; document.getElementById('add-btn').onclick=()=>showPage('page-form'); break;
-                    case 'page-form': state.isNewFormEntry=!params.id; titleKey=state.isNewFormEntry?'add_building_title':'edit_building_title'; break;
-                    case 'page-detail': const b=db.getById(params.id); if(b) { dom.headerTitle.textContent=b.buildingName; dom.headerActions.innerHTML=`<button id="edit-btn" class="p-2 rounded-full text-white hover:bg-black/20"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z"></path></svg></button><button id="del-btn" class="p-2 rounded-full text-white hover:bg-red-500/50"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>`; document.getElementById('edit-btn').onclick=()=>showPage('page-form',{id:b.id}); document.getElementById('del-btn').onclick=()=>handleDelete(b.id); } break;
-                    case 'page-scanner': titleKey='scan_title'; break;
+                    case 'page-home': dom.headerTitle.textContent = translate('app_title'); break;
+                    case 'page-admin': 
+                        dom.headerTitle.textContent = translate('admin_title');
+                        dom.headerActions.innerHTML=`<button id="add-btn" class="p-2 rounded-full text-white hover:bg-black/20"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></button>`; 
+                        document.getElementById('add-btn').onclick=()=>showPage('page-form'); 
+                        dom.searchBar.value=''; 
+                        await ui.renderAdminList(); 
+                        break;
+                    case 'page-form': 
+                        state.isNewFormEntry=!params.id; 
+                        dom.headerTitle.textContent = translate(state.isNewFormEntry?'add_building_title':'edit_building_title');
+                        break;
+                    case 'page-detail': 
+                        const b_detail = await dbOp.getById(params.id); 
+                        if(b_detail) { 
+                            dom.headerTitle.textContent = b_detail.buildingName; 
+                            dom.headerActions.innerHTML=`<button id="edit-btn" class="p-2 rounded-full text-white hover:bg-black/20"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z"></path></svg></button><button id="del-btn" class="p-2 rounded-full text-white hover:bg-red-500/50"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>`; 
+                            document.getElementById('edit-btn').onclick=()=>showPage('page-form',{id:b_detail.id}); 
+                            document.getElementById('del-btn').onclick=()=>handleDelete(b_detail.id); 
+                        } 
+                        break;
+                    case 'page-scanner': 
+                        dom.headerTitle.textContent = translate('scan_title');
+                        break;
                 }
-                if (pageId !== 'page-detail') dom.headerTitle.textContent = translate(titleKey);
+                
                 if (pageId === 'page-form') {
                     dom.form.reset(); state.photoCache = []; dom.form.bedrooms.value='0'; dom.form.bathrooms.value='0';
-                    if (params.id) { const b = db.getById(params.id); if (b) { for (const key in b) { const el = document.getElementById(key); if (el) { if (el.type === 'checkbox') el.checked = b[key]; else el.value = b[key]; } } state.photoCache = [...(b.photos||[])]; } } else { dom.form.id.value = crypto.randomUUID(); }
-                    document.querySelectorAll('.currency').forEach(el => {
-                        const num = unformatCurrency(el.value);
-                        if(num) el.value = new Intl.NumberFormat().format(num);
-                    });
+                    if (params.id) { 
+                        const b_form = await dbOp.getById(params.id); 
+                        if (b_form) { for (const key in b_form) { const el = document.getElementById(key); if (el) { if (el.type === 'checkbox') el.checked = b_form[key]; else el.value = b_form[key]; } } state.photoCache = [...(b_form.photos||[])]; } 
+                    } else { 
+                        dom.form.id.value = crypto.randomUUID(); 
+                    }
                     ui.renderPhotoThumbnails();
                 } else if (pageId === 'page-detail') {
-                    const b = db.getById(params.id); if (b) { ui.renderDetail(b); document.getElementById('detail-download-qr-btn').onclick=()=>downloadQrAsImage(b); document.getElementById('detail-export-excel-btn').onclick=()=>handleExport('xlsx',[b]); document.getElementById('detail-export-pdf-btn').onclick=()=>pdf.generate(b); } else { ui.showToast('toast_qr_not_found',true); goBack(); }
-                } else if (pageId === 'page-scanner') { startScanner(); }
+                    const b_render = await dbOp.getById(params.id); 
+                    if (b_render) { await ui.renderDetail(b_render); document.getElementById('detail-download-qr-btn').onclick=()=>downloadQrAsImage(b_render); document.getElementById('detail-export-excel-btn').onclick=async ()=>handleExport('xlsx', [await dbOp.getById(params.id)]); document.getElementById('detail-export-pdf-btn').onclick=()=>pdf.generate(b_render); } else { ui.showToast('toast_qr_not_found',true); goBack(); }
+                } else if (pageId === 'page-scanner') { 
+                    startScanner(); 
+                }
             };
 
             const goBack = () => { if (state.history.length > 0) { const prev = state.history.pop(); showPage(prev.page, {id: prev.id}, true); } };
-            const handleDelete = (id) => ui.showConfirmModal('confirm_delete', () => { db.delete(id); ui.showToast('toast_deleted'); showPage('page-admin'); });
+            const handleDelete = (id) => ui.showConfirmModal('confirm_delete', async () => { await dbOp.delete(id); ui.showToast('toast_deleted'); showPage('page-admin'); });
 
-            const handleFormSave = () => {
+            const handleFormSave = async () => {
                 if (state.photosLoading > 0) { ui.showToast('toast_photo_loading', true); return; }
                 if (!dom.form.checkValidity()) { ui.showToast('toast_fill_fields', true); dom.form.reportValidity(); return; }
-                dom.saveProgressBar.style.width='100%';
+                
+                dom.formSaveBtn.disabled = true;
+                dom.saveProgressBar.style.width='50%';
+
                 const data={}; const inputs=dom.form.querySelectorAll('input,select,textarea');
                 inputs.forEach(i=>{if(i.id)data[i.id]=i.type==='checkbox'?i.checked:i.value;});
-                data.photos=state.photoCache; db.save(data); ui.showToast('toast_saved');
-                setTimeout(() => { showPage('page-detail', {id:data.id}); dom.saveProgressBar.style.width='0%'; }, 500);
+                data.photos=state.photoCache;
+                
+                const sanitizedData = sanitizeBuilding(data);
+                await dbOp.save(sanitizedData); 
+
+                dom.saveProgressBar.style.width='100%';
+                ui.showToast('toast_saved');
+                setTimeout(() => { showPage('page-detail', {id:data.id}); dom.saveProgressBar.style.width='0%'; dom.formSaveBtn.disabled = false; }, 500);
             };
 
             const startScanner = () => {
                 state.activeScanner = new Html5Qrcode("qr-reader");
-                const onScanSuccess = (decodedText) => {
-                    if (state.activeScanner) { state.activeScanner.stop().then(() => { const b = db.getById(decodedText); if (b) { state.history.push({page:'page-admin'}); showPage('page-detail', { id: b.id }); } else { ui.showToast('toast_qr_not_found', true); goBack(); } }).catch(()=>{}); state.activeScanner = null; }
+                const onScanSuccess = async (decodedText) => {
+                    if (state.activeScanner) { 
+                        await state.activeScanner.stop();
+                        state.activeScanner = null; 
+                        const b = await dbOp.getById(decodedText); 
+                        if (b) { state.history.push({page:'page-admin'}); showPage('page-detail', { id: b.id }); } else { ui.showToast('toast_qr_not_found', true); goBack(); } 
+                    }
                 };
-                state.activeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess).catch(() => { ui.showToast("toast_camera_fail", true); goBack(); });
+                state.activeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: {width: 250, height: 250} }, onScanSuccess, (errorMessage) => { /* ignore */ }).catch(() => { ui.showToast("toast_camera_fail", true); goBack(); });
             };
 
             const handlePhotoFiles = (files, inputEl) => {
                 if(!files||files.length===0){if(inputEl)inputEl.value=null;return;}
                 const MAX_SIZE=5*1024*1024;
                 Array.from(files).forEach(file=>{ if(file.size>MAX_SIZE){ui.showToast('toast_photo_size_limit',true);return;}
-                    state.photosLoading++; dom.formSaveBtn.disabled=true; dom.formSaveBtn.classList.add('opacity-50');
+                    state.photosLoading++; dom.formSaveBtn.disabled=true;
                     const reader=new FileReader();
-                    const done=()=>{state.photosLoading--;if(state.photosLoading===0){dom.formSaveBtn.disabled=false;dom.formSaveBtn.classList.remove('opacity-50');}};
+                    const done=()=>{state.photosLoading--;if(state.photosLoading===0){dom.formSaveBtn.disabled=false;}};
                     reader.onload=(e)=>{state.photoCache.push(e.target.result);ui.renderPhotoThumbnails();done();};
                     reader.onerror=()=>{ui.showToast('toast_photo_fail',true);done();};
                     reader.readAsDataURL(file);
@@ -606,76 +715,47 @@
                 if(inputEl)inputEl.value=null;
             };
 
-            const handleExport = (format, data) => {
-                const buildings = data || db.getAll(); if (buildings.length === 0) { ui.showToast("toast_no_data_export", true); return; }
+            const handleExport = async (format, data) => {
+                const buildings = data || await dbOp.getAll();
+                if (buildings.length === 0) { ui.showToast("toast_no_data_export", true); return; }
                 const clean = buildings.map(b => { const { photos, ...rest } = sanitizeBuilding(b); return rest; });
                 if (format === 'xlsx') { const ws = XLSX.utils.json_to_sheet(clean); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Buildings"); XLSX.writeFile(wb, "Building_Export.xlsx"); }
                 ui.showToast('toast_exported', false, {format: format.toUpperCase()});
             };
 
-            const getLines = (ctx, text, maxWidth) => {
-                if (!text) return [];
-                const words = text.split(' ');
-                let lines = [];
-                let currentLine = words[0] || '';
-                for (let i = 1; i < words.length; i++) {
-                    let word = words[i];
-                    let width = ctx.measureText(currentLine + ' ' + word).width;
-                    if (width < maxWidth) {
-                        currentLine += ' ' + word;
-                    } else {
-                        lines.push(currentLine);
-                        currentLine = word;
-                    }
-                }
-                lines.push(currentLine);
-                return lines;
-            }
-
             const downloadQrAsImage = async (building) => {
+                const qrSize = 250;
+                const border = 10;
+                const textHeight = 80;
+                
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                const width = 400;
-                const padding = 20;
-                const qrSize = 150;
-
-                const name = building.buildingName || '';
-                const address = [building.street, building.city, building.stateProvince, building.zipPostal, building.country].filter(Boolean).join(', ');
-                
-                ctx.font = 'bold 24px Ubuntu';
-                const nameLines = getLines(ctx, name, width - padding * 2);
-                ctx.font = '16px Ubuntu';
-                const addressLines = getLines(ctx, address, width - padding * 2);
-
-                const height = (padding * 2) + (nameLines.length * 28) + 10 + (addressLines.length * 20) + 20 + qrSize;
-                canvas.width = width;
-                canvas.height = height;
+                canvas.width = qrSize + border * 2;
+                canvas.height = qrSize + border * 2 + textHeight;
 
                 ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, width, height);
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                ctx.fillStyle = '#03396c';
-                ctx.font = 'bold 24px Ubuntu';
-                let y = padding + 24;
-                nameLines.forEach(line => {
-                    ctx.fillText(line, padding, y);
-                    y += 28;
+                ctx.fillStyle = '#000000';
+                ctx.font = 'bold 20px Ubuntu';
+                ctx.textAlign = 'center';
+                ctx.fillText(building.buildingName || '', canvas.width / 2, 35);
+
+                const qrInstance = new QRCodeStyling({ 
+                    width: qrSize, 
+                    height: qrSize, 
+                    data: String(building.id),
+                    dotsOptions: { color: '#000000', type: 'square' },
+                    backgroundOptions: { color: '#ffffff' }
                 });
-
-                y += 10;
-                ctx.fillStyle = '#37352F';
-                ctx.font = '16px Ubuntu';
-                addressLines.forEach(line => {
-                    ctx.fillText(line, padding, y);
-                    y += 20;
-                });
-
-                y += 20;
-                const qrInstance = new QRCodeStyling({ width: qrSize, height: qrSize, data: String(building.id), dotsOptions: { color: '#03396c' } });
                 const qrBlob = await qrInstance.getRawData('png');
                 const qrImage = await createImageBitmap(qrBlob);
-                
-                ctx.drawImage(qrImage, (width - qrSize) / 2, y);
+                ctx.drawImage(qrImage, border, 50);
+
+                ctx.fillStyle = '#333333';
+                ctx.font = '16px Ubuntu';
+                ctx.textAlign = 'center';
+                ctx.fillText(building.zipPostal || '', canvas.width / 2, canvas.height - 15);
 
                 const link = document.createElement('a');
                 link.download = `QR-${building.buildingName.replace(/\s/g, '_')}.png`;
@@ -684,135 +764,100 @@
             };
 
             const pdf = {
-                generate: (b) => {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
-                    const FONT = "Helvetica";
-                    doc.setFont(FONT);
-
-                    const margin = 15;
-                    const pageW = doc.internal.pageSize.getWidth();
-                    let y = 0; 
-                    
-                    const qrInstance = new QRCodeStyling({ width: 300, height: 300, data: String(b.id) });
-                    qrInstance.getRawData('png').then(blob => {
-                         const reader = new FileReader();
-                         reader.readAsDataURL(blob);
-                         reader.onloadend = function() {
-                            const base64data = reader.result;                
-                            const qrWidth = 40;
-                            const qrHeight = 40;
-                            const qrX = pageW - margin - qrWidth;
-                            const qrY = margin;
-                            doc.addImage(base64data, 'PNG', qrX, qrY, qrWidth, qrHeight);
-
-                            doc.setFontSize(22);
-                            doc.setFont(FONT, 'bold');
-                            doc.setTextColor('#03396c');
-                            const titleMaxWidth = pageW - margin * 2 - qrWidth - 5;
-                            const titleLines = doc.splitTextToSize(b.buildingName, titleMaxWidth);
-                            doc.text(titleLines, margin, qrY + 5);
-                            
-                            y = qrY + qrHeight + 15;
-
-                            const addSection = (title, data) => {
-                                if (y > 260) { doc.addPage(); y = 20; }
-                                doc.setFontSize(16);
-                                doc.setFont(FONT, 'bold');
-                                doc.setTextColor('#03396c');
-                                doc.text(title, margin, y);
-                                y += 3;
-                                doc.setDrawColor(234, 234, 234);
-                                doc.line(margin, y, pageW - margin, y);
-                                y += 7;
-                                
-                                const tableBody = data.filter(i => i.value).map(i => [i.label, i.value]);
-                                if (tableBody.length > 0) {
-                                    doc.autoTable({
-                                        startY: y,
-                                        body: tableBody,
-                                        theme: 'plain',
-                                        styles: { font: FONT, fontStyle: 'normal', fontSize: 10, cellPadding: 2 },
-                                        columnStyles: { 0: { fontStyle: 'bold', textColor: '#37352F' } }
-                                    });
-                                    y = doc.autoTable.previous.finalY + 10;
-                                } else {
-                                     y += 5;
-                                }
-                            };
-
-                            const fC = (n) => !isNaN(n)&&n!==''&&n!==null?new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(n)):'';
-                            
-                            addSection(translate('form_section_address',{},'en'), [
-                                {label: translate('form_street',{},'en'), value: [b.street,b.city,b.stateProvince,b.zipPostal,b.country].filter(Boolean).join(', ')},
-                                {label: translate('form_webpage',{},'en'), value: b.webpage},
-                                {label: "Location", value: (b.latitude && b.longitude) ? `${b.latitude}, ${b.longitude}` : ''},
-                            ]);
-                            addSection(translate('form_section_profile',{},'en'), [
-                                {label: translate('form_property_type',{},'en'), value: b.propertyType},
-                                {label: translate('form_year_built',{},'en'), value: b.yearBuilt},
-                                {label: translate('form_sqm',{},'en'), value: b.squareFeet},
-                                {label: translate('form_bedrooms',{},'en'), value: b.bedrooms},
-                                {label: translate('form_bathrooms',{},'en'), value: b.bathrooms},
-                                {label: translate('form_garage',{},'en'), value: b.garage ? translate('yes',{},'en') : translate('no',{},'en')},
-                            ]);
-                            addSection(translate('form_section_financials',{},'en'), [
-                                {label: translate('form_loan_amount',{},'en'), value: fC(b.loanAmount)},
-                                {label: translate('form_assessed_value',{},'en'), value: fC(b.assessedValue)},
-                                {label: translate('form_current_value',{},'en'), value: fC(b.currentValue)},
-                                {label: translate('form_down_payment',{},'en'), value: fC(b.downPayment)},
-                                {label: translate('form_monthly_mortgage',{},'en'), value: fC(b.monthlyMortgage)},
-                                {label: translate('form_housing_dues',{},'en'), value: fC(b.housingDues)},
-                                {label: translate('form_tax',{},'en'), value: fC(b.tax)},
-                                {label: translate('form_insurance',{},'en'), value: fC(b.insurance)},
-                            ]);
-                            if(b.notes){
-                                if (y > 260) { doc.addPage(); y = 20; }
-                                doc.setFontSize(16);
-                                doc.setFont(FONT, 'bold');
-                                doc.text(translate('form_section_notes',{},'en'), margin, y);
-                                y += 7;
-                                doc.setFont(FONT, 'normal');
-                                doc.setFontSize(10);
-                                doc.text(b.notes, margin, y, { maxWidth: pageW - margin * 2 });
-                            }
-                            doc.save(`Building-${b.buildingName.replace(/\s/g,'_')}.pdf`);
-                        }
+                generate: async (b) => {
+                    const { jsPDF } = window.jspdf; const doc = new jsPDF(); const FONT = "Helvetica"; doc.setFont(FONT);
+                    const margin = 15; const pageW = doc.internal.pageSize.getWidth(); let y = 0; 
+                    const qrInstance = new QRCodeStyling({ 
+                        width: 300, 
+                        height: 300, 
+                        data: String(b.id),
+                        dotsOptions: { color: '#000000', type: 'square' },
+                        backgroundOptions: { color: '#ffffff' }
                     });
+                    const blob = await qrInstance.getRawData('png');
+                    const base64data = await blobToDataURI(blob);
+
+                    const qrWidth = 40; const qrHeight = 40; const qrX = pageW - margin - qrWidth; const qrY = margin;
+                    doc.addImage(base64data, 'PNG', qrX, qrY, qrWidth, qrHeight);
+                    doc.setFontSize(22); doc.setFont(FONT, 'bold'); doc.setTextColor(getComputedStyle(document.documentElement).getPropertyValue('--primary-color'));
+                    const titleMaxWidth = pageW - margin * 2 - qrWidth - 5;
+                    const titleLines = doc.splitTextToSize(b.buildingName, titleMaxWidth);
+                    doc.text(titleLines, margin, qrY + 5);
+                    y = qrY + qrHeight + 15;
+                    const addSection = (title, data) => {
+                        if (y > 260) { doc.addPage(); y = 20; }
+                        doc.setFontSize(16); doc.setFont(FONT, 'bold'); doc.setTextColor(getComputedStyle(document.documentElement).getPropertyValue('--primary-color')); doc.text(title, margin, y);
+                        y += 3; doc.setDrawColor(234, 234, 234); doc.line(margin, y, pageW - margin, y); y += 7;
+                        const tableBody = data.filter(i => i.value).map(i => [i.label, i.value]);
+                        if (tableBody.length > 0) { doc.autoTable({ startY: y, body: tableBody, theme: 'plain', styles: { font: FONT, fontStyle: 'normal', fontSize: 10, cellPadding: 2 }, columnStyles: { 0: { fontStyle: 'bold', textColor: '#37352F' } } }); y = doc.autoTable.previous.finalY + 10;
+                        } else { y += 5; }
+                    };
+                    const fC = (n) => !isNaN(n)&&n!==''&&n!==null?new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(n)):'';
+                    addSection(translate('form_section_address',{},'en'), [ {label: translate('form_street',{},'en'), value: [b.street,b.city,b.stateProvince,b.zipPostal,b.country].filter(Boolean).join(', ')}, {label: translate('form_webpage',{},'en'), value: b.webpage}, {label: "Location", value: (b.latitude && b.longitude) ? `${b.latitude}, ${b.longitude}` : ''}, ]);
+                    addSection(translate('form_section_profile',{},'en'), [ {label: translate('form_property_type',{},'en'), value: b.propertyType}, {label: translate('form_year_built',{},'en'), value: b.yearBuilt}, {label: translate('form_sqm',{},'en'), value: b.squareFeet}, {label: translate('form_bedrooms',{},'en'), value: b.bedrooms}, {label: translate('form_bathrooms',{},'en'), value: b.bathrooms}, {label: translate('form_garage',{},'en'), value: b.garage ? translate('yes',{},'en') : translate('no',{},'en')}, ]);
+                    addSection(translate('form_section_financials',{},'en'), [ {label: translate('form_loan_amount',{},'en'), value: fC(b.loanAmount)}, {label: translate('form_assessed_value',{},'en'), value: fC(b.assessedValue)}, {label: translate('form_current_value',{},'en'), value: fC(b.currentValue)}, {label: translate('form_down_payment',{},'en'), value: fC(b.downPayment)}, {label: translate('form_monthly_mortgage',{},'en'), value: fC(b.monthlyMortgage)}, {label: translate('form_housing_dues',{},'en'), value: fC(b.housingDues)}, {label: translate('form_tax',{},'en'), value: fC(b.tax)}, {label: translate('form_insurance',{},'en'), value: fC(b.insurance)}, ]);
+                    if(b.notes){
+                        if (y > 260) { doc.addPage(); y = 20; }
+                        doc.setFontSize(16); doc.setFont(FONT, 'bold'); doc.text(translate('form_section_notes',{},'en'), margin, y); y += 7;
+                        doc.setFont(FONT, 'normal'); doc.setFontSize(10); doc.text(b.notes, margin, y, { maxWidth: pageW - margin * 2 });
+                    }
+                    doc.save(`Building-${b.buildingName.replace(/\s/g,'_')}.pdf`);
                 }
             };
 
-            // EVENT LISTENERS
-            dom.backButton.addEventListener('click', goBack);
-            document.body.addEventListener('click', (e) => {
-                const navButton = e.target.closest('.nav-button');
-                if (navButton) {
-                    showPage(navButton.dataset.target);
-                }
-            });
+            const handleExcelImport = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const buildings = XLSX.utils.sheet_to_json(firstSheet);
+
+                        if (buildings.length > 0) {
+                            for (const buildingData of buildings) {
+                                const sanitized = sanitizeBuilding(buildingData);
+                                await dbOp.save(sanitized);
+                            }
+                            ui.showToast('toast_imported', false, {count: buildings.length});
+                            await ui.renderAdminList();
+                        }
+                    } catch (err) {
+                        console.error("Import error:", err);
+                        ui.showToast('toast_import_error', true);
+                    } finally {
+                        event.target.value = '';
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            };
+
+            // --- Event Listeners ---
+            dom.backButton.addEventListener('click', () => goBack());
+            document.querySelectorAll('.nav-button[data-target]').forEach(btn => btn.addEventListener('click', (e) => showPage(e.currentTarget.dataset.target)));
             dom.photoUploadInput.addEventListener('change', (e) => handlePhotoFiles(e.target.files, e.target));
             dom.photoCaptureInput.addEventListener('change', (e) => handlePhotoFiles(e.target.files, e.target));
             document.getElementById('lang-switcher').addEventListener('click', () => { state.currentLang = state.currentLang === 'en' ? 'fa' : 'en'; localStorage.setItem(LANG_KEY, state.currentLang); ui.updateText(); const currentId = dom.form.id.value; showPage(state.currentPage, {id:currentId}, true); });
             dom.searchBar.addEventListener('input', (e) => { if (state.currentPage === 'page-admin') ui.renderAdminList(e.target.value); });
             dom.formSaveBtn.addEventListener('click', handleFormSave);
-            dom.formCancelBtn.addEventListener('click', goBack);
+            dom.formCancelBtn.addEventListener('click', () => goBack());
             document.getElementById('get-location-btn').addEventListener('click', () => { if ('geolocation' in navigator) navigator.geolocation.getCurrentPosition(p => { document.getElementById('latitude').value = p.coords.latitude.toFixed(6); document.getElementById('longitude').value = p.coords.longitude.toFixed(6); ui.showToast('toast_location_captured'); }, () => ui.showToast('toast_location_fail', true)); else ui.showToast('toast_geo_unsupported', true); });
             document.getElementById('confirm-modal-no').addEventListener('click', ui.hideConfirmModal);
             document.getElementById('confirm-modal-yes').addEventListener('click', () => { if (typeof state.confirmCallback === 'function') state.confirmCallback(); ui.hideConfirmModal(); });
             dom.confirmModalOverlay.addEventListener('click', (e) => { if (e.target === dom.confirmModalOverlay) ui.hideConfirmModal(); });
+            dom.importExcelBtn.addEventListener('click', () => dom.importExcelInput.click());
+            dom.importExcelInput.addEventListener('change', handleExcelImport);
             
             dom.form.addEventListener('click', (e) => {
                 if (e.target.matches('.stepper-btn')) {
-                    e.preventDefault();
-                    e.stopPropagation();
+                    e.preventDefault(); e.stopPropagation();
                     const targetInput = document.getElementById(e.target.dataset.target);
                     if (targetInput) {
                         let value = parseInt(convertToEnglishNumerals(targetInput.value), 10) || 0;
-                        if (e.target.matches('.stepper-plus')) {
-                            value++;
-                        } else if (e.target.matches('.stepper-minus') && value > 0) {
-                            value--;
-                        }
+                        if (e.target.matches('.stepper-plus')) { value++; } else if (e.target.matches('.stepper-minus') && value > 0) { value--; }
                         targetInput.value = value;
                     }
                 }
@@ -820,18 +865,24 @@
             
             dom.form.addEventListener('input', (e) => {
                 if(e.target.matches('.currency')) {
-                    const value = e.target.value;
-                    const number = unformatCurrency(value);
-                    if (number) {
-                       e.target.value = new Intl.NumberFormat().format(number);
-                    }
+                    const value = e.target.value; const number = unformatCurrency(value);
+                    if (number) { e.target.value = new Intl.NumberFormat().format(number); }
                 }
             });
 
-
             // INITIALIZATION
-            ui.updateText();
-            showPage('page-home');
+            async function init() {
+                try {
+                    await openDB();
+                    ui.updateText();
+                    showPage('page-home');
+                } catch (error) {
+                    ui.showToast('toast_db_error', true);
+                    console.error("Failed to initialize the application:", error);
+                }
+            }
+
+            init();
         });
     </script>
 </body>
