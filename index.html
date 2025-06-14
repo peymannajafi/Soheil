@@ -282,13 +282,50 @@
                     <!-- Section 2: Design & As-Built Information -->
                     <div class="section-container">
                         <h3 class="form-section-header">Section 2: Design & As-Built Information</h3>
-                        <!-- content -->
+                        <h4 class="form-subsection-header">2.1 Architectural Data</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label for="architecturalModelLink">Link to 3D Architectural Model (BIM):</label><input type="url" id="architecturalModelLink" class="form-input"></div>
+                            <div><label for="asBuiltArchitecturalDrawings">As-Built Architectural Drawings (2D):</label><input type="file" id="asBuiltArchitecturalDrawings" class="form-input" multiple></div>
+                            <div><label for="roomSchedule">Master Room Schedule / Space List (.xlsx, .csv):</label><input type="file" id="roomSchedule" class="form-input" accept=".xlsx,.csv"></div>
+                            <div><label for="finishesSchedule">Master Finishes & Materials Schedule (.pdf, .xlsx):</label><input type="file" id="finishesSchedule" class="form-input" accept=".pdf,.xlsx"></div>
+                        </div>
+                        <h4 class="form-subsection-header">2.2 Structural Data</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label for="structuralSystemType">Structural System Type:</label><input type="text" id="structuralSystemType" class="form-input" placeholder="e.g., Steel Frame, Reinforced Concrete"></div>
+                            <div><label for="structuralModelLink">Link to 3D Structural Model (BIM):</label><input type="url" id="structuralModelLink" class="form-input"></div>
+                            <div><label for="asBuiltStructuralDrawings">As-Built Structural Drawings (2D):</label><input type="file" id="asBuiltStructuralDrawings" class="form-input" multiple></div>
+                            <div><label for="structuralMaterialSpecs">Structural Material Specifications:</label><input type="file" id="structuralMaterialSpecs" class="form-input"></div>
+                            <div><label for="floorLoadingCapacity">Floor Loading Capacity (kg/m² or psf):</label><input type="text" id="floorLoadingCapacity" class="form-input"></div>
+                        </div>
+                         <h4 class="form-subsection-header">2.3 Mechanical, Electrical & Plumbing (MEP) Data</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label for="mepModelLink">Link to 3D MEP Model (BIM):</label><input type="url" id="mepModelLink" class="form-input"></div>
+                            <div><label for="asBuiltMepDrawings">As-Built MEP Drawings (2D):</label><input type="file" id="asBuiltMepDrawings" class="form-input" multiple></div>
+                            <div><label for="mepEquipmentSchedule">Master MEP Equipment Schedule (.xlsx, .csv):</label><input type="file" id="mepEquipmentSchedule" class="form-input" accept=".xlsx,.csv"></div>
+                            <div><label for="electricalPanelSchedules">Electrical Panel Schedules:</label><input type="file" id="electricalPanelSchedules" class="form-input" multiple></div>
+                            <div class="md:col-span-2"><label for="utilityShutoffLocations">Main Utility Shut-off Locations:</label><textarea id="utilityShutoffLocations" class="form-textarea" rows="3" placeholder="Describe locations for Water, Gas, Electricity..."></textarea></div>
+                        </div>
                     </div>
 
                      <!-- Section 3: Construction & Handover Records -->
                     <div class="section-container">
                         <h3 class="form-section-header">Section 3: Construction & Handover Records</h3>
-                       <!-- content -->
+                        <h4 class="form-subsection-header">3.1 Key Construction Info</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label for="generalContractor">Original General Contractor:</label><input type="text" id="generalContractor" class="form-input"></div>
+                            <div><label for="architectOfRecord">Original Architect of Record:</label><input type="text" id="architectOfRecord" class="form-input"></div>
+                            <div><label for="structuralEngineer">Original Structural Engineer:</label><input type="text" id="structuralEngineer" class="form-input"></div>
+                            <div><label for="mepEngineer">Original MEP Engineer:</label><input type="text" id="mepEngineer" class="form-input"></div>
+                            <div><label for="constructionStartDate">Construction Start Date:</label><input type="date" id="constructionStartDate" class="form-input"></div>
+                            <div><label for="officialHandoverDate">Official Handover Date:</label><input type="date" id="officialHandoverDate" class="form-input"></div>
+                        </div>
+                        <h4 class="form-subsection-header">3.2 Handover Documentation</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div><label for="commissioningReport">Final Commissioning Report:</label><input type="file" id="commissioningReport" class="form-input"></div>
+                             <div><label for="changeOrdersLog">Log of Change Orders:</label><input type="file" id="changeOrdersLog" class="form-input"></div>
+                             <div><label for="rfiLog">Log of RFIs:</label><input type="file" id="rfiLog" class="form-input"></div>
+                             <div><label for="warrantyLog">Master Warranty Log (.xlsx, .csv):</label><input type="file" id="warrantyLog" class="form-input" accept=".xlsx,.csv"></div>
+                        </div>
                     </div>
 
                     <div class="pt-6 flex justify-end items-center space-x-4">
@@ -340,7 +377,7 @@
 
             let db; // To hold the database instance
 
-            const state = { currentPage: 'page-home', history: [], activeScanner: null, currentLang: localStorage.getItem(LANG_KEY) || 'en', isNewFormEntry: false, photosLoading: 0, confirmCallback: null };
+            const state = { currentPage: 'page-home', history: [], activeScanner: null, currentLang: localStorage.getItem(LANG_KEY) || 'en', isNewFormEntry: false, confirmCallback: null };
 
             const translations = {
                 en: {
@@ -511,6 +548,14 @@
                         'Floors Below Ground': b.floorsBelowGround,
                         'Construction Year': b.constructionCompletionYear ? new Date(b.constructionCompletionYear).getFullYear() : '',
                         'Renovation Year': b.majorRenovationYear ? new Date(b.majorRenovationYear).getFullYear() : ''
+                    });
+
+                    detailHtml += createSection('Design & As-Built Information', {
+                        'Architectural Model Link': b.architecturalModelLink,
+                        'Structural System Type': b.structuralSystemType,
+                        'Floor Loading Capacity': b.floorLoadingCapacity,
+                        'MEP Model Link': b.mepModelLink,
+                        'Utility Shut-off Locations': b.utilityShutoffLocations,
                     });
 
                      detailHtml += createSection('Construction & Handover', {
@@ -720,7 +765,7 @@
                     y += 15;
 
                     const addSectionToPdf = (title, data) => {
-                        if (Object.values(data).every(v => !v)) return; // Skip empty sections
+                        if (Object.values(data).every(v => !v)) return;
                         
                         if (y > 260) { doc.addPage(); y = 20; }
                         
@@ -731,7 +776,7 @@
                         y += 8;
 
                         const tableBody = Object.entries(data)
-                            .filter(([_, value]) => value) // Filter out empty values
+                            .filter(([_, value]) => value)
                             .map(([label, value]) => [label, value]);
 
                         if (tableBody.length > 0) {
@@ -749,18 +794,36 @@
 
                     addSectionToPdf('Core Information', {
                         'Project Name': b.projectName,
+                        'Project Number': b.projectNumber,
                         'Building Status': b.buildingStatus,
-                        'Address': `${b.buildingAddressStreet || ''}, ${b.buildingAddressCity || ''}`,
-                        'Postal Code': b.buildingAddressPostal,
+                        'Address': `${b.buildingAddressStreet || ''}, ${b.buildingAddressCity || ''} ${b.buildingAddressState || ''} ${b.buildingAddressPostal || ''}`.trim(),
+                        'Country': b.buildingAddressCountry,
+                        'GPS': b.gpsLatitude && b.gpsLongitude ? `${b.gpsLatitude}, ${b.gpsLongitude}` : '',
+                        'Primary Use': b.primaryUse,
+                        'Gross Floor Area (m²)': b.grossFloorArea,
+                        'Floors Above Ground': b.floorsAboveGround,
+                        'Floors Below Ground': b.floorsBelowGround,
                         'Construction Year': b.constructionCompletionYear ? new Date(b.constructionCompletionYear).getFullYear() : '',
-                    });
-                    
-                     addSectionToPdf('Construction Details', {
-                        'General Contractor': b.generalContractor,
-                        'Architect of Record': b.architectOfRecord,
-                        'Handover Date': b.officialHandoverDate
+                        'Renovation Year': b.majorRenovationYear ? new Date(b.majorRenovationYear).getFullYear() : ''
                     });
 
+                    addSectionToPdf('Design & As-Built Information', {
+                        'Architectural Model Link': b.architecturalModelLink,
+                        'Structural System Type': b.structuralSystemType,
+                        'Floor Loading Capacity': b.floorLoadingCapacity,
+                        'MEP Model Link': b.mepModelLink,
+                        'Utility Shut-off Locations': b.utilityShutoffLocations,
+                    });
+
+                     addSectionToPdf('Construction & Handover', {
+                        'General Contractor': b.generalContractor,
+                        'Architect of Record': b.architectOfRecord,
+                        'Structural Engineer': b.structuralEngineer,
+                        'MEP Engineer': b.mepEngineer,
+                        'Construction Start': b.constructionStartDate,
+                        'Handover Date': b.officialHandoverDate
+                    });
+                    
                     doc.save(`Building-${b.buildingName.replace(/\s/g,'_')}.pdf`);
                 }
             };
