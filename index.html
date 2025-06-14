@@ -296,25 +296,22 @@
                                 <label for="webpage" class="block text-sm font-medium text-gray-600" data-lang="form_webpage"></label>
                                 <input type="url" id="webpage" class="notion-input mt-1 block w-full">
                             </div>
+                             <div class="md:col-span-2 border-t pt-6 mt-2">
+                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                    <div>
+                                        <label for="latitude" class="block text-sm font-medium text-gray-600" data-lang="form_latitude"></label>
+                                        <input type="text" id="latitude" readonly class="notion-input mt-1 block w-full bg-gray-100">
+                                    </div>
+                                     <div>
+                                        <label for="longitude" class="block text-sm font-medium text-gray-600" data-lang="form_longitude"></label>
+                                        <input type="text" id="longitude" readonly class="notion-input mt-1 block w-full bg-gray-100">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <button type="button" id="get-location-btn" class="w-full mt-2 bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg" data-lang="form_get_location"></button>
+                                    </div>
+                                 </div>
+                             </div>
                          </div>
-                    </div>
-                    
-                    <!-- Location Section -->
-                    <div>
-                        <h3 class="font-bold text-xl mb-4 text-gray-800" data-lang="form_section_location"></h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                             <div>
-                                <label for="latitude" class="block text-sm font-medium text-gray-600" data-lang="form_latitude"></label>
-                                <input type="text" id="latitude" readonly class="notion-input mt-1 block w-full bg-gray-100">
-                            </div>
-                             <div>
-                                <label for="longitude" class="block text-sm font-medium text-gray-600" data-lang="form_longitude"></label>
-                                <input type="text" id="longitude" readonly class="notion-input mt-1 block w-full bg-gray-100">
-                            </div>
-                            <div class="md:col-span-2">
-                                <button type="button" id="get-location-btn" class="w-full mt-2 bg-[#03396c] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg" data-lang="form_get_location"></button>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Property Profile Section -->
