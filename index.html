@@ -2,9 +2,21 @@
 <html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Building Information Hub</title>
-    
+
+    <!-- PWA Manifest Link -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Theme color for PWA -->
+    <meta name="theme-color" content="#4B0082"/>
+
+    <!-- iOS PWA splash screens and icon -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Building Hub">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Font Links -->
@@ -36,7 +48,8 @@
         body {
             font-family: 'Ubuntu', sans-serif;
             color: var(--text-color);
-            background-image: linear-gradient(to top, #f9fafb, #ffffff); /* Minimalist gradient */
+            background-image: linear-gradient(to top, #f9fafb, #ffffff);
+            -webkit-tap-highlight-color: transparent; /* Disable tap highlight on mobile */
         }
         html[dir="rtl"] body {
             font-family: 'Vazirmatn', sans-serif;
@@ -69,7 +82,7 @@
             cursor: pointer;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         }
-       
+        
         .btn-primary {
             background-color: var(--primary-color);
             color: #FFFFFF;
@@ -148,7 +161,6 @@
             text-align: center;
         }
 
-        /* Form section styling */
         .form-section-header {
             font-size: 1.25rem;
             font-weight: 700;
@@ -321,10 +333,10 @@
                         </div>
                         <h4 class="form-subsection-header">3.2 Handover Documentation</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                             <div><label for="commissioningReport">Final Commissioning Report:</label><input type="file" id="commissioningReport" class="form-input"></div>
-                             <div><label for="changeOrdersLog">Log of Change Orders:</label><input type="file" id="changeOrdersLog" class="form-input"></div>
-                             <div><label for="rfiLog">Log of RFIs:</label><input type="file" id="rfiLog" class="form-input"></div>
-                             <div><label for="warrantyLog">Master Warranty Log (.xlsx, .csv):</label><input type="file" id="warrantyLog" class="form-input" accept=".xlsx,.csv"></div>
+                              <div><label for="commissioningReport">Final Commissioning Report:</label><input type="file" id="commissioningReport" class="form-input"></div>
+                              <div><label for="changeOrdersLog">Log of Change Orders:</label><input type="file" id="changeOrdersLog" class="form-input"></div>
+                              <div><label for="rfiLog">Log of RFIs:</label><input type="file" id="rfiLog" class="form-input"></div>
+                              <div><label for="warrantyLog">Master Warranty Log (.xlsx, .csv):</label><input type="file" id="warrantyLog" class="form-input" accept=".xlsx,.csv"></div>
                         </div>
                     </div>
 
@@ -364,7 +376,7 @@
             </div>
 
             <div id="page-scanner" class="page">
-                <div id="qr-reader-container"><div id="qr-reader"></div></div>
+                <div id="qr-reader-container"><div id="qr-reader" style="width: 100%"></div></div>
                 <p class="text-center text-gray-500 mt-4" data-lang="scan_instruction"></p>
             </div>
         </main>
@@ -383,52 +395,139 @@
     </div>
 
     <script>
+    // Dynamically create and inject the manifest file content
+    const manifest = {
+        "name": "Building Information Hub",
+        "short_name": "Building Hub",
+        "start_url": ".",
+        "display": "standalone",
+        "background_color": "#F7F7F5",
+        "theme_color": "#4B0082",
+        "description": "An application to manage building information.",
+        "icons": [
+            {
+                "src": "icon-192x192.png",
+                "sizes": "192x192",
+                "type": "image/png"
+            },
+            {
+                "src": "icon-512x512.png",
+                "sizes": "512x512",
+                "type": "image/png"
+            }
+        ]
+    };
+    const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+    const manifestURL = URL.createObjectURL(manifestBlob);
+    document.querySelector('link[rel="manifest"]').setAttribute('href', manifestURL);
+
+    // Create a dummy icon since we can't package real ones here.
+    // In a real deployment, you would have actual icon-192x192.png and icon-512x512.png files.
+    function createIcon(size) {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const context = canvas.getContext('2d');
+        context.fillStyle = '#4B0082';
+        context.fillRect(0, 0, size, size);
+        context.fillStyle = 'white';
+        context.font = `${size / 2}px Ubuntu`;
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText('B', size / 2, size / 2);
+        return canvas.toDataURL();
+    }
+    document.querySelector('link[rel="apple-touch-icon"]').setAttribute('href', createIcon(192));
+    
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        // We will create a blob URL for the service worker to make this self-contained
+        const swCode = `
+            const CACHE_NAME = 'building-hub-cache-v1';
+            const urlsToCache = [
+              '/',
+              'https://cdn.tailwindcss.com',
+              'https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js',
+              'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
+              'https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js',
+              'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+              'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+              'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js',
+              'https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap',
+              'https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap'
+            ];
+
+            self.addEventListener('install', event => {
+              event.waitUntil(
+                caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+              );
+            });
+
+            self.addEventListener('fetch', event => {
+              event.respondWith(
+                caches.match(event.request).then(response => {
+                  return response || fetch(event.request).then(fetchResponse => {
+                    return caches.open(CACHE_NAME).then(cache => {
+                      // We can only cache GET requests
+                      if(event.request.method === 'GET'){
+                         cache.put(event.request, fetchResponse.clone());
+                      }
+                      return fetchResponse;
+                    });
+                  });
+                })
+              );
+            });
+
+            self.addEventListener('activate', event => {
+              const cacheWhitelist = [CACHE_NAME];
+              event.waitUntil(
+                caches.keys().then(cacheNames => {
+                  return Promise.all(
+                    cacheNames.map(cacheName => {
+                      if (cacheWhitelist.indexOf(cacheName) === -1) {
+                        return caches.delete(cacheName);
+                      }
+                    })
+                  );
+                })
+              );
+            });
+        `;
+        const swBlob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(swBlob);
+
+        navigator.serviceWorker.register(swUrl)
+          .then(registration => {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          })
+          .catch(error => {
+            console.log('ServiceWorker registration failed: ', error);
+          });
+      });
+    }
+    </script>
+    <script>
+        // All the original application logic from your script tag
         document.addEventListener('DOMContentLoaded', () => {
-            const DB_NAME = 'BimHubDB';
-            const DB_VERSION = 1;
-            const STORE_NAME = 'buildings';
-            const LANG_KEY = 'qrBuildingApp_lang';
+          const DB_NAME = 'BimHubDB';
+          const DB_VERSION = 1;
+          const STORE_NAME = 'buildings';
+          const LANG_KEY = 'qrBuildingApp_lang';
 
-            let db; // To hold the database instance
+          let db; // To hold the database instance
 
-            const state = { currentPage: 'page-home', history: [], activeScanner: null, currentLang: localStorage.getItem(LANG_KEY) || 'en', isNewFormEntry: false, confirmCallback: null };
+          const state = { currentPage: 'page-home', history: [], activeScanner: null, currentLang: localStorage.getItem(LANG_KEY) || 'en', isNewFormEntry: false, confirmCallback: null };
 
-            const translations = {
-                en: {
-                    app_title: "Building Information Hub", admin_title: "Building Records", add_building_title: "Add New Building", edit_building_title: "Edit Building", scan_title: "Scan QR Code", save: "Save",
-                    scan_qr: "Scan Building QR Code", add_building: "Add New Building",
-                    import_from_excel: "Import from Excel",
-                    no_buildings_found: "No buildings found.", click_plus_to_add: "Click the '+' button above to add one.",
-                    search_placeholder: "Search by Name or ZIP Code...", no_search_results: "No buildings match your search.", try_different_search: "Try a different search term.",
-                    generate_qr: "Generate QR & Save", scan_instruction: "Point your camera at a QR code.", confirm_delete: "Are you sure you want to delete this building?",
-                    toast_saved: "Building saved successfully!", toast_deleted: "Building deleted.", toast_camera_fail: "Could not start camera. Please grant permission.", toast_qr_not_found: "Building not found in local data.", toast_fill_fields: "Please fill in all required fields.", 
-                    toast_location_captured: "Location captured!", toast_location_fail: "Could not get location.", toast_geo_unsupported: "Geolocation is not supported by your browser.",
-                    toast_db_error: "Database error. Please refresh the page.",
-                    toast_imported: "{count} records imported successfully!", toast_import_error: "Failed to import records. Please check the file format.",
-                    yes: "Yes", no: "No", cancel: "Cancel",
-                    export_to_excel: "Export to Excel", export_to_pdf: "Download PDF", download_qr_image: "Download QR Image", toast_no_data_export: "No data to export.", toast_exported: "Data exported as {format} successfully!",
-                },
-                fa: {
-                    app_title: "مرکز اطلاعات ساختمان", admin_title: "لیست ساختمان‌ها", add_building_title: "افزودن ساختمان جدید", edit_building_title: "ویرایش ساختمان", scan_title: "اسکن کد QR", save: "ذخیره",
-                    scan_qr: "اسکن کد QR ساختمان", add_building: "افزودن ساختمان جدید",
-                    import_from_excel: "ورود از اکسل",
-                    no_buildings_found: "هیچ ساختمانی یافت نشد.", click_plus_to_add: "برای افزودن، روی دکمه '+' بالا کلیک کنید.",
-                    search_placeholder: "جستجو بر اساس نام یا کد پستی...", no_search_results: "هیچ ساختمانی با جستجوی شما مطابقت ندارد.", try_different_search: "عبارت دیگری را امتحان کنید.",
-                    generate_qr: "ساختن QR و ذخیره", scan_instruction: "دوربین خود را به سمت کد QR بگیرید.", confirm_delete: "آیا از حذف این ساختمان مطمئن هستید؟",
-                    toast_saved: "ساختمان با موفقیت ذخیره شد!", toast_deleted: "ساختمان حذف شد.", toast_camera_fail: "دوربین فعال نشد. لطفاً دسترسی را مجاز کنید.", toast_qr_not_found: "ساختمان در داده‌های محلی یافت نشد.", toast_fill_fields: "لطفاً تمام فیلدهای الزامی را پر کنید.",
-                    toast_location_captured: "موقعیت مکانی ثبت شد!", toast_location_fail: "دریافت موقعیت مکانی ناموفق بود.", toast_geo_unsupported: "موقعیت یابی توسط مرورگر شما پشتیبانی نمی‌شود.",
-                    toast_db_error: "خطای پایگاه داده. لطفا صفحه را رفرش کنید.",
-                    toast_imported: "{count} رکورد با موفقیت وارد شد!", toast_import_error: "وارد کردن رکوردها ناموفق بود. لطفاً فرمت فایل را بررسی کنید.",
-                    yes: "بله", no: "خیر", cancel: "لغو",
-                    export_to_excel: "خروجی اکسل", export_to_pdf: "دانلود PDF", download_qr_image: "دانلود تصویر QR", toast_no_data_export: "داده‌ای برای خروج وجود ندارد.", toast_exported: "داده‌ها با موفقیت به صورت {format} خروجی گرفته شد!",
-                }
+          const translations = {
+                en: { app_title: "Building Information Hub", admin_title: "Building Records", add_building_title: "Add New Building", edit_building_title: "Edit Building", scan_title: "Scan QR Code", save: "Save", scan_qr: "Scan Building QR Code", add_building: "Add New Building", import_from_excel: "Import from Excel", no_buildings_found: "No buildings found.", click_plus_to_add: "Click the '+' button above to add one.", search_placeholder: "Search by Name or ZIP Code...", no_search_results: "No buildings match your search.", try_different_search: "Try a different search term.", generate_qr: "Generate QR & Save", scan_instruction: "Point your camera at a QR code.", confirm_delete: "Are you sure you want to delete this building?", toast_saved: "Building saved successfully!", toast_deleted: "Building deleted.", toast_camera_fail: "Could not start camera. Please grant permission.", toast_qr_not_found: "Building not found in local data.", toast_fill_fields: "Please fill in all required fields.", toast_location_captured: "Location captured!", toast_location_fail: "Could not get location.", toast_geo_unsupported: "Geolocation is not supported by your browser.", toast_db_error: "Database error. Please refresh the page.", toast_imported: "{count} records imported successfully!", toast_import_error: "Failed to import records. Please check the file format.", yes: "Yes", no: "No", cancel: "Cancel", export_to_excel: "Export to Excel", export_to_pdf: "Download PDF", download_qr_image: "Download QR Image", toast_no_data_export: "No data to export.", toast_exported: "Data exported as {format} successfully!", }, fa: { app_title: "مرکز اطلاعات ساختمان", admin_title: "لیست ساختمان‌ها", add_building_title: "افزودن ساختمان جدید", edit_building_title: "ویرایش ساختمان", scan_title: "اسکن کد QR", save: "ذخیره", scan_qr: "اسکن کد QR ساختمان", add_building: "افزودن ساختمان جدید", import_from_excel: "ورود از اکسل", no_buildings_found: "هیچ ساختمانی یافت نشد.", click_plus_to_add: "برای افزودن، روی دکمه '+' بالا کلیک کنید.", search_placeholder: "جستجو بر اساس نام یا کد پستی...", no_search_results: "هیچ ساختمانی با جستجوی شما مطابقت ندارد.", try_different_search: "عبارت دیگری را امتحان کنید.", generate_qr: "ساختن QR و ذخیره", scan_instruction: "دوربین خود را به سمت کد QR بگیرید.", confirm_delete: "آیا از حذف این ساختمان مطمئن هستید؟", toast_saved: "ساختمان با موفقیت ذخیره شد!", toast_deleted: "ساختمان حذف شد.", toast_camera_fail: "دوربین فعال نشد. لطفاً دسترسی را مجاز کنید.", toast_qr_not_found: "ساختمان در داده‌های محلی یافت نشد.", toast_fill_fields: "لطفاً تمام فیلدهای الزامی را پر کنید.", toast_location_captured: "موقعیت مکانی ثبت شد!", toast_location_fail: "دریافت موقعیت مکانی ناموفق بود.", toast_geo_unsupported: "موقعیت یابی توسط مرورگر شما پشتیبانی نمی‌شود.", toast_db_error: "خطای پایگاه داده. لطفا صفحه را رفرش کنید.", toast_imported: "{count} رکورد با موفقیت وارد شد!", toast_import_error: "وارد کردن رکوردها ناموفق بود. لطفاً فرمت فایل را بررسی کنید.", yes: "بله", no: "خیر", cancel: "لغو", export_to_excel: "خروجی اکسل", export_to_pdf: "دانلود PDF", download_qr_image: "دانلود تصویر QR", toast_no_data_export: "داده‌ای برای خروج وجود ندارد.", toast_exported: "داده‌ها با موفقیت به صورت {format} خروجی گرفته شد!", }
             };
-            
-            const translate = (key, params = {}, lang = state.currentLang) => { let text = (translations[lang] || translations.en)[key] || key; for(const param in params) { text = text.replace(`{${param}}`, params[param]); } return text; };
-            const dom = { pages: document.querySelectorAll('.page'), headerTitle: document.getElementById('header-title'), backButton: document.getElementById('back-button'), headerActions: document.getElementById('header-actions'), buildingList: document.getElementById('building-list'), emptyAdminState: document.getElementById('empty-admin-state'), searchBar: document.getElementById('search-bar'), form: document.getElementById('building-form'), saveProgressBar: document.getElementById('save-progress-bar'), formSaveBtn: document.getElementById('form-save-btn'), formCancelBtn: document.getElementById('form-cancel-btn'), confirmModalOverlay: document.getElementById('confirm-modal-overlay'), importExcelBtn: document.getElementById('import-excel-btn'), importExcelInput: document.getElementById('import-excel-input') };
-            
-            // --- IndexedDB Functions ---
-            function openDB() {
+          
+          const translate = (key, params = {}, lang = state.currentLang) => { let text = (translations[lang] || translations.en)[key] || key; for(const param in params) { text = text.replace(`{${param}}`, params[param]); } return text; };
+          const dom = { pages: document.querySelectorAll('.page'), headerTitle: document.getElementById('header-title'), backButton: document.getElementById('back-button'), headerActions: document.getElementById('header-actions'), buildingList: document.getElementById('building-list'), emptyAdminState: document.getElementById('empty-admin-state'), searchBar: document.getElementById('search-bar'), form: document.getElementById('building-form'), saveProgressBar: document.getElementById('save-progress-bar'), formSaveBtn: document.getElementById('form-save-btn'), formCancelBtn: document.getElementById('form-cancel-btn'), confirmModalOverlay: document.getElementById('confirm-modal-overlay'), importExcelBtn: document.getElementById('import-excel-btn'), importExcelInput: document.getElementById('import-excel-input') };
+          
+          function openDB() {
                 return new Promise((resolve, reject) => {
                     const request = indexedDB.open(DB_NAME, DB_VERSION);
                     request.onupgradeneeded = event => {
@@ -449,184 +548,39 @@
             }
 
             const dbOp = {
-                save: (data) => {
-                    return new Promise((resolve, reject) => {
-                        const transaction = db.transaction([STORE_NAME], 'readwrite');
-                        const store = transaction.objectStore(STORE_NAME);
-                        const request = store.put(data);
-                        transaction.oncomplete = () => resolve(request.result);
-                        transaction.onerror = (event) => reject(event.target.error);
-                    });
-                },
-                getAll: () => {
-                    return new Promise((resolve, reject) => {
-                        const transaction = db.transaction([STORE_NAME], 'readonly');
-                        const store = transaction.objectStore(STORE_NAME);
-                        const request = store.getAll();
-                        transaction.oncomplete = () => resolve(request.result);
-                        transaction.onerror = (event) => reject(event.target.error);
-                    });
-                },
-                getById: (id) => {
-                     return new Promise((resolve, reject) => {
-                        const transaction = db.transaction([STORE_NAME], 'readonly');
-                        const store = transaction.objectStore(STORE_NAME);
-                        const request = store.get(id);
-                        transaction.oncomplete = () => resolve(request.result);
-                        transaction.onerror = (event) => reject(event.target.error);
-                    });
-                },
-                delete: (id) => {
-                     return new Promise((resolve, reject) => {
-                        const transaction = db.transaction([STORE_NAME], 'readwrite');
-                        const store = transaction.objectStore(STORE_NAME);
-                        const request = store.delete(id);
-                        transaction.oncomplete = () => resolve();
-                        transaction.onerror = (event) => reject(event.target.error);
-                    });
-                }
+                save: (data) => new Promise((resolve, reject) => { const tx = db.transaction([STORE_NAME], 'readwrite'); tx.objectStore(STORE_NAME).put(data); tx.oncomplete = () => resolve(); tx.onerror = (e) => reject(e.target.error); }),
+                getAll: () => new Promise((resolve, reject) => { const tx = db.transaction([STORE_NAME], 'readonly'); const req = tx.objectStore(STORE_NAME).getAll(); tx.oncomplete = () => resolve(req.result); tx.onerror = (e) => reject(e.target.error); }),
+                getById: (id) => new Promise((resolve, reject) => { const tx = db.transaction([STORE_NAME], 'readonly'); const req = tx.objectStore(STORE_NAME).get(id); tx.oncomplete = () => resolve(req.result); tx.onerror = (e) => reject(e.target.error); }),
+                delete: (id) => new Promise((resolve, reject) => { const tx = db.transaction([STORE_NAME], 'readwrite'); tx.objectStore(STORE_NAME).delete(id); tx.oncomplete = () => resolve(); tx.onerror = (e) => reject(e.target.error); })
             };
             
-            const blobToDataURI = (blob) => {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = e => resolve(e.target.result);
-                    reader.onerror = e => reject(e.target.error);
-                    reader.readAsDataURL(blob);
-                });
-            }
+            const blobToDataURI = (blob) => new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.onerror = e => reject(e.target.error); reader.readAsDataURL(blob); });
 
             const ui = {
-                updateText: () => {
-                    document.documentElement.lang = state.currentLang;
-                    document.documentElement.dir = state.currentLang === 'fa' ? 'rtl' : 'ltr';
-                    document.getElementById('lang-switcher').textContent = state.currentLang === 'en' ? 'FA' : 'EN';
-                    document.querySelectorAll('[data-lang]').forEach(el => { if (el.dataset.lang) el.textContent = translate(el.dataset.lang); });
-                    dom.searchBar.placeholder = translate('search_placeholder');
-                    document.getElementById('home-title').textContent = translate('app_title');
-                },
+                updateText: () => { document.documentElement.lang = state.currentLang; document.documentElement.dir = state.currentLang === 'fa' ? 'rtl' : 'ltr'; document.getElementById('lang-switcher').textContent = state.currentLang === 'en' ? 'FA' : 'EN'; document.querySelectorAll('[data-lang]').forEach(el => { if (el.dataset.lang) el.textContent = translate(el.dataset.lang); }); dom.searchBar.placeholder = translate('search_placeholder'); document.getElementById('home-title').textContent = translate('app_title'); },
                 renderAdminList: async (term = '') => {
                     let buildings = await dbOp.getAll();
                     const normTerm = term.toLowerCase().trim();
                     if (normTerm) buildings = buildings.filter(b => (b.buildingName && b.buildingName.toLowerCase().includes(normTerm)) || (b.buildingAddressPostal && b.buildingAddressPostal.toLowerCase().includes(normTerm)));
                     dom.buildingList.innerHTML = '';
-                    if (buildings.length === 0) {
-                        dom.emptyAdminState.classList.remove('hidden');
-                    } else {
-                        dom.emptyAdminState.classList.add('hidden');
-                        buildings.forEach(b => { 
-                            const item = document.createElement('div'); 
-                            item.className = 'bg-white p-4 rounded-md border border-gray-200 hover:border-[var(--primary-color)] hover:shadow-sm cursor-pointer flex justify-between items-center'; 
-                            item.dataset.id = b.id; 
-                            item.innerHTML = `<div><h3 class="font-bold text-lg">${b.buildingName}</h3><p class="text-gray-500">${b.buildingAddressStreet || 'No address'}</p></div><span class="text-gray-500">${b.buildingAddressPostal||''}</span>`; 
-                            item.onclick = async () => await showPage('page-detail', { id: b.id }); 
-                            dom.buildingList.appendChild(item); 
-                        });
-                    }
+                    dom.emptyAdminState.classList.toggle('hidden', buildings.length > 0);
+                    buildings.forEach(b => { const item = document.createElement('div'); item.className = 'bg-white p-4 rounded-md border border-gray-200 hover:border-[var(--primary-color)] hover:shadow-sm cursor-pointer flex justify-between items-center'; item.dataset.id = b.id; item.innerHTML = `<div><h3 class="font-bold text-lg">${b.buildingName}</h3><p class="text-gray-500">${b.buildingAddressStreet || 'No address'}</p></div><span class="text-gray-500">${b.buildingAddressPostal||''}</span>`; item.onclick = async () => await showPage('page-detail', { id: b.id }); dom.buildingList.appendChild(item); });
                 },
                 renderDetail: async (b) => {
                     document.getElementById('detail-building-name').textContent = b.buildingName;
-                    const qrContainer = document.getElementById('detail-qr-code-container'); qrContainer.innerHTML = ''; 
-                    new QRCodeStyling({ 
-                        width: 180, 
-                        height: 180, 
-                        data: String(b.id), 
-                        dotsOptions: { color: '#000000', type: 'square' },
-                        backgroundOptions: { color: '#ffffff' }
-                    }).append(qrContainer);
-
-                    const content = document.getElementById('detail-content');
-                    content.innerHTML = '';
-
-                    const createDetailField = (label, value) => {
-                        if (!value) return '';
-                        // For file objects, display their name
-                        if (typeof value === 'object' && value.name) {
-                           value = value.name;
-                        }
-                        return `<div class="flex justify-between py-2 border-b"><p class="font-medium text-gray-600">${label}</p><p class="text-right text-gray-800 break-all">${value}</p></div>`;
-                    };
-                    
-                    const createSection = (title, data) => {
-                        const fieldsHtml = Object.entries(data)
-                            .map(([label, value]) => createDetailField(label, value))
-                            .join('');
-
-                        if (fieldsHtml.trim() === '') return '';
-                        
-                        return `
-                            <div class="section-container">
-                                <h3 class="form-section-header">${title}</h3>
-                                <div class="space-y-2">${fieldsHtml}</div>
-                            </div>
-                        `;
-                    }
-                    
-                    let detailHtml = createSection('Core Information', {
-                        'Project Name': b.projectName,
-                        'Project Number': b.projectNumber,
-                        'Building Status': b.buildingStatus,
-                        'Address': `${b.buildingAddressStreet || ''}, ${b.buildingAddressCity || ''} ${b.buildingAddressState || ''} ${b.buildingAddressPostal || ''}`.trim(),
-                        'Country': b.buildingAddressCountry,
-                        'GPS': b.gpsLatitude && b.gpsLongitude ? `${b.gpsLatitude}, ${b.gpsLongitude}` : '',
-                        'Primary Use': b.primaryUse,
-                        'Gross Floor Area (m²)': b.grossFloorArea,
-                        'Floors Above Ground': b.floorsAboveGround,
-                        'Floors Below Ground': b.floorsBelowGround,
-                        'Construction Year': b.constructionCompletionYear ? new Date(b.constructionCompletionYear).getFullYear() : '',
-                        'Renovation Year': b.majorRenovationYear ? new Date(b.majorRenovationYear).getFullYear() : ''
-                    });
-
-                    detailHtml += createSection('Design & As-Built Information', {
-                        'Architectural Model Link': b.architecturalModelLink,
-                        'Structural System Type': b.structuralSystemType,
-                        'Floor Loading Capacity': b.floorLoadingCapacity,
-                        'MEP Model Link': b.mepModelLink,
-                        'Utility Shut-off Locations': b.utilityShutoffLocations,
-                    });
-
-                     detailHtml += createSection('Construction & Handover', {
-                        'General Contractor': b.generalContractor,
-                        'Architect of Record': b.architectOfRecord,
-                        'Structural Engineer': b.structuralEngineer,
-                        'MEP Engineer': b.mepEngineer,
-                        'Construction Start': b.constructionStartDate,
-                        'Handover Date': b.officialHandoverDate
-                    });
-
-                    const documentFields = {
-                        'Site Plan Drawing': b.sitePlanDrawing,
-                        'Occupancy Permit': b.occupancyPermit,
-                        'Main Building Photo': b.mainBuildingPhoto,
-                        'As-Built Architectural Drawings': b.asBuiltArchitecturalDrawings,
-                        'Room Schedule': b.roomSchedule,
-                        'Finishes Schedule': b.finishesSchedule,
-                        'As-Built Structural Drawings': b.asBuiltStructuralDrawings,
-                        'Structural Material Specs': b.structuralMaterialSpecs,
-                        'As-Built MEP Drawings': b.asBuiltMepDrawings,
-                        'MEP Equipment Schedule': b.mepEquipmentSchedule,
-                        'Electrical Panel Schedules': b.electricalPanelSchedules,
-                        'Commissioning Report': b.commissioningReport,
-                        'Log of Change Orders': b.changeOrdersLog,
-                        'Log of RFIs': b.rfiLog,
-                        'Master Warranty Log': b.warrantyLog
-                    };
-
+                    const qrContainer = document.getElementById('detail-qr-code-container'); qrContainer.innerHTML = ''; new QRCodeStyling({ width: 180, height: 180, data: String(b.id), dotsOptions: { color: '#000000', type: 'square' }, backgroundOptions: { color: '#ffffff' } }).append(qrContainer);
+                    const content = document.getElementById('detail-content'); content.innerHTML = '';
+                    const createDetailField = (label, value) => { if (!value) return ''; if (typeof value === 'object' && value.name) { value = value.name; } return `<div class="flex justify-between py-2 border-b"><p class="font-medium text-gray-600">${label}</p><p class="text-right text-gray-800 break-all">${value}</p></div>`; };
+                    const createSection = (title, data) => { const fieldsHtml = Object.entries(data).map(([label, value]) => createDetailField(label, value)).join(''); if (fieldsHtml.trim() === '') return ''; return `<div class="section-container"><h3 class="form-section-header">${title}</h3><div class="space-y-2">${fieldsHtml}</div></div>`; }
+                    let detailHtml = createSection('Core Information', { 'Project Name': b.projectName, 'Project Number': b.projectNumber, 'Building Status': b.buildingStatus, 'Address': `${b.buildingAddressStreet || ''}, ${b.buildingAddressCity || ''} ${b.buildingAddressState || ''} ${b.buildingAddressPostal || ''}`.trim(), 'Country': b.buildingAddressCountry, 'GPS': b.gpsLatitude && b.gpsLongitude ? `${b.gpsLatitude}, ${b.gpsLongitude}` : '', 'Primary Use': b.primaryUse, 'Gross Floor Area (m²)': b.grossFloorArea, 'Floors Above Ground': b.floorsAboveGround, 'Floors Below Ground': b.floorsBelowGround, 'Construction Year': b.constructionCompletionYear ? new Date(b.constructionCompletionYear).getFullYear() : '', 'Renovation Year': b.majorRenovationYear ? new Date(b.majorRenovationYear).getFullYear() : '' });
+                    detailHtml += createSection('Design & As-Built Information', { 'Architectural Model Link': b.architecturalModelLink, 'Structural System Type': b.structuralSystemType, 'Floor Loading Capacity': b.floorLoadingCapacity, 'MEP Model Link': b.mepModelLink, 'Utility Shut-off Locations': b.utilityShutoffLocations, });
+                    detailHtml += createSection('Construction & Handover', { 'General Contractor': b.generalContractor, 'Architect of Record': b.architectOfRecord, 'Structural Engineer': b.structuralEngineer, 'MEP Engineer': b.mepEngineer, 'Construction Start': b.constructionStartDate, 'Handover Date': b.officialHandoverDate });
+                    const documentFields = { 'Site Plan Drawing': b.sitePlanDrawing, 'Occupancy Permit': b.occupancyPermit, 'Main Building Photo': b.mainBuildingPhoto, 'As-Built Architectural Drawings': b.asBuiltArchitecturalDrawings, 'Room Schedule': b.roomSchedule, 'Finishes Schedule': b.finishesSchedule, 'As-Built Structural Drawings': b.asBuiltStructuralDrawings, 'Structural Material Specs': b.structuralMaterialSpecs, 'As-Built MEP Drawings': b.asBuiltMepDrawings, 'MEP Equipment Schedule': b.mepEquipmentSchedule, 'Electrical Panel Schedules': b.electricalPanelSchedules, 'Commissioning Report': b.commissioningReport, 'Log of Change Orders': b.changeOrdersLog, 'Log of RFIs': b.rfiLog, 'Master Warranty Log': b.warrantyLog };
                     detailHtml += createSection('Attached Documents', documentFields);
-
                     content.innerHTML = detailHtml;
                 },
-                showToast: (key, isErr = false, params = {}) => {
-                    const toast = document.getElementById('toast'); toast.querySelector('p').textContent = translate(key, params);
-                    toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg transition-transform duration-300 ${isErr?'bg-red-600':'bg-gray-800'}`;
-                    requestAnimationFrame(()=>{toast.style.opacity='1';toast.style.transform='translateY(0)';}); setTimeout(()=>{toast.style.opacity='0';toast.style.transform='translateY(5rem)';}, 3000);
-                },
-                showConfirmModal: (key, cb) => {
-                    document.getElementById('confirm-modal-message').textContent = translate(key);
-                    document.getElementById('confirm-modal-yes').textContent = translate('yes');
-                    document.getElementById('confirm-modal-no').textContent = translate('no');
-                    dom.confirmModalOverlay.classList.add('visible'); state.confirmCallback = cb;
-                },
+                showToast: (key, isErr = false, params = {}) => { const toast = document.getElementById('toast'); toast.querySelector('p').textContent = translate(key, params); toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg transition-transform duration-300 ${isErr?'bg-red-600':'bg-gray-800'}`; requestAnimationFrame(()=>{toast.style.opacity='1';toast.style.transform='translateY(0)';}); setTimeout(()=>{toast.style.opacity='0';toast.style.transform='translateY(5rem)';}, 3000); },
+                showConfirmModal: (key, cb) => { document.getElementById('confirm-modal-message').textContent = translate(key); document.getElementById('confirm-modal-yes').textContent = translate('yes'); document.getElementById('confirm-modal-no').textContent = translate('no'); dom.confirmModalOverlay.classList.add('visible'); state.confirmCallback = cb; },
                 hideConfirmModal: () => { dom.confirmModalOverlay.classList.remove('visible'); state.confirmCallback = null; }
             };
 
@@ -643,14 +597,7 @@
                     case 'page-home': dom.headerTitle.textContent = translate('app_title'); break;
                     case 'page-admin': 
                         dom.headerTitle.textContent = translate('admin_title');
-                        dom.headerActions.innerHTML = `
-                            <button id="export-all-btn" class="p-2 rounded-full text-white hover:bg-black/20" title="Export All to Excel">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            </button>
-                            <button id="add-btn" class="p-2 rounded-full text-white hover:bg-black/20" title="Add New Building">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                            </button>
-                        `; 
+                        dom.headerActions.innerHTML = `<button id="export-all-btn" class="p-2 rounded-full text-white hover:bg-black/20" title="Export All to Excel"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></button><button id="add-btn" class="p-2 rounded-full text-white hover:bg-black/20" title="Add New Building"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></button>`; 
                         document.getElementById('export-all-btn').onclick = () => handleExport('xlsx');
                         document.getElementById('add-btn').onclick = () => showPage('page-form'); 
                         dom.searchBar.value = ''; 
@@ -665,18 +612,14 @@
                             if(buildingData) {
                                 for (const key in buildingData) {
                                     const el = document.getElementById(key);
-                                    if(el) {
-                                        if(el.type !== 'file') {
-                                           el.value = buildingData[key];
-                                        }
-                                    }
+                                    if(el && el.type !== 'file') { el.value = buildingData[key]; }
                                 }
                             }
                         } else {
-                           dom.form.reset();
-                           document.getElementById('id').value = crypto.randomUUID();
-                           document.getElementById('lastUpdated').value = new Date().toLocaleDateString();
-                           document.getElementById('formVersion').value = "1.0";
+                            dom.form.reset();
+                            document.getElementById('id').value = crypto.randomUUID();
+                            document.getElementById('lastUpdated').value = new Date().toLocaleDateString();
+                            document.getElementById('formVersion').value = "1.0";
                         }
                         break;
                     case 'page-detail': 
@@ -690,6 +633,7 @@
                         break;
                     case 'page-scanner': 
                         dom.headerTitle.textContent = translate('scan_title');
+                        startScanner();
                         break;
                 }
                 
@@ -704,8 +648,6 @@
                         ui.showToast('toast_qr_not_found',true); 
                         goBack(); 
                     }
-                } else if (pageId === 'page-scanner') { 
-                    startScanner(); 
                 }
             };
 
@@ -725,20 +667,12 @@
                 inputs.forEach(i=>{
                     if(i.id) {
                         if (i.type === 'file' && i.files.length > 0) {
-                           for (const file of i.files) {
-                                // We store the file object itself to be saved in IndexedDB
-                                filePromises.push({id: i.id, file: file});
-                            }
-                        } else if (i.type !== 'file') {
-                            data[i.id] = i.value;
-                        }
+                            for (const file of i.files) { filePromises.push({id: i.id, file: file}); }
+                        } else if (i.type !== 'file') { data[i.id] = i.value; }
                     }
                 });
                 
-                // For this version, we'll just store file names for simplicity in the main data object
-                filePromises.forEach(fileInfo => {
-                    data[fileInfo.id] = fileInfo.file.name;
-                });
+                filePromises.forEach(fileInfo => { data[fileInfo.id] = fileInfo.file.name; });
                 
                 await dbOp.save(data); 
 
@@ -748,13 +682,32 @@
             };
 
             const startScanner = () => {
-                // ... scanner logic ...
+                const qrReaderElement = document.getElementById('qr-reader');
+                if (!qrReaderElement) return;
+
+                const html5QrCode = new Html5Qrcode("qr-reader");
+                state.activeScanner = html5QrCode;
+
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    async (decodedText, decodedResult) => {
+                        if (state.activeScanner) {
+                            await state.activeScanner.stop();
+                            state.activeScanner = null;
+                        }
+                        showPage('page-detail', { id: decodedText });
+                    },
+                    (errorMessage) => { /* console.log(errorMessage) */ }
+                ).catch(err => {
+                    ui.showToast('toast_camera_fail', true);
+                    console.error("QR Scanner Error:", err);
+                });
             };
 
-            const handleExport = async (format, data) => {
+            const handleExport = async (format, data) => { 
                 const buildings = data || await dbOp.getAll();
                 if (buildings.length === 0) { ui.showToast("toast_no_data_export", true); return; }
-                
                 if (format === 'xlsx') { 
                     const ws = XLSX.utils.json_to_sheet(buildings); 
                     const wb = XLSX.utils.book_new(); 
@@ -762,166 +715,55 @@
                     XLSX.writeFile(wb, "Building_Export.xlsx"); 
                 }
                 ui.showToast('toast_exported', false, {format: format.toUpperCase()});
-            };
-
-            const downloadQrAsImage = async (building) => {
-                const qrSize = 250;
-                const border = 10;
-                const textHeight = 80;
-                
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = qrSize + border * 2;
-                canvas.height = qrSize + border * 2 + textHeight;
-
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = '#000000';
-                ctx.font = 'bold 20px Ubuntu';
-                ctx.textAlign = 'center';
-                ctx.fillText(building.buildingName || '', canvas.width / 2, 35);
-
-                const qrInstance = new QRCodeStyling({ 
-                    width: qrSize, 
-                    height: qrSize, 
-                    data: String(building.id),
-                    dotsOptions: { color: '#000000', type: 'square' },
-                    backgroundOptions: { color: '#ffffff' }
-                });
-                const qrBlob = await qrInstance.getRawData('png');
-                const qrImage = await createImageBitmap(qrBlob);
-                ctx.drawImage(qrImage, border, 50);
-
-                ctx.fillStyle = '#333333';
-                ctx.font = '16px Ubuntu';
-                ctx.textAlign = 'center';
-                ctx.fillText(building.buildingAddressPostal || '', canvas.width / 2, canvas.height - 15);
-
-                const link = document.createElement('a');
-                link.download = `QR-${building.buildingName.replace(/\s/g, '_')}.png`;
-                link.href = canvas.toDataURL("image/png");
-                link.click();
-            };
-
-            const pdf = {
-                generate: async (b) => {
-                    const { jsPDF } = window.jspdf; 
-                    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-                    const FONT = "Helvetica"; 
-                    doc.setFont(FONT);
-
-                    const leftMargin = 15;
-                    const rightMargin = leftMargin * 1.5;
-                    const pageW = doc.internal.pageSize.getWidth();
-                    const contentWidth = pageW - leftMargin - rightMargin;
-                    let y = 20;
-
-                    // QR Code
-                    const qrInstance = new QRCodeStyling({ width: 200, height: 200, data: String(b.id), dotsOptions: { color: '#000000' } });
-                    const qrBlob = await qrInstance.getRawData('png');
-                    const qrImage = await blobToDataURI(qrBlob);
-                    doc.addImage(qrImage, 'PNG', pageW - rightMargin - 25, 15, 25, 25);
-
-                    // Top-left Header
-                    doc.setFontSize(9);
-                    doc.setFont(FONT, 'bold');
-                    doc.setTextColor('#333333');
-                    const address = `${b.buildingAddressStreet || ''}, ${b.buildingAddressCity || ''}`;
-                    doc.text(b.buildingName || "Building Record", leftMargin, y);
-                    y += 4;
-                    doc.setFont(FONT, 'normal');
-                    doc.text(address, leftMargin, y);
-                    y += 15;
-                    
-
-                    const addField = (label, value) => {
-                        if (!value) return;
-                        if (y > 275) { doc.addPage(); y = 20; }
-                        doc.setFontSize(9);
-                        doc.setFont(FONT, 'bold');
-                        doc.setTextColor('#555555');
-                        doc.text(label.toUpperCase(), leftMargin, y);
-                        y += 5;
-
-                        doc.setFontSize(11);
-                        doc.setFont(FONT, 'normal');
-                        doc.setTextColor('#000000');
-                        const splitValue = doc.splitTextToSize(String(value), contentWidth);
-                        doc.text(splitValue, leftMargin, y);
-                        y += (splitValue.length * 5) + 4;
-                    };
-                    
-                    const addSectionHeader = (title) => {
-                         if (y > 265) { doc.addPage(); y = 20; }
-                         if(y > 25) y += 5; // Add extra space between sections, but not after the main header
-                         doc.setFontSize(14);
-                         doc.setFont(FONT, 'bold');
-                         doc.setTextColor(getComputedStyle(document.documentElement).getPropertyValue('--primary-color'));
-                         doc.text(title, leftMargin, y);
-                         y += 3;
-                         doc.setDrawColor(220, 220, 220);
-                         doc.line(leftMargin, y, pageW - rightMargin, y);
-                         y += 8;
-                    }
-
-                    addSectionHeader('Core Information');
-                    addField('Project Name', b.projectName);
-                    addField('Project Number', b.projectNumber);
-                    addField('Building Status', b.buildingStatus);
-                    addField('Primary Use', b.primaryUse);
-                    
-                    addSectionHeader('Design & As-Built');
-                    addField('Architectural Model', b.architecturalModelLink);
-                    addField('Structural System', b.structuralSystemType);
-                    
-                    addSectionHeader('Construction & Handover');
-                    addField('General Contractor', b.generalContractor);
-                    addField('Architect', b.architectOfRecord);
-                    
-                    addSectionHeader('Attached Documents');
-                     const documentFields = {
-                        'Site Plan': b.sitePlanDrawing, 'Occupancy Permit': b.occupancyPermit, 'Main Photo': b.mainBuildingPhoto,
-                        'Arch. Drawings': b.asBuiltArchitecturalDrawings, 'Room Schedule': b.roomSchedule, 'Finishes Schedule': b.finishesSchedule,
-                        'Struct. Drawings': b.asBuiltStructuralDrawings, 'Struct. Specs': b.structuralMaterialSpecs,
-                        'MEP Drawings': b.asBuiltMepDrawings, 'MEP Equipment': b.mepEquipmentSchedule, 'Elec. Panels': b.electricalPanelSchedules,
-                        'Commissioning': b.commissioningReport, 'Change Orders': b.changeOrdersLog, 'RFIs': b.rfiLog, 'Warranty Log': b.warrantyLog
-                    };
-                    Object.entries(documentFields).forEach(([label, value]) => addField(label, value));
-
-                    doc.save(`Building-${b.buildingName.replace(/\s/g,'_')}.pdf`);
-                }
-            };
-
-            const handleExcelImport = (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, {type: 'array'});
-                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                        const buildings = XLSX.utils.sheet_to_json(firstSheet);
-
-                        if (buildings.length > 0) {
-                            for (const buildingData of buildings) {
-                                if(!buildingData.id) buildingData.id = crypto.randomUUID();
-                                await dbOp.save(buildingData);
-                            }
-                            ui.showToast('toast_imported', false, {count: buildings.length});
-                            await ui.renderAdminList();
-                        }
-                    } catch (err) {
-                        console.error("Import error:", err);
-                        ui.showToast('toast_import_error', true);
-                    } finally {
-                        event.target.value = '';
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            };
+             };
+            const downloadQrAsImage = async (building) => { 
+                const qrSize=250, border=10, textHeight=80;
+                const canvas=document.createElement('canvas'), ctx=canvas.getContext('2d');
+                canvas.width=qrSize+border*2; canvas.height=qrSize+border*2+textHeight;
+                ctx.fillStyle='white'; ctx.fillRect(0,0,canvas.width,canvas.height);
+                ctx.fillStyle='#000000'; ctx.font='bold 20px Ubuntu'; ctx.textAlign='center';
+                ctx.fillText(building.buildingName||'',canvas.width/2,35);
+                const qrInstance = new QRCodeStyling({width:qrSize,height:qrSize,data:String(building.id),dotsOptions:{color:'#000000',type:'square'},backgroundOptions:{color:'#ffffff'}});
+                const qrBlob=await qrInstance.getRawData('png'), qrImage=await createImageBitmap(qrBlob);
+                ctx.drawImage(qrImage,border,50);
+                ctx.fillStyle='#333333'; ctx.font='16px Ubuntu'; ctx.textAlign='center';
+                ctx.fillText(building.buildingAddressPostal||'',canvas.width/2,canvas.height-15);
+                const link=document.createElement('a');
+                link.download=`QR-${building.buildingName.replace(/\s/g,'_')}.png`;
+                link.href=canvas.toDataURL("image/png"); link.click();
+             };
+            const pdf = { generate: async (b) => { 
+                const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
+                const FONT="Helvetica";doc.setFont(FONT);
+                const leftMargin=15,rightMargin=leftMargin*1.5,pageW=doc.internal.pageSize.getWidth(),contentWidth=pageW-leftMargin-rightMargin;
+                let y=20;
+                const qrInstance=new QRCodeStyling({width:200,height:200,data:String(b.id),dotsOptions:{color:'#000000'}});
+                const qrBlob=await qrInstance.getRawData('png'),qrImage=await blobToDataURI(qrBlob);
+                doc.addImage(qrImage,'PNG',pageW-rightMargin-25,15,25,25);
+                doc.setFontSize(9);doc.setFont(FONT,'bold');doc.setTextColor('#333333');
+                const address=`${b.buildingAddressStreet||''}, ${b.buildingAddressCity||''}`;
+                doc.text(b.buildingName||"Building Record",leftMargin,y);y+=4;
+                doc.setFont(FONT,'normal');doc.text(address,leftMargin,y);y+=15;
+                const addField=(label,value)=>{if(!value)return;if(y>275){doc.addPage();y=20;}
+                doc.setFontSize(9);doc.setFont(FONT,'bold');doc.setTextColor('#555555');doc.text(label.toUpperCase(),leftMargin,y);y+=5;
+                doc.setFontSize(11);doc.setFont(FONT,'normal');doc.setTextColor('#000000');
+                const splitValue=doc.splitTextToSize(String(value),contentWidth);doc.text(splitValue,leftMargin,y);y+=(splitValue.length*5)+4;};
+                const addSectionHeader=(title)=>{if(y>265){doc.addPage();y=20;}
+                if(y>25)y+=5;doc.setFontSize(14);doc.setFont(FONT,'bold');doc.setTextColor(getComputedStyle(document.documentElement).getPropertyValue('--primary-color'));
+                doc.text(title,leftMargin,y);y+=3;doc.setDrawColor(220,220,220);doc.line(leftMargin,y,pageW-rightMargin,y);y+=8;};
+                addSectionHeader('Core Information');addField('Project Name',b.projectName);addField('Project Number',b.projectNumber);addField('Building Status',b.buildingStatus);addField('Primary Use',b.primaryUse);
+                addSectionHeader('Design & As-Built');addField('Architectural Model',b.architecturalModelLink);addField('Structural System',b.structuralSystemType);
+                addSectionHeader('Construction & Handover');addField('General Contractor',b.generalContractor);addField('Architect',b.architectOfRecord);
+                addSectionHeader('Attached Documents');const documentFields={'Site Plan':b.sitePlanDrawing,'Occupancy Permit':b.occupancyPermit,'Main Photo':b.mainBuildingPhoto,'Arch. Drawings':b.asBuiltArchitecturalDrawings,'Room Schedule':b.roomSchedule,'Finishes Schedule':b.finishesSchedule,'Struct. Drawings':b.asBuiltStructuralDrawings,'Struct. Specs':b.structuralMaterialSpecs,'MEP Drawings':b.asBuiltMepDrawings,'MEP Equipment':b.mepEquipmentSchedule,'Elec. Panels':b.electricalPanelSchedules,'Commissioning':b.commissioningReport,'Change Orders':b.changeOrdersLog,'RFIs':b.rfiLog,'Warranty Log':b.warrantyLog};
+                Object.entries(documentFields).forEach(([label,value])=>addField(label,value));
+                doc.save(`Building-${b.buildingName.replace(/\s/g,'_')}.pdf`);
+             } };
+            const handleExcelImport = (event) => { 
+                const file=event.target.files[0];if(!file)return;
+                const reader=new FileReader();reader.onload=async(e)=>{try{const data=new Uint8Array(e.target.result);const workbook=XLSX.read(data,{type:'array'});const firstSheet=workbook.Sheets[workbook.SheetNames[0]];const buildings=XLSX.utils.sheet_to_json(firstSheet);
+                if(buildings.length>0){for(const buildingData of buildings){if(!buildingData.id)buildingData.id=crypto.randomUUID();await dbOp.save(buildingData);}
+                ui.showToast('toast_imported',false,{count:buildings.length});await ui.renderAdminList();}}catch(err){console.error("Import error:",err);ui.showToast('toast_import_error',true);}finally{event.target.value='';}};reader.readAsArrayBuffer(file);
+             };
 
             // --- Event Listeners ---
             dom.backButton.addEventListener('click', () => goBack());
@@ -949,7 +791,6 @@
                     console.error("Failed to initialize the application:", error);
                 }
             }
-
             init();
         });
     </script>
